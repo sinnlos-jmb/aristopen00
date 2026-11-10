@@ -1,0 +1,38 @@
+name: Ágora · navegador (Playwright)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  navegador:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v4
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependencias E2E
+        run: npm install --prefix e2e --no-audit --no-fund
+      - name: Instalar Chromium
+        run: npx --prefix e2e playwright install --with-deps chromium
+      - name: Ejecutar pruebas de navegador
+        run: npm --prefix e2e test
+      - name: Guardar resultados si falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-resultados
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
