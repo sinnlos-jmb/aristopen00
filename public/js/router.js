@@ -16,7 +16,10 @@ export function createRouter({ routes, notFound, onChange }) {
       view = await factory();
     } catch (e) {
       console.error('Router: factory failed:', e);
-      document.getElementById('app').innerHTML = `<div class="empty">Error cargando la vista: ${e.message || e}.</div>`;
+      const message = document.createElement('div');
+      message.className = 'empty';
+      message.textContent = `Error cargando la vista: ${e?.message || String(e)}.`;
+      document.getElementById('app').replaceChildren(message);
       return;
     }
     if (request !== revision) { view.destroy?.(); return; }
