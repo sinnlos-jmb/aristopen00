@@ -1,6 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs"
+    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs",
+    "test:questions": "node scripts/check-question-diagnostic.mjs"
   }
 }
