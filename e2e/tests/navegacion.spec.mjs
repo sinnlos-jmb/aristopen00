@@ -15,7 +15,7 @@ test('navega entre las cinco secciones sin fallos JavaScript', async ({ page }) 
   await expect(page.locator('#status')).toContainText('E2E fixture');
   for (const [path, selector] of links) {
     await page.evaluate(path => { location.hash = `#${path}`; }, path);
-    await expect(page.locator(`#app ${selector}`)).toBeVisible();
+    await expect(page.locator(`#app ${selector}`).first()).toBeVisible();
     await expect(page.locator('#app')).not.toContainText('Error cargando la vista');
   }
   expect(errors).toEqual([]);
