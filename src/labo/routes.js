@@ -3,9 +3,7 @@ import {Router} from 'express';
 import {asyncHandler as h} from '../utils/async-handler.js';
 import {HttpError} from '../utils/http-error.js';
 import {crearServicioCorpus} from './corpus-service.js';
-import {pathToFileURL} from 'node:url';
-import path from 'node:path';
-import {config} from '../config.js';
+import {loadPublicModule} from '../utils/public-module.js';
 const notFound = new HttpError(404,'Modelo no encontrado.');
 const bad = message => new HttpError(400,message);
 const conflict = () => new HttpError(409,'Los datos cambiaron. Recargá para continuar con una sola versión.');
@@ -22,8 +20,8 @@ export function crearLaboRouter(options={}) {
  const r=Router();
  let searchModules=null;
  const mod=async()=>searchModules ||= Promise.all([
-   buscador || import(pathToFileURL(path.join(config.publicDir,'labo/js/buscar.js')).href),
-   constructor || import(pathToFileURL(path.join(config.publicDir,'labo/js/constructor.js')).href)
+   buscador || loadPublicModule('labo/js/buscar.js'),
+   constructor || loadPublicModule('labo/js/constructor.js')
  ]);
  const read=async revision=>{const data=await servicio.obtener();if(typeof revision!=='string'||revision!==data.sourceHash)throw conflict();return data;};
  const send=(res,value)=>res.set('Cache-Control','no-store').json(value);
@@ -58,7 +56,7 @@ export function crearLaboRouter(options={}) {
    if(!['query','ia','mapa'].includes(tipo))throw bad('Comando inválido.');
    if(tipo!=='mapa'&&(typeof pregunta!=='string'||!pregunta.trim()||pregunta.length>2000))throw bad('Consulta inválida.');
    const data=await read(revision),c=indexar(data.corpus);
-   const cmd=await (comandos||import(pathToFileURL(path.join(config.publicDir,'labo/js/bot-commands.js')).href));
+   const cmd=await (comandos||loadPublicModule('labo/js/bot-commands.js'));
    let text;
    if(tipo==='mapa'){
      const u=ubicacion,ids=data.fase.topics.map(t=>t.id);

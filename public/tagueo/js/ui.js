@@ -1,7 +1,8 @@
 // Piezas de interfaz comunes (devuelven HTML)
 import { href } from './router.js';
 import { mapaRef } from './store.js';
-export const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+import { esc } from '../../shared/escape-html.js';
+export { esc };
 export const ST = {propuesto: 'Propuesto', confirmado: 'Confirmado', discusion: 'En discusión', esbozo: 'Esbozo', borrador: 'Borrador', none: 'sin revisar'};
 export const VLAB = {textual: 'Textual', comentarista: 'Comentarista', nuestra: 'Lectura nuestra', traduccion: 'Traducción', endoxa: 'Éndoxon'};
 export const KIND = {raiz: 'Raíz', categoria: 'Categoría', division: 'División', especie: 'Especie', parte: 'Parte', concepto: 'Concepto', compartido: 'Compartido', propio: 'Propio del funcional'};

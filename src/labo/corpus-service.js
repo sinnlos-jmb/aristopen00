@@ -1,8 +1,6 @@
 // Índice derivado efímero, nunca otra fuente editorial. No almacena un JSON público.
 import crypto from 'node:crypto';
-import path from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { config } from '../config.js';
+import { loadPublicModule } from '../utils/public-module.js';
 import { leerSnapshot, validarFuentes } from './snapshot.js';
 import { generarCorpus } from './corpus-core.js';
 import { generarConstructor } from './query-builder-core.js';
@@ -29,7 +27,7 @@ export function crearServicioCorpus({leer = leerSnapshot, motor, maxAgeMs = 5000
           cache.vence = Date.now() + maxAgeMs;
           return cache;
         }
-        const tools = motor || await import(pathToFileURL(path.join(config.publicDir, 'tagueo/js/store.js')).href);
+        const tools = motor || await loadPublicModule('tagueo/js/store.js');
         // build() puede agregar campos a los objetos de tags; no modificar el snapshot original.
         const corpus = generarCorpus(structuredClone(snapshot), tools);
         const avisos = [];
