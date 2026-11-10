@@ -1,2 +1,2 @@
-export const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
-  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// API pública de escape conservada para los consumidores de la SPA.
+export { esc } from '../shared/escape-html.js';

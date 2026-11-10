@@ -1,11 +1,7 @@
 import { SOURCE_LABELS, VOICE_LABELS } from './store.js';
 
-export const esc = value => String(value ?? '')
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#39;');
+import { esc } from '../../shared/escape-html.js';
+export { esc };
 
 export const voiceKey = item => item.voiceStatus === 'estructurada'
   ? item.voices.join('+')
