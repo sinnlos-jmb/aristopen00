@@ -2,6 +2,8 @@ import { renderCatalogHeader, renderCatalogCard } from './shared.js';
 import { renderTrajectoriesView } from './labTrajectoriesView.js';
 import { renderAuditView } from './labAuditView.js';
 import { renderQuestionBench } from './labQuestionBench.js';
+import { buildEvidenceAudit } from '../lab/evidenceAudit.js';
+import { renderEvidenceAudit } from './labEvidenceView.js';
 import { QUESTION_CASES, evaluateQuestionCase } from '../lab/questionCases.js';
 import { simulate } from '../lab/simulate.js';
 import { buildAllTrajectories } from '../lab/trajectories.js';
@@ -255,9 +257,12 @@ function render() {
       const diagnostic = simulation.diagnosis;
       const result = diagnostic.analysis;
       // La evaluación editorial se añade solo a una prueba dirigida, sin cambiar simulate() ni el motor.
-      latestResult = questionCase
-        ? { ...simulation, questionAudit: evaluateQuestionCase(questionCase, result) }
-        : simulation;
+      const evidenceAudit = buildEvidenceAudit(S, simulation);
+      latestResult = {
+        ...simulation,
+        ...(questionCase ? { questionAudit: evaluateQuestionCase(questionCase, result) } : {}),
+        evidenceAudit,
+      };
       conceptsEl.innerHTML = `<div class="lab-panel__label">Conceptos detectados</div>${
       result.conceptos.length
       ? result.conceptos.map(c => `<span class="lab-chip">${esc(c.word)} <small>→ ${esc(c.id)}</small></span>`).join('')
@@ -301,6 +306,7 @@ function render() {
       <h3>Plan real del diálogo (${simulation.plan.length} pasos)</h3>
       ${simulation.plan.length ? `<ol>${simulation.plan.map(s => `<li>${esc(s.id)} · ${esc(s.titulo)}</li>`).join('')}</ol>` : '<p>No se genera un recorrido hasta resolver la aclaración.</p>'}
       </section>
+      ${renderEvidenceAudit(evidenceAudit)}
       <section class="lab-panel">
       <h3>Vista previa del diálogo</h3>
       <p class="hint">Instancia aislada del bot. Si hay definición, se simula «Profundizar»; luego se elige «Seguir». Las aclaraciones quedan pendientes, como en el chat.</p>
