@@ -1,5 +1,6 @@
 // Regression checks with Node only: no dev dependencies or external services.
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 import { readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -8,7 +9,7 @@ const viewDir = new URL('../js/views/', import.meta.url);
 const files = readdirSync(viewDir).filter(name => name.endsWith('.js'));
 for (const filename of files) {
   const url = new URL(filename, viewDir);
-  execFileSync(process.execPath, ['--check', url.pathname]);
+  execFileSync(process.execPath, ['--check', fileURLToPath(url)]);
   const source = readFileSync(url, 'utf8');
   assert.doesNotMatch(source, /\sstyle\s*=\s*["']/i, `Inline CSS in ${filename}`);
   assert.doesNotMatch(source, /<style(?:\s|>)/i, `Embedded CSS in ${filename}`);
