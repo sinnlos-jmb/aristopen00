@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aristóteles · las tres esferas</title>
+<link rel="stylesheet" href="./css/grafos.css">
+<link rel="stylesheet" href="./css/reader.css">
+</head>
+<body>
+
+<div id="stage">
+  <svg id="svg" role="group" aria-label="Las tres esferas: las tres posibilidades del alma, las facultades que afectan, sus virtudes dianoéticas y las dos actualizaciones. Seleccioná nodos o aristas para leer su explicación">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#A9A6A0"></path>
+      </marker>
+      <marker id="arrowOn" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#2783DE"></path>
+      </marker>
+      <marker id="arrow-fphusis" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#4E9A5E"></path>
+      </marker>
+      <marker id="arrow-ftheion" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#3FA0CC"></path>
+      </marker>
+    </defs>
+    <g id="viewport">
+      <g id="gedges"></g>
+      <g id="gnodes"></g>
+    </g>
+  </svg>
+
+  <div id="modal" hidden>
+    <div id="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Claves de lectura</h2>
+<div class="thesis"><b>Las tres esferas.</b> El alma tiene tres posibilidades de ejercer el logos: poíesis, praxis y theoría. En cada una se ve afectada una facultad del logos, y cada facultad tiene su virtud dianoética: el arte, la prudencia, la sabiduría. La poíesis está subordinada a la praxis: se produce para algo, mientras que la buena acción es fin. La theoría no se ordena a nada fuera de sí. Pero las virtudes valen poco si no actúan: puestas a obrar, la sabiduría da la felicidad y la prudencia, el estado ético.</div>
+<p><b>Explorar:</b> tocá o hacé clic en un nodo, una línea o su palabra griega. La ficha muestra el sentido de la relación y sus referencias. Con teclado: Tab y Enter o Espacio; Escape cierra la ficha.</p>
+<p><b>Mover y acercar:</b> arrastrá un nodo para moverlo, o el fondo para recorrer el grafo. Usá + / −, la rueda o dos dedos para cambiar el zoom. Recentrar encuadra todos los elementos visibles. Las posiciones arrastradas no se guardan al cerrar el archivo.</p>
+<p><b>De arriba abajo:</b> el alma, sus tres posibilidades (las esferas), las facultades que cada una afecta, sus virtudes dianoéticas y, abajo, las dos actualizaciones: la felicidad y el estado ético. El logos calculativo considera lo que puede ser de otro modo y lo afectan la poíesis y la praxis; el logos científico considera lo que no puede ser de otro modo y lo afecta la theoría. El logos rector conduce la facultad deseante, que solo afecta la praxis: su virtud no es dianoética sino ética, y pone recto el blanco de la prudencia.</p>
+<p><b>La subordinación:</b> la línea entre poíesis y praxis (ἕνεκα, «para algo») es la única que une dos esferas. Lo producido es fin relativo y de alguien; lo hecho en la acción es fin sin más.</p>
+<p><b>Los dos originarios:</b> Phýsis tiene una sola arista saliente, punteada (ὁρμή), hacia el alma; al seleccionarla, el impulso se muestra como τέλος: el alma está marcada por la potencialidad (δύναμις). Lo Divino, en el centro, recibe dos aristas punteadas (ἕλξις): desde la praxis y desde la theoría. Al seleccionarlo aparecen sus dos τέλος, hacia la felicidad y el estado ético: por ellos entra la ἐνέργεια.</p>
+<p><b>Campos:</b> al seleccionar un originario se resalta su campo: lo que la naturaleza da y por dónde atrae lo divino.</p>
+<p><b>Remisiones:</b> las esferas y las virtudes remiten a la Introducción; el logos calculativo y el rector, a La función propia; el alma, la felicidad y el estado ético, al grafo cero.</p>
+<div class="ref">EN I.1 · I.13 · VI.1–7 · VI.12–13 · X.7–8 · De an. II.1, II.5 · Met. Λ.7</div>
+<button id="modalClose" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="./js/grafo-loader.js"></script>
+</body>
+</html>

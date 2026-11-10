@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EN I · Tagueo</title>
+<link rel="stylesheet" href="./css/tagueo.css">
+<script type="module" src="./js/main.js"></script>
+</head>
+<body>
+<header>
+ <div class="top">
+  <h1>EN I · Tagueo</h1><span class="sub" id="ver">Cargando…</span>
+  <div class="progress" id="prog"></div>
+ </div>
+ <nav class="tabs" aria-label="Secciones">
+  <a href="#/parrafo/1" data-sec="parrafo">Texto</a>
+  <a href="#/estatico" data-sec="estatico">Estático</a>
+  <a href="#/funcional" data-sec="funcional">Funcional</a>
+  <a href="#/unidad" data-sec="unidad">Unidades</a>
+  <a href="#/mapa" data-sec="mapa">Mapa</a>
+  <a href="#/faq" data-sec="faq">FAQ</a>
+  <a href="#/tradicion" data-sec="tradicion">Tradición</a>
+  <a href="#/decisiones" data-sec="decisiones">Decisiones</a>
+  <a href="#/control" data-sec="control">Control <span id="ctlbadge"></span></a>
+ </nav>
+</header>
+<main id="view" tabindex="-1"><div class="single"><div class="empty">Cargando datos…</div></div></main>
+<dialog id="gmodal" aria-labelledby="gm-title">
+ <div class="gm-head">
+  <div class="gm-t"><b id="gm-title">Grafo</b><span class="sub" id="gm-sub"></span></div>
+  <a id="gm-open" class="btn" href="#" target="_blank" rel="noopener">Abrir en pestaña nueva</a>
+  <button class="btn" id="gm-close" type="button">Cerrar</button>
+ </div>
+ <iframe id="gm-frame" title="Grafo"></iframe>
+</dialog>
+</body>
+</html>

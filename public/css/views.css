@@ -1,0 +1,328 @@
+/*
+ * Styles for the SPA views. Keep structure in JS templates and presentation here.
+ * Loaded after app.css and ux-compact.css (prior behavior was inline styles).
+ */
+
+/* Shared catalogue shell: Grafos, Laboratorio and Biblioteca */
+.catalog-view { display: flex; flex-direction: column; }
+.catalog-view__content { flex: 1; padding-bottom: 24px; }
+.catalog-view__content--reading { padding-bottom: 48px; }
+.catalog-view__head { margin-bottom: 24px; }
+.catalog-view__head .lab__eyebrow {
+  display: inline-block; font-size: .7rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+}
+.catalog-view__title {
+  font-family: var(--font-display); font-size: 1.6rem; font-weight: 600;
+  margin-bottom: 4px; color: var(--fg);
+}
+.catalog-view__description {
+  color: var(--fg-muted); font-family: var(--font-body); font-size: 1.1rem;
+  line-height: 1.5; max-width: 720px;
+}
+.catalog-section { margin-bottom: 32px; }
+.catalog-section--last { margin-bottom: 24px; }
+.card--catalog-link { text-decoration: none; display: flex; }
+.card--catalog-link .card__title { margin-top: 4px; }
+.card--catalog-link .card__footer { margin-top: auto; }
+.view-footer { margin-top: auto; }
+
+/* Portada */
+.landing-section { margin-bottom: 32px; }
+.landing-section--metrics { margin-bottom: 24px; }
+
+/* Grafo embebido */
+.view-graph { overflow: hidden; height: 100%; }
+.main.main--graph { padding: 0 24px; }
+.graph-breadcrumb__title { text-transform: uppercase; }
+
+/* Biblioteca: paneles plegables con comportamiento nativo */
+.reading-catalog .reader-book {
+  margin-top: 24px; border: 1px solid var(--border);
+  border-radius: 16px; background: var(--bg-elevated);
+}
+.reading-catalog .reader-book > summary {
+  padding: 16px; font-family: var(--font-display); color: var(--gold);
+  cursor: pointer; font-weight: 600; list-style: none;
+  display: flex; align-items: center; justify-content: space-between; border-radius: 16px;
+}
+.reading-catalog .reader-chapter { border-top: 1px solid var(--border); }
+.reading-catalog .reader-chapter > summary {
+  padding: 12px 16px; cursor: pointer; color: var(--accent); font-weight: 500;
+  list-style: none; display: flex; align-items: center;
+  justify-content: space-between; background: var(--bg-subtle);
+}
+.reading-catalog .reader-summary__icon { font-size: .8rem; color: var(--fg-subtle); }
+.reading-catalog .reader-chapter-content {
+  padding: 16px; font-family: var(--font-body); font-size: 1.1rem; line-height: 1.6;
+}
+.reading-catalog__error {
+  padding: 48px; text-align: center; display: flex; flex-direction: column;
+  align-items: center; gap: 16px; margin: auto;
+}
+.reading-catalog__error p { color: var(--fg-muted); font-size: 1.1rem; }
+.reading-catalog__loading { padding: 48px; text-align: center; color: var(--fg-subtle); margin: auto; }
+
+/* Laboratorio: navegación y paneles */
+.view-lab .lab-panel--spaced { margin-top: 1rem; }
+.lab-nav { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+.lab-nav__button { border-radius: 20px; padding: 6px 16px; }
+.lab-nav > a.lab-nav__button { display: inline-flex; align-items: center; gap: 4px; }
+.lab-nav__divider { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+.lab-exp__header { margin-bottom: 2px; }
+.lab-exp__title {
+  font-family: var(--font-display); font-size: 2.2rem; font-weight: 400;
+  letter-spacing: .05em; color: var(--fg); margin: 0; text-transform: uppercase;
+}
+
+/* Adaptación a pantallas estrechas */
+@media (max-width: 600px) {
+  .main.main--graph { padding: 0 8px; }
+  .lab-exp__title { font-size: 1.5rem; }
+}
+
+/* ===== Estilos antiguos del laboratorio que se inyectaban en cada render =====
+ * Extraídos de lab.js para que no se dupliquen ni dependan de la ruta.
+ * Se conservan selectores y prioridades para minimizar cambios visuales.
+ */
+      /* EXPANDIR EL CONTENEDOR */
+      .lab__inner {
+        max-width: 1200px !important;
+        width: 100%;
+        margin: 0 auto;
+        padding: 0px 32px 64px 32px;
+      }
+
+      /* TEMA CLARO/OSCURO PARA PANELES VIEJOS */
+      .view-lab .lab-card, 
+      .view-lab .lab-panel {
+        background: var(--bg-elevated, #ffffff) !important;
+        border: 1px solid var(--border, #e5e7eb) !important;
+        color: var(--fg, #111827) !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        border-radius: 12px;
+      }
+      
+      .view-lab .lab-card h2, 
+      .view-lab .lab-card h3, 
+      .view-lab .lab-panel h3 {
+        color: var(--fg) !important;
+        font-family: var(--font-display);
+      }
+
+      .view-lab .lab-card p, 
+      .view-lab .lab-card .hint, 
+      .view-lab .lab-panel__label {
+        color: var(--fg-muted, #6b7280) !important;
+      }
+
+      /* INPUTS Y CHIPS */
+      .view-lab .lab-input {
+        background: var(--bg, #f9fafb) !important;
+        color: var(--fg) !important;
+        border: 1px solid var(--border) !important;
+      }
+      .view-lab .lab-chip {
+        background: var(--bg, #f3f4f6) !important;
+        color: var(--fg) !important;
+        border: 1px solid var(--border) !important;
+      }
+
+      /* 1. AJUSTE: SALIDA ESTRUCTURADA (JSON) */
+      .view-lab .lab-json {
+        max-height: 400px;
+        overflow-y: auto;
+        background: var(--bg, #f9fafb) !important;
+        color: var(--fg, #111827) !important;
+        border: 1px solid var(--border) !important;
+        padding: 16px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.85rem;
+      }
+
+      /* 2. AJUSTE: LIMPIAR FONDOS OSCUROS EN HISTORIAL Y EJEMPLOS */
+      .view-lab .lab-help__item,
+      .view-lab .lab-history__item {
+        background: var(--bg, #f9fafb) !important;
+        color: var(--fg) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px;
+        transition: background 0.2s;
+        text-align: left;
+      }
+      .view-lab .lab-help__item:hover,
+      .view-lab .lab-history__item:hover {
+        background: var(--border, #e5e7eb) !important;
+      }
+      .view-lab .lab-help__item b,
+      .view-lab .lab-history__item b {
+        color: var(--fg) !important;
+        display: block;
+        margin-bottom: 4px;
+      }
+      .view-lab .lab-help__item span,
+      .view-lab .lab-history__item .mode {
+        color: var(--fg-muted) !important;
+      }
+
+
+/* 5. EXPERIMENTO 2: TRAYECTORIAS (BORDES Y TONALIDADES SUTILES) */
+      .traj-card {
+        background: var(--bg-elevated, #ffffff) !important;
+        border: 1px solid var(--border, #e5e7eb) !important;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        color: var(--fg) !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+      }
+      .traj-card__head { border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px; }
+      .traj-card__q { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; color: var(--fg); margin-bottom: 6px; }
+      .traj-card__meta { color: var(--fg-muted); font-size: 0.85rem; margin-bottom: 12px; }
+      
+      .traj-detail summary { color: var(--fg); cursor: pointer; padding: 12px 0; font-weight: 500; font-size: 0.95rem; }
+      .traj-detail { border-top: 1px solid var(--border); margin-top: 12px; }
+
+      /* Badges de Focos */
+      .traj-focus {
+        display: inline-flex; align-items: center; gap: 4px;
+        background: var(--bg) !important; border: 1px solid var(--border) !important;
+        color: var(--fg-muted) !important; padding: 2px 10px; border-radius: 16px;
+        font-size: 0.8rem; margin: 0 4px 6px 0;
+      }
+      .traj-focus--primary { background: rgba(201, 169, 106, 0.1) !important; border-color: var(--gold) !important; color: var(--fg) !important; font-weight: 500; }
+      .traj-focus--fn { background: rgba(59, 130, 246, 0.05) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
+
+      /* =========================================
+         RESET AGRESIVO DEL SVG (GRAFO Y LEYENDA)
+         ========================================= */
+      .traj-diagram svg, .traj-legend svg { overflow: visible; }
+      
+      /* 1. Textos: Siempre nítidos y legibles (anula colores fijos) */
+      .traj-diagram svg text, .traj-legend svg text,
+      .traj-diagram svg text tspan, .traj-legend svg text tspan { 
+        fill: var(--fg, #111827) !important; 
+        stroke: none !important; 
+        text-shadow: none !important;
+        font-family: var(--font-body) !important;
+        font-weight: 500 !important;
+      }
+      .traj-diagram svg text[font-size="7"], .traj-diagram svg text[font-size="8"],
+      .traj-diagram svg text[font-style="italic"] { 
+        fill: var(--fg-muted) !important; font-size: 0.75rem !important; font-weight: 400 !important;
+      }
+      
+      /* 2. Nodos base: Huecos (toman color de la tarjeta) y con borde gris */
+      .traj-diagram svg circle, .traj-legend svg circle { 
+        fill: var(--bg-elevated) !important;
+        stroke: var(--border) !important; 
+        stroke-width: 2px !important; 
+      }
+      
+      /* Mantener transparentes los círculos punteados o guía */
+      .traj-diagram svg circle[stroke-dasharray], .traj-diagram svg circle[fill="none"],
+      .traj-legend svg circle[stroke-dasharray], .traj-legend svg circle[fill="none"] {
+        fill: none !important;
+      }
+      
+      /* 3. Nodo Principal/Oro: Lo atrapamos por clase o por su color quemado viejo (#c9a96a) */
+      .traj-diagram svg circle.traj-node--primary, .traj-legend svg circle.traj-node--primary,
+      .traj-diagram svg circle[fill*="c9a96a"], .traj-diagram svg circle[stroke*="c9a96a"] { 
+        fill: rgba(201, 169, 106, 0.15) !important; 
+        stroke: var(--gold) !important; 
+      }
+      
+      /* 4. Nodo Motor/Azul: Lo atrapamos por clase o por su color quemado viejo (#3b82f6) */
+      .traj-diagram svg circle.traj-node--motor, .traj-legend svg circle.traj-node--motor,
+      .traj-diagram svg circle[fill*="3b82f6"], .traj-diagram svg circle[stroke*="3b82f6"] { 
+        fill: rgba(59, 130, 246, 0.15) !important; 
+        stroke: var(--accent) !important; 
+      }
+      
+      /* 5. Aristas: Grises por defecto, azules si son motor */
+      .traj-diagram svg line, .traj-diagram svg path { stroke: var(--border) !important; stroke-width: 1.5px !important; }
+      .traj-diagram svg line.traj-edge--motor-line,
+      .traj-diagram svg line[stroke*="3b82f6"], .traj-diagram svg path[stroke*="3b82f6"] { 
+        stroke: var(--accent) !important; stroke-width: 2px !important; 
+      }
+      
+      .traj-legend__item { display: inline-flex; align-items: center; gap: 8px; color: var(--fg-muted) !important; font-size: 0.85rem; }
+
+      /* 6. EXPERIMENTO 2: CAJAS UNCOVERED Y ALERTAS */
+      .traj-uncovered, .traj-alert {
+        background: var(--bg, #f9fafb) !important;
+        border: 1px dashed var(--border, #e5e7eb) !important;
+        color: var(--fg, #111827) !important;
+        padding: 16px;
+        border-radius: 8px;
+        margin: 16px 0;
+        font-size: 0.9rem;
+      }
+      .traj-alert {
+        border-color: #f59e0b !important;
+        background: rgba(245, 158, 11, 0.05) !important;
+      }
+      
+      /* Focos no cubiertos: Badge inactivo en vez de tachado */
+      .traj-focus--miss {
+        background: var(--bg-elevated) !important;
+        color: var(--fg-muted) !important;
+        border: 1px dashed var(--border) !important;
+        padding: 2px 10px;
+        border-radius: 16px;
+        margin: 0 4px;
+        text-decoration: none !important;
+        font-size: 0.8rem;
+        display: inline-block;
+      }
+      .traj-uncovered__hint { display: block; margin-top: 12px; font-size: 0.8rem; color: var(--fg-muted); }
+
+/* 7. EXPERIMENTO 2: TRAYECTOS ALTERNATIVOS */
+      .view-lab .traj-alt {
+        background: var(--bg, #f9fafb) !important;
+        border: 1px solid var(--border, #e5e7eb) !important;
+        border-radius: 8px;
+        margin-top: 16px;
+        margin-bottom: 16px;
+        padding: 16px;
+      }
+      
+      .view-lab .traj-alt__head {
+        color: var(--fg-muted) !important;
+        border-bottom: 1px solid var(--border) !important;
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+        font-size: 0.85rem;
+      }
+
+      /* 8. EXPERIMENTO 3: FORMULARIOS DE AUDITORÍA (TEXTAREA Y SELECT) */
+      .view-lab select,
+      .view-lab textarea {
+        background: var(--bg, #f9fafb) !important;
+        color: var(--fg, #111827) !important;
+        border: 1px solid var(--border, #e5e7eb) !important;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin-top: 6px;
+        margin-bottom: 16px;
+      }
+      
+      .view-lab textarea {
+        min-height: 80px;
+        resize: vertical;
+      }
+
+      .view-lab .lab-review label {
+        color: var(--fg-muted) !important;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: block;
+        margin-top: 12px;
+      }
+

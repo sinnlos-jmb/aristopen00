@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aristóteles · grafo cero · el sustrato</title>
+<link rel="stylesheet" href="./css/grafos.css">
+<link rel="stylesheet" href="./css/reader.css">
+</head>
+<body>
+
+<div id="stage">
+  <svg id="svg" role="group" aria-label="Grafo cero: el alma, sus partes, las esferas y los dos originarios. Seleccioná nodos o aristas para leer su explicación">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#A9A6A0"></path>
+      </marker>
+      <marker id="arrowOn" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#2783DE"></path>
+      </marker>
+      <marker id="arrow-fphusis" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#4E9A5E"></path>
+      </marker>
+      <marker id="arrow-ftheion" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#3FA0CC"></path>
+      </marker>
+    </defs>
+    <g id="viewport">
+      <g id="gedges"></g>
+      <g id="gnodes"></g>
+    </g>
+  </svg>
+
+  <div id="modal" hidden>
+    <div id="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Claves de lectura</h2>
+<div class="thesis"><b>El sustrato.</b> El camino que todos los grafos recorren por tramos: la naturaleza da la potencia, la acción la actualiza y lo divino atrae hacia la corona. Phýsis empuja el alma hasta una llamada al bien supremo, todavía indeterminado; la llamada se responde actuando, y la realización efectiva abre una alternativa: según la virtud, en una vida completa, o sin virtud total. Según la virtud se realiza de dos maneras, la felicidad contemplativa y la felicidad segunda, práctica, del estado ético, que son también los dos fines de Lo Divino.</div>
+<p><b>Explorar:</b> tocá o hacé clic en un nodo, una línea o su palabra griega. La ficha muestra el sentido de la relación y sus referencias. Con teclado: Tab y Enter o Espacio; Escape cierra la ficha.</p>
+<p><b>Mover y acercar:</b> arrastrá un nodo para moverlo, o el fondo para recorrer el grafo. Usá + / −, la rueda o dos dedos para cambiar el zoom. Recentrar encuadra todos los elementos visibles. Las posiciones arrastradas no se guardan al cerrar el archivo.</p>
+<p><b>La trayectoria:</b> la areté es incremento: de la potencia a la ἕξις y de la ἕξις al ejercicio pleno. Es el principio de areté: la manera en que las virtudes pasan de posibilidad a realidad efectiva. Cada grafo trabaja un tramo de este camino.</p>
+<p><b>Los dos originarios:</b> Phýsis tiene una sola arista saliente, punteada (ὁρμή); Lo Divino, una sola entrante, también punteada (ἕλξις). Al seleccionarlos aparecen sus τέλος, en línea sólida: el de Phýsis llega a una potencialidad; los dos de Lo Divino, a la actualización.</p>
+<p><b>La alternativa:</b> la Realización efectiva es una condición, porque las capacidades con logos lo son de los contrarios: la misma acción que forma la virtud puede formar el vicio. Una salida es según la virtud; la otra, errar el blanco (ἁμαρτία), que lleva al alma sin virtud total, un espectro que va de la bestialidad y el vicio, abandono del principio, a la incontinencia, su cumplimiento deficiente, con la continencia en el umbral. Su ficha lo detalla. El virtuoso golpeado por la fortuna, como Príamo, no es un desvío: está en la ficha de la Realización.</p>
+<p><b>El bucle:</b> entre Realización efectiva y Según la virtud corren dos aristas en sentidos opuestos: βίος de ida, λόγος de vuelta. Actuando según la virtud se descubre el logos de lo que se realiza, y con él las notas y la medida posible del bien buscado. Es una espiral orientada al τέλος, no un círculo, y solo existe del lado de la virtud. El grafo cero lo sugiere; los otros grafos lo desarrollan.</p>
+<p><b>Los nombres del bien:</b> la llamada es al bien supremo, todavía indeterminado; en el bucle es el bien buscado; solo cuando se determinan sus condiciones recibe el nombre de felicidad.</p>
+<p><b>¿Dónde estoy?</b> el botón de cada grafo trae a esta página y marca el tramo del camino que ese grafo trabaja. Las ubicaciones son provisorias.</p>
+<p><b>Campos:</b> al seleccionar un originario se resalta su campo: lo que la naturaleza da y hacia dónde atrae lo divino.</p>
+<p><b>Remisiones:</b> el Alma remite a La función propia; la Realización efectiva, a la vida práctica, y Según la virtud, a su nodo, ambos en ese mismo grafo; la Felicidad y el Estado ético, a la Introducción.</p>
+<div class="ref">EN I.2 · I.7 · II.1 · VI.13 · VII.1–9 · IX.4 · X.7–8 · De an. II.5 · Met. Θ.2 · Λ.7</div>
+<button id="modalClose" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="./js/grafo-loader.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Laboratorio local de búsqueda, evaluación y recorrido guiado para la Ética nicomáquea.">
+  <title>EN I · Labo</title>
+  <link rel="stylesheet" href="./css/labo.css">
+  <script type="module" src="./js/main.js"></script>
+</head>
+<body>
+  <a class="skip" href="#app">Saltar al contenido</a>
+  <header class="site-head">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">λ</span>
+      <div>
+        <strong>EN I · Labo</strong>
+        <span id="corpus-status">Cargando corpus…</span>
+      </div>
+    </div>
+    <nav class="nav" aria-label="Secciones del Laboratorio">
+      <a href="#/buscar" data-section="buscar">Búsqueda</a>
+      <a href="#/recorrido" data-section="recorrido">Recorrido</a>
+      <a href="#/recorrido-stream" data-section="recorrido-stream">Bot stream</a>
+      <a href="#/grafos" data-section="grafos">Grafos <span>F2</span></a>
+      <a href="#/config" data-section="config">Configuración</a>
+      <a href="#/historial" data-section="historial">Historial</a>
+      <a href="#/agentes" data-section="agentes">Agentes <span>final</span></a>
+    </nav>
+  </header>
+  <main id="app" tabindex="-1">
+    <div class="loading">
+      <span class="spinner" aria-hidden="true"></span>
+      Preparando el Laboratorio…
+    </div>
+  </main>
+  <div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

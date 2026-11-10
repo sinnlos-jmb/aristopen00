@@ -1,0 +1,113 @@
+/* =========================================
+   UX — Catálogos compactos
+   Grafos, Laboratorio y Portada
+   ========================================= */
+.card-grid--catalog {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+.card-grid--catalog .card {
+  border-radius: 12px;
+  min-width: 0;
+}
+
+.card-grid--catalog .card__media {
+  aspect-ratio: auto;
+  height: 60px;
+  flex: 0 0 60px;
+}
+
+.card-grid--catalog .card__icon {
+  font-size: 1.9rem;
+}
+
+.card-grid--catalog .card__body {
+  padding: 12px 14px;
+  gap: 7px;
+}
+
+.card-grid--catalog .card__eyebrow {
+  font-size: 0.65rem;
+}
+
+.card-grid--catalog .card__title {
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.card-grid--catalog .card__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.card-grid--catalog .card__footer {
+  gap: 8px;
+  padding: 9px 14px;
+}
+
+.card-grid--catalog .card__meta {
+  font-size: 0.67rem;
+}
+
+/* La portada conserva un poco más de descripción en cada tarjeta. */
+.landing-view .card-grid--catalog .card__text {
+  -webkit-line-clamp: 4;
+}
+
+/* Portada: reducir altura del hero y aire entre bloques. */
+.landing-view .hero {
+  margin-bottom: 24px;
+  padding: 24px 20px;
+}
+
+.landing-view .hero__eyebrow {
+  margin-bottom: 8px;
+}
+
+.landing-view .hero__title {
+  margin-bottom: 10px;
+}
+
+.landing-view .hero__lead {
+  margin-bottom: 16px;
+  line-height: 1.55;
+}
+
+.landing-view .hero__actions {
+  gap: 8px;
+}
+
+.landing-view .hero__actions .btn--lg {
+  padding: 12px 18px;
+}
+
+.landing-view .section__header {
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.landing-view .section__description {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .card-grid--catalog {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .landing-view .hero {
+    padding: 20px 14px;
+  }
+
+  .landing-view .hero__title {
+    font-size: 1.65rem;
+  }
+}

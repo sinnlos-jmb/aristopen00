@@ -1,0 +1,16 @@
+{
+  "name": "agora-backend",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test:integracion": "node --test test/integration/api-frontend.test.mjs test/integration/db-readonly.test.mjs"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "mariadb": "^3.4.0"
+  }
+}

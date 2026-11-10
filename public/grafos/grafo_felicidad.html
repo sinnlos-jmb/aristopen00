@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aristóteles · héxis, vida y eudaimonía y sus condiciones</title>
+<link rel="stylesheet" href="./css/grafos.css">
+<link rel="stylesheet" href="./css/reader.css">
+</head>
+<body>
+
+<div id="stage">
+  <svg id="svg" role="group" aria-label="Grafo interactivo de la felicidad: seleccioná nodos o aristas para leer su explicación">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#A9A6A0"></path>
+      </marker>
+      <marker id="arrowOn" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#2783DE"></path>
+      </marker>
+      <marker id="arrow-fphusis" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#4E9A5E"></path>
+      </marker>
+      <marker id="arrow-ftheion" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#3FA0CC"></path>
+      </marker>
+    </defs>
+    <g id="viewport">
+      <g id="gedges"></g>
+      <g id="gnodes"></g>
+    </g>
+  </svg>
+
+  <div id="modal" hidden>
+    <div id="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Claves de lectura</h2>
+<div class="thesis"><b>Eudaimonía y sus condiciones.</b> El recorrido desde el alma, por la formación ética e intelectual, hasta la virtud y la excelencia total desarrolla la condición principal de la felicidad: la excelencia en ejercicio. No representa una garantía automática de felicidad ni una secuencia única de causas eficientes.</div>
+<p><b>Explorar:</b> tocá o hacé clic en un nodo, una línea o su palabra griega. La ficha muestra el sentido de la relación y sus referencias. Con teclado: Tab y Enter o Espacio; Escape cierra la ficha.</p>
+<p><b>Mover y acercar:</b> arrastrá un nodo para moverlo, o el fondo para recorrer el grafo. Usá + / −, la rueda o dos dedos para cambiar el zoom. Recentrar encuadra todos los elementos visibles. Las posiciones arrastradas no se guardan al cerrar el archivo.</p>
+<p><b>Una palabra por arista:</b> los rótulos griegos son claves de memoria elegidas para este diagrama, no necesariamente citas ni fórmulas técnicas de Aristóteles. El sentido preciso se encuentra en cada explicación.</p>
+<p><b>Nodos originarios:</b> Phýsis y Lo Divino son los dos polos del grafo y reaparecerán en todos los diagramas del proyecto. Phýsis está del lado del impulso y la potencia; Lo Divino, del lado de la atracción y el acto. Su acción es siempre indirecta: cada uno tiene una sola arista punteada y deliberadamente indefinida, saliente en Phýsis y entrante en Lo Divino.</p>
+<p><b>Campos:</b> al seleccionar Phýsis se resalta en verde el recorrido que va de la naturaleza hasta las dos disposiciones, ética y noética. Al seleccionar Lo Divino se resalta en celeste su zona de influencia, de la actividad noética hasta la excelencia total. En ambos casos aparece además una flecha sólida y gruesa, rotulada τέλος, que nombra aquello a lo que apunta ese origen en este grafo: la disposición noética para la phýsis, la excelencia total para lo divino. Esa flecha solo existe mientras el nodo originario está seleccionado. Los campos muestran recorridos, no cadenas de causas eficientes.</p>
+<p><b>Punteadas:</b> relaciones condicionales, originarias o puentes interpretativos, según la ficha. No todas expresan el mismo tipo de dependencia. Las líneas continuas indican relaciones estructurales, formativas o de ejercicio, sin implicar por eso necesidad causal. Cada ficha declara ahora el tipo de relación.</p>
+<p><b>Potencia y actividad:</b> sus dos apariciones distinguen el ámbito ético del intelectual. «Noético» se usa aquí en sentido amplio, no exclusivamente contemplativo. El ejercicio de una disposición y los efectos del ejercicio sobre ella son relaciones diferentes.</p>
+<p><b>Colores:</b> dorado, naturaleza y referencia divina; azul, capacidades y actividades; verde, felicidad; naranja, condiciones. Son categorías de lectura, no una clasificación exhaustiva de las causas.</p>
+<p><b>Excelencia total:</b> abre una lectura comprensiva de la excelencia en vistas a la función natural del alma. Su enlace «τελείωσις» prepara el grafo del argumento del érgon, al que ahora se llega con el signo ↗ desde Felicidad, en el nodo de lo propio del hombre (ἀνθρώπινον). Es también el punto donde se vuelve legible la orientación al incremento de excelencia.</p>
+<p><b>Al abrir:</b> Condiciones está contraído. La excelencia total sigue visible porque también se llega desde la virtud; +3 cuenta los nodos ocultos, no todas las relaciones. Mesótes y phrónesis permanecen en las explicaciones, sin nodos propios.</p>
+<div class="ref">EN I.7–13 · II.1–6 · VI · X.7–8 · De An. II.1, II.5 · Met. Θ y Λ</div>
+<button id="modalClose" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="./js/grafo-loader.js"></script>
+</body>
+</html>
