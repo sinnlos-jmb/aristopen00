@@ -1,6 +1,8 @@
 import { renderCatalogHeader, renderCatalogCard } from './shared.js';
 import { renderTrajectoriesView } from './labTrajectoriesView.js';
 import { renderAuditView } from './labAuditView.js';
+import { renderQuestionBench } from './labQuestionBench.js';
+import { QUESTION_CASES, evaluateQuestionCase } from '../lab/questionCases.js';
 import { simulate } from '../lab/simulate.js';
 import { buildAllTrajectories } from '../lab/trajectories.js';
 import { esc } from '../ui.js';
@@ -108,6 +110,7 @@ export function createLabView(App, opts = {}) {
 
   function renderExp1() {
     return `
+    ${renderQuestionBench()}
     <section class="lab-card">
     <h2>Entrada</h2>
     <p class="hint">Probá una pregunta para inspeccionar conceptos, intención, selección de FAQ y el recorrido real del diálogo.</p>
@@ -127,7 +130,7 @@ export function createLabView(App, opts = {}) {
     <div class="lab-empty">—</div>
     </div>
     </div>
-    <div id="lab-diagnosis" class="lab-diagnostics" aria-live="polite"></div>
+    <div id="lab-diagnosis" class="lab-diagnostics" aria-live="polite" tabindex="-1"></div>
     <div class="lab-panel lab-panel--spaced">
     <div class="lab-panel__label">Salida estructurada</div>
     <div class="lab-toolbar"><button type="button" class="lab-btn lab-btn--ghost" id="lab-copy">Copiar JSON</button><button type="button" class="lab-btn lab-btn--ghost" id="lab-export">Exportar prueba</button><button type="button" class="lab-btn lab-btn--ghost" id="lab-export-history">Exportar historial</button><button type="button" class="lab-btn lab-btn--ghost" id="lab-clear-history">Borrar historial</button></div>
@@ -248,10 +251,13 @@ function render() {
     const helpEl     = el.querySelector('#lab-help');
     const historyEl  = el.querySelector('#lab-history');
 
-    function renderResult(simulation) {
-      latestResult = simulation;
+    function renderResult(simulation, questionCase = null) {
       const diagnostic = simulation.diagnosis;
       const result = diagnostic.analysis;
+      // La evaluación editorial se añade solo a una prueba dirigida, sin cambiar simulate() ni el motor.
+      latestResult = questionCase
+        ? { ...simulation, questionAudit: evaluateQuestionCase(questionCase, result) }
+        : simulation;
       conceptsEl.innerHTML = `<div class="lab-panel__label">Conceptos detectados</div>${
       result.conceptos.length
       ? result.conceptos.map(c => `<span class="lab-chip">${esc(c.word)} <small>→ ${esc(c.id)}</small></span>`).join('')
@@ -262,7 +268,7 @@ function render() {
       ? result.modos.map(m => `<span class="lab-chip lab-chip--mode">${esc(m.label)} <small>${esc(m.id)}${m.id === diagnostic.primaryMode ? ' · principal' : ' · secundario'}</small></span>`).join('')
       : '<div class="lab-empty">Ningún modo reconocido.</div>'
       }`;
-      jsonEl.textContent = JSON.stringify(simulation, null, 2);
+      jsonEl.textContent = JSON.stringify(latestResult, null, 2);
       const labels = { safe: 'Coincidencia segura', weak: 'Coincidencia débil · concepto', ambiguous: 'Pregunta ambigua', none: 'Sin resultado' };
       const selected = diagnostic.candidates.find(c => c.id === diagnostic.goal?.id && diagnostic.goal?.type === 'faq');
       el.querySelector('#lab-diagnosis').innerHTML = `
@@ -326,13 +332,29 @@ function render() {
       }).join('') || '<p class="lab-empty">Todavía no hay pruebas.</p>';
     }
 
+    function runQuestion(text, questionCase = null) {
+      const result = simulate(S, text);
+      renderResult(result, questionCase);
+      pushHistory(text, latestResult);
+    }
+
+    el.querySelector('#lab-question-bench').addEventListener('click', e => {
+      const button = e.target.closest('[data-question-case]');
+      if (!button) return;
+      const item = QUESTION_CASES.find(c => c.id === button.dataset.questionCase);
+      if (!item) return;
+      input.value = item.pregunta;
+      runQuestion(item.pregunta, item);
+      const diagnosisPanel = el.querySelector('#lab-diagnosis');
+      diagnosisPanel?.focus({ preventScroll: true });
+      diagnosisPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const text = input.value.trim();
       if (!text) return;
-      const result = simulate(S, text);
-      renderResult(result);
-      pushHistory(text, result);
+      runQuestion(text);
     });
 
     el.querySelector('#lab-clear').addEventListener('click', () => {
@@ -351,16 +373,16 @@ function render() {
       if (!btn) return;
       input.value = btn.dataset.example;
       input.focus();
-      const result = simulate(S, input.value);
-      renderResult(result);
-      pushHistory(input.value, result);
+      runQuestion(input.value);
     });
 
     historyEl.addEventListener('click', e => {
       const item = e.target.closest('[data-history]');
       if (!item) return;
       input.value = item.dataset.history;
-      renderResult(simulate(S, input.value));
+      const previous = history.find(h => h.text === input.value);
+      const previousCase = QUESTION_CASES.find(c => c.id === previous?.result?.questionAudit?.id) || null;
+      renderResult(simulate(S, input.value), previousCase);
       lastQuestion = input.value;
       writeSession('last-question', lastQuestion);
     });
