@@ -102,3 +102,11 @@ test('Las rutas desconocidas devuelven 404 y una revisión incorrecta devuelve 4
   const outdated = await request('/api/labo/lectura?revision=revision-invalida');
   assert.equal(outdated.status, 409);
 });
+
+// No modifica datos: comprueba que una ruta editorial nunca permite acceso anónimo.
+test('La API rechaza escrituras editoriales sin autorización, sin modificar MariaDB', async () => {
+  const res = await request('/api/faqs', { method: 'POST', json: { id: 'no-debe-crearse' } });
+  assert.ok([401, 503].includes(res.status), `POST /api/faqs sin token: HTTP ${res.status}`);
+  const payload = await res.json();
+  assert.equal(typeof payload.error, 'string');
+});

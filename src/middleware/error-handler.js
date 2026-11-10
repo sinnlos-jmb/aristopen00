@@ -18,7 +18,7 @@ export function errorHandler(err, req, res, _next) {
   }
   if (err?.type === 'entity.parse.failed') return res.status(400).json({ error: 'JSON inválido en el cuerpo del pedido.' });
   const mapped = DB_ERRORS[err?.code];
-  if (mapped) return res.status(mapped[0]).json({ error: mapped[1], detalles: err.sqlMessage });
+  if (mapped) return res.status(mapped[0]).json({ error: mapped[1] });
   if (err?.code === 'ECONNREFUSED' || err?.code === 'ER_GET_CONNECTION_TIMEOUT' || err?.code === 'ER_ACCESS_DENIED_ERROR') {
     return res.status(503).json({ error: 'Base de datos no disponible.' });
   }
