@@ -3,16 +3,36 @@ import { asyncHandler as h } from '../utils/async-handler.js';
 import { registrarQuery } from '../services/user-queries.service.js';
 import { HttpError } from '../utils/http-error.js';
 
+
 // Protección provisional para la maqueta (por proceso; no sustituye un rate-limit
 // compartido para despliegues múltiples). No persiste direcciones en MariaDB.
+// Límite provisional: 10 registros por IP y por hora.
+// Se reinicia al reiniciar el servidor.
 const entradas = new Map();
-function permitir(ip) {
+
+function permit(ip) {
   const ahora = Date.now();
-  for (const [key, item] of entradas) if (ahora - item.inicio >= 3600000) entradas.delete(key);
-  const actual = entradas.get(ip) || { inicio: ahora, cantidad: 0 };
-  if (actual.cantidad >= 10) return false;
-  actual.cantidad++;
-  entradas.set(ip, actual);
+  const ventana = 60 * 60 * 1000;
+  const clave = ip || 'sin-ip';
+
+  for (const [key, registro] of entradas) {
+    if (ahora - registro.inicio >= ventana) {
+      entradas.delete(key);
+    }
+  }
+
+  const registro = entradas.get(clave);
+
+  if (!registro) {
+    entradas.set(clave, { inicio: ahora, cantidad: 1 });
+    return true;
+  }
+
+  if (registro.cantidad >= 10) {
+    return false;
+  }
+
+  registro.cantidad++;
   return true;
 }
 
