@@ -1,8 +1,9 @@
 {
   "type": "module",
   "scripts": {
-    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs && node scripts/check-evidence-audit.mjs",
+    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs && node scripts/check-evidence-audit.mjs && node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs && node scripts/check-orientador-libre.mjs",
     "test:questions": "node scripts/check-question-diagnostic.mjs",
-    "test:evidence": "node scripts/check-evidence-audit.mjs"
+    "test:evidence": "node scripts/check-evidence-audit.mjs",
+    "test:orientador": "node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs && node scripts/check-orientador-libre.mjs"
   }
 }

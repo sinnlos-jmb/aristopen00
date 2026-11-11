@@ -3,6 +3,7 @@ import { asyncHandler as h } from '../utils/async-handler.js';
 import { health } from '../controllers/health.controller.js';
 import { getContenido } from '../controllers/contenido.controller.js';
 import { faqsRouter } from './faqs.routes.js';
+import { userQueriesRouter } from './user-queries.routes.js';
 import { trayectosRouter } from './trayectos.routes.js';
 import { unidadesRouter, subunidadesRouter } from './unidades.routes.js';
 import { textoLibro } from '../services/texto.service.js';
@@ -16,6 +17,7 @@ export const crearApiRouter = ({ servicio = servicioCorpus } = {}) => Router()
   .get('/texto/EN_libro1_v8.txt', h(textoLibro))
   .use('/labo', crearLaboRouter({ servicio }))
   .use('/faqs', faqsRouter)
+  .use('/user-queries', userQueriesRouter)
   .use('/trayectos', trayectosRouter)
   .use('/unidades', unidadesRouter)
   .use('/subunidades', subunidadesRouter)
