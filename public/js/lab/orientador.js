@@ -79,6 +79,67 @@ export function sugerirRelaciones(S, tema, omitidos = []) {
   return [...encontrados.values()];
 }
 
+// Catálogo elegible del corpus: nodos estáticos, funcionales y extremos de aristas.
+// Una etiqueta coincidente no demuestra una conexión filosófica con el tema elegido.
+export function buscarConceptos(S, texto, tema = null, limit = 12) {
+  const norm = s => String(s || '').toLowerCase().normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '').trim();
+  const consulta = norm(texto);
+  if (!consulta) return [];
+  const candidatos = new Map();
+  for (const [tipo, nodos] of [['estatico', S?.N], ['funcional', S?.FN]]) {
+    for (const [id, nodo] of Object.entries(nodos || {})) {
+      if (id === tema) continue;
+      const previo = candidatos.get(id);
+      if (!previo) candidatos.set(id, {
+        valor: id, etiqueta: nodo.label || id, fuente: 'catalogo_conceptos', clase: tipo,
+        griego: nodo.gr || null,
+      });
+    }
+  }
+  // Sólo son elegibles los extremos con un registro de nodo conocido.
+  const links = sugerirRelaciones(S, tema);
+  for (const link of links) {
+    if (candidatos.has(link.valor)) candidatos.get(link.valor).vinculo = link;
+  }
+  return [...candidatos.values()]
+    .filter(o => [o.valor, o.etiqueta, o.griego].some(t => norm(t).includes(consulta)))
+    .sort((a, b) => {
+      const startA = [a.valor, a.etiqueta, a.griego].some(t => norm(t).startsWith(consulta));
+      const startB = [b.valor, b.etiqueta, b.griego].some(t => norm(t).startsWith(consulta));
+      return Number(startB) - Number(startA) || Number(!!b.vinculo) - Number(!!a.vinculo)
+        || a.etiqueta.localeCompare(b.etiqueta, 'es');
+    }).slice(0, Math.max(0, Math.min(limit, 30)));
+}
+
+// Registrar una elección libre sin perder su literalidad. Si coincide con un nodo
+// conocido, conserva su ID y la procedencia del catálogo; de otro modo mantiene texto.
+export function responderLibre(sesion, texto, S = null, elegidoId = null) {
+  if (sesion?.estado !== 'en_refinamiento') throw new Error('Esta orientación ya terminó.');
+  const pregunta = siguientePregunta(sesion, S);
+  if (!pregunta || !['tema', 'destino'].includes(pregunta.clave)) throw new Error('No se admite texto libre en este paso.');
+  const literal = String(texto || '').trim().replace(/\s+/g, ' ');
+  if (!literal || literal.length > 400) throw new Error('Escribí entre 1 y 400 caracteres.');
+  const normal = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  const exacto = !elegidoId && buscarConceptos(S, literal, sesion.consulta.tema, 30)
+    .find(o => [o.valor, o.etiqueta, o.griego].some(t => normal(t) === normal(literal)));
+  const id = elegidoId || exacto?.valor || null;
+  const nodo = id && (S?.N?.[id] || S?.FN?.[id]);
+  if (id && (!nodo || id === sesion.consulta.tema)) throw new Error('Concepto seleccionado inválido.');
+  const opcion = nodo
+    ? { valor: id, etiqueta: nodo.label || id, fuente: 'catalogo_conceptos', textoBuscado: literal,
+        vinculo: sugerirRelaciones(S, sesion.consulta.tema).find(x => x.valor === id) || null }
+    : { valor: literal, etiqueta: literal, fuente: 'texto_libre', textoBuscado: literal, sinCoincidencia: true };
+  const nueva = { ...sesion, consulta: { ...sesion.consulta, [pregunta.clave]: opcion.valor } };
+  nueva.bitacora = bitacora(nueva, 'respuesta', {
+    pregunta: pregunta.clave, formulacion: pregunta.texto, opcion,
+    anterior: sesion.consulta[pregunta.clave],
+    efecto: nodo ? 'Seleccionado del catálogo; la validación de trayectos sigue pendiente.'
+      : 'Texto libre sin nodo identificado; requiere revisión editorial para conectar con el grafo.',
+  });
+  return nueva;
+}
+
 export function iniciarOrientacion(texto) {
   const pregunta = String(texto || '').trim();
   if (!pregunta) throw new Error('Escribí primero tu inquietud.');
