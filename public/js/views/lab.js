@@ -13,6 +13,11 @@ import { openTrayectoEditor } from './labTrayectoEditor.js';
 
 // Catálogo de experimentos para la maqueta grid
 export const EXPERIMENTS = Object.freeze({
+  orientador: {
+    id: 'orientador', tab: 4, title: 'Orientador de consultas',
+    desc: 'Precisá una inquietud en diálogo y examiná la génesis de cada decisión. V1 no genera trayectos.',
+    tag: 'Experimento 4', icon: '🧭', featured: false
+  },
   motor: {
     id: 'motor',
     tab: 1,

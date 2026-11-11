@@ -13,6 +13,7 @@ import { loadLibrary } from './reader/text.js';
 import { createReadingView } from './views/reading.js';
 import { createGraphCatalogView, createGraphView, GRAPHS } from './views/graphs.js';
 import { createLabView, createLabCatalogView, EXPERIMENTS } from './views/lab.js';
+import { createLabOrientadorView } from './views/labOrientadorView.js';
 
 const App = {
   S: null,
@@ -60,6 +61,7 @@ const router = createRouter({
     '/grafos':    () => createGraphCatalogView(),
     ...Object.fromEntries(Object.keys(GRAPHS).map(id => [`/grafos/${id}`, () => createGraphView(id)])),
     ...Object.fromEntries(Object.keys(EXPERIMENTS).map(id => [`/lab/${id}`, () => createLabView(App, { exp: id })])),
+    '/lab/orientador': () => createLabOrientadorView(),
   },
   notFound: () => createLandingView(App),
   onChange: (path) => {
