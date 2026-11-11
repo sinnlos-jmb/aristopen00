@@ -61,7 +61,7 @@ const router = createRouter({
     '/grafos':    () => createGraphCatalogView(),
     ...Object.fromEntries(Object.keys(GRAPHS).map(id => [`/grafos/${id}`, () => createGraphView(id)])),
     ...Object.fromEntries(Object.keys(EXPERIMENTS).map(id => [`/lab/${id}`, () => createLabView(App, { exp: id })])),
-    '/lab/orientador': () => createLabOrientadorView(),
+    '/lab/orientador': () => createLabOrientadorView(App),
   },
   notFound: () => createLandingView(App),
   onChange: (path) => {

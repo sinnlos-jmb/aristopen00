@@ -44,6 +44,41 @@ function bitacora(sesion, tipo, datos) {
   }];
 }
 
+// Sugerencias documentales de un salto: respetan la dirección de cada arista.
+// No son trayectos validados ni infieren reciprocidad entre los conceptos.
+export function sugerirRelaciones(S, tema, omitidos = []) {
+  if (!tema || !S?.FE?.length) return [];
+  const omitir = new Set([tema, ...omitidos]);
+  const anclas = new Set([tema, ...(S.REM?.[tema] || [])]);
+  // Los remite_a funcionales pueden portar sufijos de sentido (concepto#sentido).
+  for (const [id, nodo] of Object.entries(S.FN || {})) {
+    if ((nodo.remite_a || []).some(r => r.split('#')[0] === tema)) anclas.add(id);
+  }
+  const encontrados = new Map();
+  for (const edge of S.FE) {
+    let otro, direccion, nodo;
+    if (anclas.has(edge.de)) { otro = edge.a; direccion = 'saliente'; nodo = edge.de; }
+    else if (anclas.has(edge.a)) { otro = edge.de; direccion = 'entrante'; nodo = edge.a; }
+    else continue;
+    const conceptos = [otro, ...(S.FN?.[otro]?.remite_a || []).map(r => r.split('#')[0])];
+    const id = conceptos.find(c => !omitir.has(c) && (S.N?.[c] || S.FN?.[c])) || (omitir.has(otro) ? null : otro);
+    if (!id || omitir.has(id) || encontrados.has(id)) continue;
+    encontrados.set(id, {
+      valor: id,
+      etiqueta: S.N?.[id]?.label || S.FN?.[id]?.label || id,
+      fuente: 'arista_funcional',
+      direccion,
+      relacion: edge.rel || null,
+      de: edge.de,
+      a: edge.a,
+      ref: edge.ref || null,
+      voz: edge.voz || null,
+      ancla: nodo,
+    });
+  }
+  return [...encontrados.values()];
+}
+
 export function iniciarOrientacion(texto) {
   const pregunta = String(texto || '').trim();
   if (!pregunta) throw new Error('Escribí primero tu inquietud.');
@@ -57,6 +92,7 @@ export function iniciarOrientacion(texto) {
     analisis: {
       normalizado: analisis.normalized,
       conceptosDetectados: conceptos,
+      activadores: analisis.conceptos.map(c => ({ id: c.id, palabra: c.word })),
       intencionDetectada: analisis.primaryMode?.id || null,
     },
     consulta: {
@@ -76,7 +112,7 @@ export function iniciarOrientacion(texto) {
   return sesion;
 }
 
-export function siguientePregunta(sesion) {
+export function siguientePregunta(sesion, S = null) {
   if (!sesion || sesion.estado !== 'en_refinamiento') return null;
   const c = sesion.consulta;
   let clave = null;
@@ -88,17 +124,41 @@ export function siguientePregunta(sesion) {
   else if (!hasValue(c.origen)) clave = 'origen';
   if (!clave) return null;
   const spec = PREGUNTAS[clave];
-  return {
-    clave, texto: spec.texto,
-    opciones: spec.opciones
-      .filter(([v]) => clave !== 'destino' || v !== c.tema)
-      .map(([valor, etiqueta]) => ({ valor, etiqueta })),
-  };
+  const originales = spec.opciones
+    .filter(([v]) => clave !== 'destino' || v !== c.tema)
+    .map(([valor, etiqueta]) => ({ valor, etiqueta, fuente: 'opcion_general' }));
+  if (clave === 'tema') {
+    const reconocidos = sesion.analisis.conceptosDetectados.map(id => ({
+      valor: id, etiqueta: S?.N?.[id]?.label || S?.FN?.[id]?.label || originales.find(o => o.valor === id)?.etiqueta || id,
+      fuente: 'pregunta_inicial',
+    }));
+    const unicos = new Map();
+    for (const opcion of [...reconocidos, ...originales]) {
+      if (!unicos.has(opcion.valor)) unicos.set(opcion.valor, opcion);
+    }
+    return { clave, texto: spec.texto, opciones: [...unicos.values()] };
+  }
+  if (clave === 'destino') {
+    const reconocidos = sesion.analisis.conceptosDetectados
+      .filter(id => id !== c.tema)
+      .map(id => ({ valor: id, etiqueta: S?.N?.[id]?.label || S?.FN?.[id]?.label || originales.find(o => o.valor === id)?.etiqueta || id, fuente: 'pregunta_inicial' }));
+    const aristas = sugerirRelaciones(S, c.tema).slice(0, 8);
+    for (const reconocido of reconocidos) {
+      const arista = aristas.find(a => a.valor === reconocido.valor);
+      if (arista) reconocido.vinculo = { direccion: arista.direccion, de: arista.de, a: arista.a, relacion: arista.relacion, ref: arista.ref };
+    }
+    const unicos = new Map();
+    for (const opcion of [...reconocidos, ...aristas, ...originales]) {
+      if (opcion.valor !== c.tema && !unicos.has(opcion.valor)) unicos.set(opcion.valor, opcion);
+    }
+    return { clave, texto: spec.texto, opciones: [...unicos.values()].slice(0, 12) };
+  }
+  return { clave, texto: spec.texto, opciones: originales };
 }
 
-export function responderOrientacion(sesion, valor) {
+export function responderOrientacion(sesion, valor, S = null) {
   if (sesion?.estado !== 'en_refinamiento') throw new Error('Esta orientación ya terminó.');
-  const pregunta = siguientePregunta(sesion);
+  const pregunta = siguientePregunta(sesion, S);
   if (!pregunta) throw new Error('La consulta está completa. Podés confirmar o abandonar.');
   const opcion = pregunta.opciones.find(o => o.valor === valor);
   if (!opcion) throw new Error('Opción no válida para la pregunta actual.');
