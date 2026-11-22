@@ -1,0 +1,21 @@
+/* N1-U.12: solo legibilidad. No altera la base de datos ni el diseño anterior. */
+.lab-architecture .arch-display-tools,
+.lab-architecture .arch-reader-font-tools { display:inline-flex; align-items:center; gap:4px; flex-wrap:wrap; }
+.lab-architecture .arch-display-tools { border:1px solid var(--border,#bdcbd0); border-radius:7px; padding:3px 6px; }
+.lab-architecture .arch-display-tools button,
+.lab-architecture .arch-reader-font-tools button { min-width:32px; min-height:30px; border:1px solid var(--border,#9daeb7); border-radius:5px; background:var(--bg-elevated,#fff); color:inherit; padding:4px 7px; cursor:pointer; font:inherit; }
+.lab-architecture .arch-display-tools label,
+.lab-architecture .arch-reader-font-tools label { font-size:.78rem; white-space:nowrap; }
+.lab-architecture .arch-display-tools output,
+.lab-architecture .arch-reader-font-tools output { display:inline-block; min-width:38px; text-align:center; font-size:.8rem; font-variant-numeric:tabular-nums; }
+.lab-architecture .arch-display-tools button[aria-pressed="false"] { opacity:.65; }
+.lab-architecture .arch-gestos { font-size:.73rem; color:var(--text-muted,#526875); padding-left:3px; }
+.lab-architecture .arch-reader .reader-text {
+  font-family:"DejaVu Sans Mono","Noto Sans Mono","FreeMono",Consolas,"Liberation Mono",monospace;
+  font-size:var(--arch-reader-font,18px); line-height:1.78; overflow-wrap:anywhere;
+}
+.lab-architecture .arch-reader .reader-text[lang="el"],
+.lab-architecture .arch-reader .reader-text[lang="grc"] { font-variant-ligatures:none; }
+.lab-architecture .arch-reader .reader-paragraph__number { font-family:monospace; }
+.lab-architecture .arch-reader-head { justify-content:space-between; }
+@media (max-width:720px) { .lab-architecture .arch-display-tools { flex-basis:100%; } }

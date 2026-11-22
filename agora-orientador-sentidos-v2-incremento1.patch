@@ -1,0 +1,371 @@
+# Ágora · Orientador V2 · Primer incremento: sentido contextual y pregunta completa
+diff --git a/public/js/lab/orientador.js b/public/js/lab/orientador.js
+--- a/public/js/lab/orientador.js
++++ b/public/js/lab/orientador.js
+@@ -1,2 +1,3 @@
+ import { analyze } from './analyze.js';
++import { interpretarInquietud } from './sentidos.js';
+ 
+@@ -4,2 +4,2 @@
+-// V1: contrato de consulta y bitácora; NO calcula trayectos ni interpreta tags.
++// V2: conserva el contrato de consulta y agrega una lectura contextual provisional.
+ // Todas las transiciones devuelven una sesión nueva, sin mutar las anteriores.
+@@ -6,2 +6,2 @@
+-export const ORIENTADOR_VERSION = 1;
++export const ORIENTADOR_VERSION = 2;
+ 
+@@ -14,2 +14,2 @@
+-    opciones: [['definir', 'Precisar su significado'], ['explorar', 'Explorarlo paso a paso'], ['relacionar', 'Relacionarlo con otro concepto']],
++    opciones: [['definir', 'Precisar su significado'], ['caracterizar', 'Examinar sus cualidades'], ['explorar', 'Explorarlo paso a paso'], ['relacionar', 'Relacionarlo con otro concepto'], ['distinguir', 'Distinguirlo de otros conceptos'], ['evaluar', 'Examinar su excelencia o valor'], ['justificar', 'Buscar su fundamento'], ['explicar_genesis', 'Comprender cómo surge o se adquiere']],
+   },
+@@ -133,4 +133,5 @@
+   const analisis = analyze(pregunta);
+-  // Una detección léxica es una hipótesis inicial, no una interpretación confirmada.
+-  const conceptos = [...new Set(analisis.conceptos.map(c => c.id))];
++  const interpretacion = interpretarInquietud(pregunta, analisis);
++  // La lectura de V2 preserva la forma de la pregunta sin confirmar sus hipótesis.
++  const conceptos = interpretacion.conceptos;
+   const sesion = {
+@@ -150,3 +150,5 @@
+       intencionDetectada: analisis.primaryMode?.id || null,
+     },
++    interpretacion,
++    aclaracionSentido: null,
+     consulta: {
+@@ -166,3 +166,4 @@
+     intencionDetectada: sesion.analisis.intencionDetectada,
+-    nota: 'El léxico aporta una hipótesis; ninguna preferencia se presupone.',
++    interpretacionInicial: { operacion: interpretacion.operacion, forma: interpretacion.forma },
++    nota: 'El léxico y la forma de la pregunta son hipótesis; ninguna preferencia se presupone.',
+   });
+@@ -180,2 +180,2 @@
+-  else if (c.intencion === 'relacionar' && !hasValue(c.destino)) clave = 'destino';
++  else if (['relacionar', 'distinguir'].includes(c.intencion) && !hasValue(c.destino)) clave = 'destino';
+   else if (!hasValue(c.nivel)) clave = 'nivel';
+@@ -191,3 +191,10 @@
++  if (clave === 'intencion') {
++    const prioritaria = originales.find(o => o.valor === sesion.interpretacion?.operacion);
++    if (prioritaria) return { clave, texto: spec.texto, opciones: [
++      { ...prioritaria, fuente: 'hipotesis_inicial' },
++      ...originales.filter(o => o.valor !== prioritaria.valor),
++    ] };
++  }
+   if (clave === 'tema') {
+-    const reconocidos = sesion.analisis.conceptosDetectados.map(id => ({
++    const reconocidos = (sesion.interpretacion?.conceptos || sesion.analisis.conceptosDetectados).map(id => ({
+       valor: id, etiqueta: S?.N?.[id]?.label || S?.FN?.[id]?.label || originales.find(o => o.valor === id)?.etiqueta || id,
+@@ -204,2 +204,2 @@
+-    const reconocidos = sesion.analisis.conceptosDetectados
++    const reconocidos = (sesion.interpretacion?.conceptos || sesion.analisis.conceptosDetectados)
+       .filter(id => id !== c.tema)
+@@ -245 +245,17 @@
++// El estudiante puede precisar su acepción sin inventar un nodo o etiqueta editorial.
++// Es opcional, reversible mediante una nueva precisión y queda en la bitácora.
++export function precisarSentido(sesion, texto) {
++  if (sesion?.estado !== 'en_refinamiento') throw new Error('Esta orientación ya terminó.');
++  if (!hasValue(sesion.consulta.tema)) throw new Error('Elegí primero el tema.');
++  const literal = String(texto || '').trim().replace(/\s+/g, ' ');
++  if (!literal || literal.length > 400) throw new Error('Precisá el sentido entre 1 y 400 caracteres.');
++  const nueva = { ...sesion, aclaracionSentido: literal };
++  nueva.bitacora = bitacora(nueva, 'precision_sentido', {
++    tema: nueva.consulta.tema, texto: literal, anterior: sesion.aclaracionSentido || null,
++    fuente: 'texto_estudiante',
++    nota: 'La precisión expresa el sentido buscado, sin acreditar una acepción editorial ni una arista.',
++  });
++  return nueva;
++}
++
+ export function cerrarOrientacion(sesion, motivo) {
+diff --git a/public/js/views/labOrientadorView.js b/public/js/views/labOrientadorView.js
+--- a/public/js/views/labOrientadorView.js
++++ b/public/js/views/labOrientadorView.js
+@@ -2,2 +2,2 @@
+-import { iniciarOrientacion, siguientePregunta, responderOrientacion, cerrarOrientacion, resumenOrientacion, buscarConceptos, responderLibre } from '../lab/orientador.js';
++import { iniciarOrientacion, siguientePregunta, responderOrientacion, cerrarOrientacion, resumenOrientacion, buscarConceptos, responderLibre, precisarSentido } from '../lab/orientador.js';
+ import { downloadJSON, copyJSON } from '../lab/session.js';
+@@ -5,2 +5,2 @@
+-const EJEMPLO = 'Quiero comprender la naturaleza y su relación con la felicidad';
++const EJEMPLO = '¿Cuáles son las diferencias entre disposición, virtud y felicidad?';
+ const etiquetas = {
+@@ -26,2 +26,2 @@
+-      <header class="lab-exp__header"><h1 class="lab-exp__title">Orientador de consultas · V1</h1></header>
++      <header class="lab-exp__header"><h1 class="lab-exp__title">Orientador de consultas · V2 (primer incremento)</h1></header>
+       <section class="lab-card" id="lab-orientador">
+@@ -28,2 +28,2 @@
+-        <p class="hint">Un pequeño diálogo para precisar qué buscamos. La V1 registra decisiones, pero todavía no construye ni puntúa trayectos. Las preferencias no expresadas permanecen abiertas.</p>
++        <p class="hint">Un pequeño diálogo para precisar qué buscamos. La V2 conserva la forma de la pregunta y sus posibles sentidos; todavía no construye ni puntúa trayectos. Las preferencias no expresadas permanecen abiertas.</p>
+         ${!sesion ? `<form id="orientador-inicio" class="lab-form">
+@@ -46,3 +46,16 @@
+-          <p class="hint">Intención detectada: ${esc(sesion.analisis.intencionDetectada || 'No determinada; el orientador pedirá precisarla.')}</p>
++          <p class="hint">Intención detectada por V1: ${esc(sesion.analisis.intencionDetectada || 'No determinada.')}</p>
++          ${sesion.interpretacion ? `<div id="orientador-lectura-v2">
++            <p><strong>Lectura V2 (provisional):</strong> ${esc(sesion.interpretacion.operacion)} · ${esc(sesion.interpretacion.forma)} · ${esc(sesion.interpretacion.precision || 'precisión abierta')}</p>
++            <p><strong>Conceptos considerados:</strong> ${esc(sesion.interpretacion.conceptos.join(', ') || 'Sin reconocimiento')}</p>
++            ${sesion.interpretacion.relacionesSolicitadas.length ? `<p><strong>Relaciones solicitadas, no acreditadas:</strong> ${sesion.interpretacion.relacionesSolicitadas.map(r => esc(r.entre.join(' ↔ '))).join('; ')}</p>` : ''}
++            ${sesion.interpretacion.criterioEvaluacion ? '<p class="hint">El criterio para determinar «mejor» todavía debe aclararse.</p>' : ''}
++            <p class="hint">El reconocimiento contextual no confirma sentidos editoriales ni implica que existan aristas.</p>
++          </div>` : ''}
+         </section>
++        ${sesion.estado === 'en_refinamiento' && sesion.consulta.tema ? `<form id="orientador-sentido" class="lab-form">
++          <label for="orientador-sentido-texto">¿En qué sentido usás el tema elegido? (opcional)</label>
++          <input id="orientador-sentido-texto" class="lab-input" maxlength="400" value="${esc(sesion.aclaracionSentido || '')}" placeholder="Podés escribir tu propia precisión del concepto" required />
++          <button class="lab-btn lab-btn--ghost" type="submit">Conservar precisión del sentido</button>
++        </form>` : ''}
++        ${sesion.aclaracionSentido ? `<p><strong>Sentido precisado por el estudiante:</strong> ${esc(sesion.aclaracionSentido)}</p>` : ''}
+         <p><strong>Estado:</strong> ${esc(sesion.estado)} · ${sesion.bitacora.length} decisiones registradas.</p>
+@@ -105 +105,11 @@
++    el.querySelector('#orientador-sentido')?.addEventListener('submit', event => {
++      event.preventDefault();
++      try {
++        sesion = precisarSentido(sesion, el.querySelector('#orientador-sentido-texto').value);
++        render();
++      } catch (error) {
++        const estado = el.querySelector('#orientador-estado');
++        if (estado) estado.textContent = error.message;
++      }
++    });
+     el.querySelectorAll('[data-opcion]').forEach(button => button.addEventListener('click', () => {
+@@ -154,3 +154,4 @@
+           body: JSON.stringify({ textoInicial: sesion.textoInicial, consulta: sesion.consulta,
+-            estado: sesion.estado, bitacora: sesion.bitacora }),
++            estado: sesion.estado, bitacora: sesion.bitacora,
++            interpretacion: sesion.interpretacion || null, aclaracionSentido: sesion.aclaracionSentido || null }),
+         });
+@@ -157,2 +157,6 @@
+-        if (!response.ok) throw new Error(`No se pudo registrar (HTTP ${response.status}). Revisá la migración de MariaDB.`);
++        if (!response.ok) {
++          const detalle = await response.json().catch(() => null);
++          throw new Error(detalle?.error ? `HTTP ${response.status}: ${detalle.error}`
++            : `No se pudo registrar (HTTP ${response.status}).`);
++        }
+         const result = await response.json();
+@@ -168,2 +168,2 @@
+-    el.querySelector('#orientador-exportar')?.addEventListener('click', () => downloadJSON(sesion, 'agora-orientador-v1.json'));
++    el.querySelector('#orientador-exportar')?.addEventListener('click', () => downloadJSON(sesion, 'agora-orientador-v2.json'));
+     el.querySelector('#orientador-copiar')?.addEventListener('click', async () => {
+diff --git a/src/services/user-queries.contract.js b/src/services/user-queries.contract.js
+--- a/src/services/user-queries.contract.js
++++ b/src/services/user-queries.contract.js
+@@ -32 +32,18 @@
++  const sentido = payload.aclaracionSentido;
++  if (sentido != null && (typeof sentido !== 'string' || !sentido.trim() || sentido.length > 400))
++    throw new Error('Sentido inválido.');
++  const lectura = payload.interpretacion;
++  let interpretacion = null;
++  if (lectura != null) {
++    if (!lectura || typeof lectura !== 'object' || Array.isArray(lectura) || lectura.version !== 2)
++      throw new Error('Interpretación inválida.');
++    const textoBreve = v => typeof v === 'string' && v.length <= 80 ? v : null;
++    const conceptos = lectura.conceptos;
++    if (!Array.isArray(conceptos) || conceptos.length > 15 ||
++      !conceptos.every(c => typeof c === 'string' && c.length <= 80))
++      throw new Error('Conceptos de interpretación inválidos.');
++    interpretacion = { version: 2, operacion: textoBreve(lectura.operacion),
++      precision: textoBreve(lectura.precision), forma: textoBreve(lectura.forma),
++      conceptos: [...new Set(conceptos)] };
++  }
+   const agregados = payload.bitacora.filter(e => e?.tipo === 'respuesta' && e?.datos?.opcion?.fuente === 'texto_libre')
+@@ -40,2 +40,3 @@
+-  return { textoInicial: texto.trim(), estado: payload.estado, consulta, agregados };
++  return { textoInicial: texto.trim(), estado: payload.estado, consulta, agregados,
++    aclaracionSentido: sentido?.trim() || null, interpretacion };
+ }
+diff --git a/src/services/user-queries.service.js b/src/services/user-queries.service.js
+--- a/src/services/user-queries.service.js
++++ b/src/services/user-queries.service.js
+@@ -11,2 +11,5 @@
+-    VALUES (?, ?, ?, ?, ?, ?)`, [value.textoInicial, JSON.stringify(value.consulta), value.estado,
++    VALUES (?, ?, ?, ?, ?, ?)`, [value.textoInicial, JSON.stringify({ ...value.consulta,
++    ...(value.interpretacion && { interpretacion: value.interpretacion }),
++    ...(value.aclaracionSentido && { aclaracionSentido: value.aclaracionSentido }),
++  }), value.estado,
+     JSON.stringify(value.agregados), match.estado, match.faqId]);
+diff --git a/src/test/user-queries.test.mjs b/src/test/user-queries.test.mjs
+--- a/src/test/user-queries.test.mjs
++++ b/src/test/user-queries.test.mjs
+@@ -19 +19,7 @@
+ assert.deepEqual(validarQuery(p).agregados, [{ campo: 'destino', texto: 'mi experiencia' }]);
++const v2 = validarQuery({ ...p, aclaracionSentido: 'Disposición en la formación del carácter',
++  interpretacion: { version: 2, operacion: 'distinguir', precision: 'diferencia',
++    forma: 'comparacion_multiple', conceptos: ['hexis', 'arete', 'eudaimonia'] } });
++assert.equal(v2.aclaracionSentido, 'Disposición en la formación del carácter');
++assert.deepEqual(v2.interpretacion.conceptos, ['hexis', 'arete', 'eudaimonia']);
++assert.throws(() => validarQuery({ ...p, aclaracionSentido: 15 }), /inválido/);
+diff --git a/public/package.json b/public/package.json
+--- a/public/package.json
++++ b/public/package.json
+@@ -4,2 +4,2 @@
+-    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs && node scripts/check-evidence-audit.mjs && node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs && node scripts/check-orientador-libre.mjs",
++    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs && node scripts/check-evidence-audit.mjs && node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs && node scripts/check-orientador-libre.mjs && node scripts/check-orientador-sentidos.mjs",
+     "test:questions": "node scripts/check-question-diagnostic.mjs",
+@@ -6,2 +6,2 @@
+-    "test:orientador": "node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs && node scripts/check-orientador-libre.mjs"
++    "test:orientador": "node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs && node scripts/check-orientador-libre.mjs && node scripts/check-orientador-sentidos.mjs"
+   }
+diff --git a/public/js/lab/sentidos.js b/public/js/lab/sentidos.js
+new file mode 100644
+--- /dev/null
++++ b/public/js/lab/sentidos.js
+@@ -0,0 +1,56 @@
++import { analyze, normalize } from './analyze.js';
++
++// Interpretación de la forma de la pregunta. No asigna sentidos editoriales,
++// causalidad real ni aristas: todos los vínculos son solicitudes del estudiante.
++const REGLAS = [
++  { operacion: 'distinguir', precision: 'diferencia', expresion: /\b(diferencias?|distingue|distinguir|distincion|comparar|comparacion)\b/ },
++  { operacion: 'evaluar', precision: 'cualidad', expresion: /\b(mejor|peor|superior|mas importante|mas excelente)\b/ },
++  { operacion: 'caracterizar', precision: 'cualidad', expresion: /\b(caracteriza|cualidades?|propiedades?|rasgos?|caracteristicas?)\b/ },
++  { operacion: 'explicar_genesis', precision: 'genesis', expresion: /\b(como se adquiere|como se forma|como surge|como se genera|como nace|como se desarrolla)\b/ },
++  { operacion: 'justificar', precision: 'fundamento', expresion: /\b(por que|fundamento|causa|origen)\b/ },
++  { operacion: 'relacionar', precision: 'relacion', expresion: /\b(relacion entre|como se relacionan|relacion de|relacion con|que relacion|que tiene que ver)\b/ },
++  { operacion: 'definir', precision: 'definicion', expresion: /\b(que es|que son|que significa|definicion|como define|que entiende por)\b/ },
++];
++
++export function interpretarInquietud(texto, analisis = analyze(texto)) {
++  const normalizado = normalize(texto);
++  const hallazgo = REGLAS.find(r => r.expresion.test(normalizado));
++  const operacion = hallazgo?.operacion || analisis.primaryMode?.id || 'explorar';
++  const precision = hallazgo?.precision || null;
++  // «mejor» funciona aquí como comparador, no como una mención inequívoca al bien supremo.
++  const conceptos = [...new Set(analisis.conceptos
++    .filter(c => !(operacion === 'evaluar' && c.id === 'ariston' && c.word === 'mejor'))
++    .map(c => c.id))];
++  const multiple = conceptos.length >= 2;
++  const forma = operacion === 'distinguir' && multiple ? 'comparacion_multiple'
++    : operacion === 'evaluar' ? 'evaluacion'
++    : multiple ? 'relacion_de_conceptos' : 'pregunta_focal';
++  const relacionesSolicitadas = [];
++  if (multiple && ['distinguir', 'relacionar'].includes(operacion)) {
++    for (let i = 0; i < conceptos.length; i++) {
++      for (let j = i + 1; j < conceptos.length; j++) {
++        relacionesSolicitadas.push({ entre: [conceptos[i], conceptos[j]],
++          estado: 'solicitada_no_verificada', dirigida: false });
++      }
++    }
++  }
++  const indicios = [];
++  if (hallazgo) indicios.push({ texto: normalizado.match(hallazgo.expresion)?.[0] || '', funcion: 'operacion' });
++  if (/\borigen del movimiento\b/.test(normalizado)) indicios.push({ texto: 'origen del movimiento', funcion: 'relacion_causal_sugerida' });
++  return {
++    version: 2, operacion, precision, forma, conceptos,
++    relacionesSolicitadas, indicios,
++    criterioEvaluacion: operacion === 'evaluar' ? 'no_precisado' : null,
++    estado: 'hipotesis_de_lectura',
++    advertencia: 'Las relaciones son solicitadas, no comprobadas. El sentido conceptual no se confirma léxicamente.',
++  };
++}
++
++// Evidencia editorial opcional. Sólo se ofrece si la base trae definiciones
++// identificables para el concepto; nunca se fabrican acepciones filosóficas.
++export function definicionesDisponibles(S, concepto) {
++  return (S?.DEFC?.[concepto] || [])
++    .filter(d => d && typeof d.id === 'string')
++    .map(d => ({ id: d.id, concepto, titulo: d.titulo || d.label || d.id,
++      fuente: 'definicion_editorial' }));
++}
+diff --git a/public/scripts/check-orientador-sentidos.mjs b/public/scripts/check-orientador-sentidos.mjs
+new file mode 100644
+--- /dev/null
++++ b/public/scripts/check-orientador-sentidos.mjs
+@@ -0,0 +1,45 @@
++import assert from 'node:assert/strict';
++import { interpretarInquietud, definicionesDisponibles } from '../js/lab/sentidos.js';
++import { iniciarOrientacion, siguientePregunta, responderOrientacion, precisarSentido } from '../js/lab/orientador.js';
++
++const diferencia = interpretarInquietud('¿Cuáles son las diferencias entre disposición, virtud y felicidad?');
++assert.deepEqual(diferencia.conceptos, ['hexis', 'arete', 'eudaimonia']);
++assert.equal(diferencia.operacion, 'distinguir');
++assert.equal(diferencia.forma, 'comparacion_multiple');
++assert.equal(diferencia.relacionesSolicitadas.length, 3);
++assert.ok(diferencia.relacionesSolicitadas.every(r => r.estado === 'solicitada_no_verificada'));
++assert.ok(diferencia.relacionesSolicitadas.every(r => r.dirigida === false));
++
++const evaluacion = interpretarInquietud('¿Cuál es la mejor de las virtudes?');
++assert.equal(evaluacion.operacion, 'evaluar');
++assert.equal(evaluacion.precision, 'cualidad');
++assert.deepEqual(evaluacion.conceptos, ['arete']);
++assert.equal(evaluacion.criterioEvaluacion, 'no_precisado');
++const inicio = iniciarOrientacion('¿Cuál es la mejor de las virtudes?');
++assert.equal(inicio.consulta.tema, 'arete');
++assert.equal(siguientePregunta(inicio).opciones[0].valor, 'evaluar');
++
++assert.equal(interpretarInquietud('¿Qué es la virtud?').precision, 'definicion');
++assert.equal(interpretarInquietud('¿Qué cualidades tiene la virtud?').precision, 'cualidad');
++assert.equal(interpretarInquietud('¿Cómo se adquiere la virtud?').operacion, 'explicar_genesis');
++const causal = interpretarInquietud('¿Por qué la naturaleza es origen del movimiento?');
++assert.equal(causal.operacion, 'justificar');
++assert.ok(causal.indicios.some(i => i.funcion === 'relacion_causal_sugerida'));
++assert.equal(causal.relacionesSolicitadas.length, 0, 'No inventa una arista causal');
++
++const antes = iniciarOrientacion('¿Cuáles son las diferencias entre disposición, virtud y felicidad?');
++const tema = siguientePregunta(antes);
++assert.deepEqual(tema.opciones.slice(0, 3).map(o => o.valor), ['hexis','arete','eudaimonia']);
++const a = responderOrientacion(antes, 'hexis');
++assert.equal(siguientePregunta(a).opciones[0].valor, 'distinguir');
++const b = responderOrientacion(a, 'distinguir');
++assert.equal(siguientePregunta(b).clave, 'destino');
++const c = precisarSentido(b, 'Disposición entendida como hábito adquirido');
++assert.equal(c.aclaracionSentido, 'Disposición entendida como hábito adquirido');
++assert.equal(b.aclaracionSentido, null, 'La sesión previa sigue inmutable');
++assert.equal(c.bitacora.at(-1).tipo, 'precision_sentido');
++assert.throws(() => precisarSentido(c, ''), /sentido/i);
++assert.deepEqual(definicionesDisponibles({ DEFC: { hexis: [{ id: 'def-hexis', titulo: 'Disposición' }] } }, 'hexis'),
++  [{ id: 'def-hexis', concepto: 'hexis', titulo: 'Disposición', fuente: 'definicion_editorial' }]);
++assert.deepEqual(definicionesDisponibles({}, 'hexis'), []);
++console.log('OK: V2 distingue definición, cualidad, comparación múltiple, evaluación y sentido libre.');
+diff --git a/e2e/tests/orientador-sentidos-v2.spec.mjs b/e2e/tests/orientador-sentidos-v2.spec.mjs
+new file mode 100644
+--- /dev/null
++++ b/e2e/tests/orientador-sentidos-v2.spec.mjs
+@@ -0,0 +1,26 @@
++import { test, expect } from '@playwright/test';
++
++test('V2 preserva una comparación entre tres conceptos y permite precisar el sentido', async ({ page }) => {
++  await page.goto('/#/lab/orientador', { waitUntil: 'domcontentloaded' });
++  await page.locator('#orientador-texto').fill('¿Cuáles son las diferencias entre disposición, virtud y felicidad?');
++  await page.getByRole('button', { name: 'Comenzar orientación' }).click();
++  await expect(page.locator('#orientador-lectura-v2')).toContainText('comparacion_multiple');
++  await expect(page.locator('#orientador-lectura-v2')).toContainText('hexis, arete, eudaimonia');
++  await expect(page.locator('#orientador-lectura-v2')).toContainText('no acreditadas');
++  await page.locator('[data-opcion="hexis"]').click();
++  await page.locator('#orientador-sentido-texto').fill('Disposición adquirida en el hábito');
++  await page.getByRole('button', { name: 'Conservar precisión del sentido' }).click();
++  await expect(page.locator('#lab-orientador')).toContainText('Disposición adquirida en el hábito');
++  await expect(page.locator('#orientador-json')).toContainText('precision_sentido');
++  await expect(page.locator('[data-opcion="distinguir"]')).toBeVisible();
++});
++
++test('V2 no confunde el comparativo «mejor» con un tema autónomo', async ({ page }) => {
++  await page.goto('/#/lab/orientador', { waitUntil: 'domcontentloaded' });
++  await page.locator('#orientador-texto').fill('¿Cuál es la mejor de las virtudes?');
++  await page.getByRole('button', { name: 'Comenzar orientación' }).click();
++  await expect(page.locator('#orientador-lectura-v2')).toContainText('evaluar');
++  await expect(page.locator('#orientador-lectura-v2')).toContainText('arete');
++  await expect(page.locator('#orientador-lectura-v2')).toContainText('criterio');
++  await expect(page.locator('[data-opcion="evaluar"]')).toBeVisible();
++});
+diff --git a/docs/ORIENTADOR_V2_INCREMENTO1.md b/docs/ORIENTADOR_V2_INCREMENTO1.md
+new file mode 100644
+--- /dev/null
++++ b/docs/ORIENTADOR_V2_INCREMENTO1.md
+@@ -0,0 +1,20 @@
++# Ágora · Orientador V2, incremento 1
++
++## Alcance
++
++Este incremento reconoce la forma de la pregunta inicial **sin sustituir la decisión del estudiante**. Las hipótesis de interpretación quedan separadas de `consulta` (decisiones confirmadas), del corpus editorial y de las aristas verificadas.
++
++- Multiplicidad: `distinguir` preserva tres o más conceptos y genera pares solicitados, **sin inventar aristas**, direcciones ni causalidad.
++- Preguntas evaluativas: «mejor de las virtudes» activa `evaluar`, señala que falta criterio y no convierte el adjetivo «mejor» en el concepto independiente `ariston`.
++- Definición/cualidad y génesis/justificación: distingue la operación pedida de la acepción conceptual.
++- Sentido libre: el estudiante puede precisar su uso del tema; se registra con procedencia `texto_estudiante` en bitácora y, si da consentimiento, en `consulta_json` de `user_queries`. No se publica como definición editorial.
++- Persistencia: amplía opcionalmente el JSON existente; **no requiere migración**. La V1 anterior sigue aceptándose.
++- `definicionesDisponibles(S, id)` prepara la recuperación de definiciones con identidad editorial desde `S.DEFC`; no fabrica definiciones ni asigna automáticamente una al estudiante.
++
++## Límites
++
++El QuerySpec de V1 aún tiene un solo `tema` y un solo `destino`. Las parejas de una comparación múltiple viven en `interpretacion.relacionesSolicitadas`, **no** en un grafo comprobado. No se construyen trayectos ni se emite un ranking. Los sentidos documentales y la pregunta de aclaración sobre un criterio evaluativo quedarán para el siguiente incremento.
++
++## Pruebas
++
++Desde `public`: `npm run test:orientador`. Desde la raíz: `node --test src/test/user-queries.test.mjs` o `node src/test/user-queries.test.mjs` según el runner disponible. Abrir `/#/lab/orientador` para validar el flujo manual y el registro. Playwright cubre ambos casos en `e2e/tests/orientador-sentidos-v2.spec.mjs`.

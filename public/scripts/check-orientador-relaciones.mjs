@@ -19,25 +19,31 @@ assert.deepEqual(tema.opciones.slice(0, 2).map(o => o.valor), ['phusis','eudaimo
 assert.ok(tema.opciones.slice(0,2).every(o => o.fuente === 'pregunta_inicial'));
 const a = responderOrientacion(inicio,'phusis',S);
 const b = responderOrientacion(a,'relacionar',S);
-const destino = siguientePregunta(b,S);
+// Los conceptos ya mencionados no se vuelven a preguntar como destinos nuevos.
+assert.deepEqual(b.consulta.conceptosRelacionados, ['eudaimonia']);
+assert.equal(b.consulta.destino, null);
+assert.equal(siguientePregunta(b, S).clave, 'nivel');
+assert.deepEqual(inicio.consulta.conceptosRelacionados, [], 'La sesión inicial no se modifica');
+// Si la pregunta inicial nombra un único concepto y el estudiante decide
+// relacionarlo, las sugerencias sí proceden del grafo con su fuente y dirección.
+const desdeUno = iniciarOrientacion('Quiero comprender la naturaleza');
+const conRelacion = responderOrientacion(desdeUno, 'relacionar', S);
+const destino = siguientePregunta(conRelacion,S);
 assert.equal(destino.clave,'destino');
-assert.equal(destino.opciones[0].valor,'eudaimonia');
-assert.equal(destino.opciones[0].fuente,'pregunta_inicial');
 const virtud = destino.opciones.find(o => o.valor === 'arete');
 assert.equal(virtud.fuente,'arista_funcional');
 assert.equal(virtud.direccion,'saliente');
 assert.equal(virtud.de,'naturaleza_func');
 assert.equal(virtud.a,'arete');
 assert.equal(virtud.ref,'1097a');
-assert.equal(destino.opciones.filter(o => o.valor === 'eudaimonia').length,1);
 assert.equal(destino.opciones.some(o => o.valor === 'hexis'), false, 'No se proponen dos saltos como vecinos');
 const rel = sugerirRelaciones(S,'phusis');
 assert.equal(rel.find(o=>o.valor==='eudaimonia').direccion,'entrante');
 assert.equal(rel.find(o=>o.valor==='eudaimonia').de,'eudaimonia');
 assert.equal(rel.find(o=>o.valor==='eudaimonia').a,'naturaleza_func');
 assert.equal(sugerirRelaciones({ FE: [] },'phusis').length,0);
-const elegido = responderOrientacion(b,'arete',S);
+const elegido = responderOrientacion(conRelacion,'arete',S);
 assert.equal(elegido.bitacora.at(-1).datos.opcion.fuente, 'arista_funcional');
 assert.equal(elegido.consulta.destino,'arete');
-assert.equal(b.consulta.destino,null);
+assert.equal(conRelacion.consulta.destino,null);
 console.log('OK: conceptos reconocidos, sugerencias de un salto, dirección, procedencia e historial.');

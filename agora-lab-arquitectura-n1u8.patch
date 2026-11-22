@@ -1,0 +1,366 @@
+diff --git a/docs/LAB_N1U8_ZOOM_Y_DENSIDAD_VISUAL.md b/docs/LAB_N1U8_ZOOM_Y_DENSIDAD_VISUAL.md
+new file mode 100644
+index 0000000..95cba4c
+--- /dev/null
++++ b/docs/LAB_N1U8_ZOOM_Y_DENSIDAD_VISUAL.md
+@@ -0,0 +1,27 @@
++# Ágora · Checkpoint N1-U.8 · Zoom y densidad visual
++
++Se aplica **después de N1-U.7**, sin modificar las fichas, sus anclajes, relaciones editoriales, las FAQ originales ni MariaDB.
++
++## Cambios
++
++1. El zoom con rueda de Cytoscape pasa de `wheelSensitivity: 0.16` a `0.48`: exactamente **3×** la sensibilidad previa, tanto para acercar como para alejar. Se mantienen los límites `minZoom: 0.22` y `maxZoom: 2.5`. En trackpads puede variar la percepción según sistema/navegador.
++2. Se reemplaza la banda permanente de siete botones de fichas por **Elegir ficha…**, que abre un `<dialog>` nativo. Tiene siete botones de tamaño uniforme, selección con teclado, cierre con `Esc`, botón de cierre y fondo oscuro. Se conserva **Red de fichas** como botón de retorno visible.
++3. El diagrama y el inspector ganan espacio: cabecera y barras compactas, contexto filosófico contraído inicialmente pero desplegable, tres perspectivas compactas, leyenda y estado editorial en desplegables. En escritorio el grafo pasa a ocupar una mayor proporción del ancho y del alto de la ventana; el inspector sigue disponible con desplazamiento propio. En móvil, las columnas se apilan.
++4. La vista de Cytoscape conserva el **zoom y desplazamiento actual** al inspeccionar nodos/aristas del mismo grafo. Al cambiar de red/ficha/perspectiva, ejecuta un nuevo `fit`. La lectura bilingüe no restaura forzosamente el zoom predeterminado al volver.
++
++## Instalación (Windows, PowerShell)
++
++Desde el repositorio **con N1-U.7 aplicado**:
++
++```powershell
++git apply --check "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u8.patch"
++git apply "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u8.patch"
++node public/scripts/check-lab-arquitectura-n1u8.mjs
++node public/scripts/check-lab-arquitectura-n1u7.mjs
++```
++
++Abrí `/#/lab/arquitectura` y verificá las siete fichas en el modal, el botón **Red de fichas**, los tres enfoques de cada ficha, el encuadre tras seleccionar nodos y el zoom en ambas direcciones con rueda o trackpad.
++
++## Alcance de pruebas
++
++Validación estática y tests Node sin navegador ni MariaDB. Queda pendiente comprobar el comportamiento visual en la instalación del usuario con Cytoscape y la API reales.
+diff --git a/public/css/lab-arquitectura-n1u2.css b/public/css/lab-arquitectura-n1u2.css
+index 764578c..0c0e16a 100644
+--- a/public/css/lab-arquitectura-n1u2.css
++++ b/public/css/lab-arquitectura-n1u2.css
+@@ -101,3 +101,65 @@
+ .arch-fichas-nav [data-arch-card] { max-width: 235px; text-align: left; }
+ .arch-fichas-nav [data-arch-card]:focus-visible, .arch-fichas-nav [data-arch-network]:focus-visible { outline: 3px solid #368478; outline-offset: 2px; }
+ @media (max-width: 650px) { .arch-fichas-nav [data-arch-card] { max-width: none; } }
++
++/* N1-U.8 · El grafo tiene prioridad visual; elección de fichas en modal. */
++.arch-page { max-width: 1840px; padding: clamp(10px, 1.1vw, 18px); }
++.arch-top { margin-bottom: 5px; }
++.arch-page h1 { font-size: clamp(1.35rem, 1.7vw, 1.75rem); margin-bottom: 3px; }
++.arch-intro { font-size: .86rem; line-height: 1.4; margin-bottom: 6px; }
++.arch-status { font-size: .74rem; margin-bottom: 6px; }
++.arch-fichas-nav { flex-wrap: nowrap; min-height: 42px; gap: 8px; padding: 5px 8px; margin-bottom: 7px; }
++.arch-fichas-nav button { box-sizing: border-box; min-height: 34px; padding: 5px 10px; flex: none; font-size: .83rem; white-space: nowrap; text-align: center; }
++.arch-fichas-nav [data-arch-network] { max-width: none; min-width: 110px; }
++.arch-ficha-actual { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: .86rem; color: var(--text, #243c46); }
++.arch-ficha-intro { padding: 7px 10px; margin-bottom: 7px; }
++.arch-ficha-intro > summary { font-size: .91rem; gap: 6px; }
++.arch-ficha-intro > summary small { font-size: .7rem; }
++.arch-perspectivas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin-bottom: 7px; }
++.arch-perspectivas button { box-sizing: border-box; min-height: 35px; padding: 5px 8px; font-size: .78rem; }
++.arch-toolbar { gap: 5px; margin-bottom: 7px; }
++.arch-toolbar button { box-sizing: border-box; min-height: 32px; padding: 5px 9px; font-size: .78rem; }
++.arch-modes { gap: 3px; padding: 2px; }
++.arch-modes button { font-size: .76rem; }
++.arch-legend-details { margin-left: auto; font-size: .75rem; color: var(--text-muted, #607580); max-width: min(100%, 340px); }
++.arch-legend-details summary { cursor: pointer; white-space: nowrap; }
++.arch-legend-details .arch-legend { display: block; margin: 4px 0 0; font-size: .75rem; line-height: 1.4; }
++.arch-columns { grid-template-columns: minmax(0, 2.5fr) minmax(280px, .9fr); gap: 9px; }
++.arch-graph { height: clamp(600px, 76vh, 940px); }
++.arch-inspector { height: clamp(600px, 76vh, 940px); }
++.arch-inspector-content { padding: 13px; }
++.arch-inspector h3 { margin-top: 13px; }
++.arch-footer { margin-top: 7px; font-size: .74rem; }
++.arch-footer summary { cursor: pointer; }
++.arch-footer p { max-width: 1050px; }
++
++/* Modal nativo: foco contenido, cierre con Escape y selección uniforme. */
++.arch-picker-dialog { width: min(760px, calc(100vw - 24px)); max-height: min(84vh, 780px); padding: 0; border: 1px solid var(--border, #aebec6); border-radius: 14px; background: var(--bg-elevated, #fff); color: var(--text, #172e3e); box-shadow: 0 20px 70px rgba(0,0,0,.23); }
++.arch-picker-dialog::backdrop { background: rgba(15,32,40,.52); }
++.arch-picker-body { display: flex; flex-direction: column; min-height: 0; max-height: min(84vh, 780px); }
++.arch-picker-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 15px 17px 10px; border-bottom: 1px solid var(--border, #d0dadd); }
++.arch-picker-head h2 { margin: 0; font-size: 1.15rem; }
++.arch-picker-head p { margin: 4px 0 0; font-size: .82rem; color: var(--text-muted, #607580); }
++.arch-picker-close { flex: none; border: 1px solid var(--border, #9daeb7); background: var(--bg-elevated, #fff); border-radius: 7px; color: inherit; padding: 7px 10px; font: inherit; cursor: pointer; }
++.arch-picker-options { min-height: 0; overflow-y: auto; padding: 13px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 85px; gap: 9px; }
++.arch-picker-option { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; width: 100%; height: 100%; min-width: 0; box-sizing: border-box; padding: 10px 13px; gap: 5px; text-align: left; border: 1px solid var(--border, #aebfc6); border-radius: 9px; background: var(--bg-elevated, #fff); color: inherit; font: inherit; font-size: .88rem; cursor: pointer; }
++.arch-picker-option:hover, .arch-picker-option:focus-visible, .arch-picker-close:focus-visible { outline: 2px solid #317e74; outline-offset: 2px; border-color: #317e74; }
++.arch-picker-option[aria-pressed="true"] { background: #e5f2ef; border-color: #2d6968; }
++.arch-picker-option-title { font-weight: 600; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
++.arch-picker-option small { font-size: .72rem; color: var(--text-muted, #607580); }
++@media (max-width: 1050px) {
++  .arch-columns { grid-template-columns: 1fr; }
++  .arch-graph { height: max(470px, 60vh); }
++  .arch-inspector { height: auto; max-height: 520px; }
++}
++@media (max-width: 650px) {
++  .arch-fichas-nav { flex-wrap: wrap; }
++  .arch-fichas-nav button { flex: 1 1 auto; }
++  .arch-ficha-actual { order: 3; flex-basis: 100%; font-size: .78rem; }
++  .arch-perspectivas { grid-template-columns: 1fr; }
++  .arch-perspectivas button { min-height: 32px; flex: none; }
++  .arch-legend-details { margin-left: 0; }
++  .arch-graph { height: max(410px, 56vh); }
++  .arch-picker-options { grid-template-columns: 1fr; grid-auto-rows: 80px; }
++  .arch-picker-head { padding: 12px; }
++}
+diff --git a/public/js/lab/architectureCards.js b/public/js/lab/architectureCards.js
+index f42285f..38ca3c8 100644
+--- a/public/js/lab/architectureCards.js
++++ b/public/js/lab/architectureCards.js
+@@ -56,7 +56,7 @@ export function elementosFichaFAQ(ficha, modelo, seleccion = {}) {
+ 
+ export function fichaIntroHtml(ficha) {
+   if (!ficha) return '';
+-  return `<details class="arch-ficha-intro" open>
++  return `<details class="arch-ficha-intro">
+     <summary><span>${safe(ficha.titulo)}</span> <small>Marco explicativo · borrador para curaduría</small></summary>
+     <div class="arch-ficha-intro__body">
+       <h3>Introducción filosófica</h3>${ficha.introduccion.map(p => `<p>${safe(p)}</p>`).join('')}
+diff --git a/public/js/lab/architectureUiControls.js b/public/js/lab/architectureUiControls.js
+new file mode 100644
+index 0000000..a0c6913
+--- /dev/null
++++ b/public/js/lab/architectureUiControls.js
+@@ -0,0 +1,17 @@
++// N1-U.8 · Ajustes de interacción, sin cambios editoriales ni persistencia.
++export const ZOOM_SENSITIVITY_ANTERIOR = 0.16;
++export const ZOOM_SENSITIVITY_TRIPLE = ZOOM_SENSITIVITY_ANTERIOR * 3;
++const escapar = value => String(value ?? '').replace(/[&<>"']/g, char => ({
++  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
++})[char]);
++
++export function opcionesModalFichasHtml(fichas) {
++  if (!Array.isArray(fichas)) throw new TypeError('Se esperaba una colección de fichas');
++  return fichas.map(ficha => {
++    const estado = ficha.tipo === 'faq'
++      ? (ficha.fuente_editorial?.origen === 'propuesta_lab' ? 'FAQ de síntesis · borrador' : 'FAQ con trayecto editorial')
++      : 'Proemio · marco argumentativo';
++    return `<button type="button" class="arch-picker-option" data-arch-card="${escapar(ficha.id)}" aria-pressed="false">`
++      + `<span class="arch-picker-option-title">${escapar(ficha.titulo)}</span><small>${escapar(estado)}</small></button>`;
++  }).join('');
++}
+diff --git a/public/js/views/labArchitectureView.js b/public/js/views/labArchitectureView.js
+index a8fd06c..fecb735 100644
+--- a/public/js/views/labArchitectureView.js
++++ b/public/js/views/labArchitectureView.js
+@@ -7,6 +7,7 @@ import { construirCapasProemio, elementosCapaBasica, elementosCapaDetallada } fr
+ import { construirFichasArquitectura, elementosFichaFAQ, fichaIntroHtml, inspectorFichaFAQHtml } from '../lab/architectureCards.js';
+ import { construirPuentesExplicativos, elementosPuentes, inspectorPuentesHtml } from '../lab/architectureBridges.js';
+ import { construirAmpliacionFichas, elementosRedFichas, inspectorRedFichasHtml } from '../lab/architecturePilotNetwork.js';
++import { ZOOM_SENSITIVITY_TRIPLE, opcionesModalFichasHtml } from '../lab/architectureUiControls.js';
+ import { localizarSubunidadEnBiblioteca, representarLecturaContextual } from '../lab/graphPassageReader.js';
+ 
+ const safe = x => esc(String(x ?? ''));
+@@ -211,15 +212,25 @@ export async function createLabArchitectureView(App) {
+   css.rel = 'stylesheet'; css.href = '/css/lab-arquitectura-n1u2.css'; css.dataset.agoraLabArquitectura = '1';
+   document.head.append(css);
+   el.innerHTML = `<div class="arch-page">
+-    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.7 · Red de siete fichas · Solo consulta</span></nav>
++    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.8 · Fichas y grafo · Solo consulta</span></nav>
+     <h1>Fichas explicativas del Libro I</h1>
+     <p class="arch-intro">Comenzá por una red de preguntas filosóficas y explorá los pasajes que fundamentan cada explicación. La virtud completa en una vida entera.</p>
+     <p class="arch-status" role="status" aria-live="polite">Cargando la revisión editorial…</p>
+     <div class="arch-main" hidden>
+-      <div class="arch-fichas-nav" role="group" aria-label="Red y fichas explicativas">
+-        <span>Fichas y problemas:</span>
++      <div class="arch-fichas-nav" role="group" aria-label="Navegación por fichas">
++        <button type="button" data-arch-picker-open aria-haspopup="dialog">Elegir ficha…</button>
++        <span class="arch-ficha-actual" data-arch-current-ficha aria-live="polite">Vista general · siete fichas</span>
+         <button type="button" data-arch-network aria-pressed="true">Red de fichas</button>
+       </div>
++      <dialog class="arch-picker-dialog" aria-labelledby="arch-picker-title">
++        <div class="arch-picker-body">
++          <header class="arch-picker-head">
++            <div><h2 id="arch-picker-title">Elegir una ficha</h2><p>Preguntas del Libro I · seleccioná una para explorarla.</p></div>
++            <button type="button" class="arch-picker-close" data-arch-picker-close aria-label="Cerrar selector de fichas">Cerrar ✕</button>
++          </header>
++          <div class="arch-picker-options" role="group" aria-label="Siete fichas disponibles"></div>
++        </div>
++      </dialog>
+       <section class="arch-ficha-panel" aria-label="Marco explicativo del diagrama" hidden></section>
+       <div class="arch-perspectivas" role="group" aria-label="Enfoque de la ficha" hidden>
+         <button type="button" data-arch-perspectiva="orientacion" aria-pressed="true">1 · Contexto en el Libro I</button>
+@@ -237,7 +248,7 @@ export async function createLabArchitectureView(App) {
+           <button type="button" data-arch-mode="relaciones" aria-pressed="false">Vista analítica · relaciones</button>
+         </div>
+         <button type="button" data-arch-fit>Ajustar grafo</button>
+-        <span class="arch-legend" data-arch-legend>Los vínculos desde la ficha son decisiones editoriales revisables, no aristas extraídas automáticamente del tagueo.</span>
++        <details class="arch-legend-details"><summary>Convenciones del grafo</summary><span class="arch-legend" data-arch-legend>Los vínculos desde la ficha son decisiones editoriales revisables, no aristas extraídas automáticamente del tagueo.</span></details>
+       </div>
+       <div class="arch-columns">
+         <section class="arch-graph-shell" aria-label="Grafo del libro">
+@@ -246,7 +257,7 @@ export async function createLabArchitectureView(App) {
+         </section>
+         <aside class="arch-inspector" aria-label="Ficha editorial"><div class="arch-inspector-content"></div></aside>
+       </div>
+-      <p class="arch-footer">N1-U.7 reúne siete fichas y propone una primera red curatorial navegable. Las cuatro nuevas FAQ y sus seis pasos son borradores, no trayectos publicados. Cada ficha separa contexto, diagrama y apoyo textual. El archivo estructural sigue disponible como herramienta documental; los puentes explicativos y las aristas argumentativas hipotéticas no sustituyen ni modifican MariaDB.</p>
++      <details class="arch-footer"><summary>Fuentes y estado editorial</summary><p>N1-U.7 reúne siete fichas y propone una primera red curatorial navegable. Las cuatro nuevas FAQ y sus seis pasos son borradores, no trayectos publicados. Cada ficha separa contexto, diagrama y apoyo textual. El archivo estructural sigue disponible como herramienta documental; los puentes explicativos y las aristas argumentativas hipotéticas no sustituyen ni modifican MariaDB.</p></details>
+     </div>
+     <section class="arch-reader" hidden>
+       <div class="arch-reader-head"><button type="button" data-arch-reader-back>← Volver al grafo</button><div><h2 data-arch-reader-title>Lectura</h2><p class="arch-muted" data-arch-reader-ref></p></div></div>
+@@ -257,10 +268,11 @@ export async function createLabArchitectureView(App) {
+   const $ = selector => el.querySelector(selector);
+   const status = $('.arch-status');
+   const main = $('.arch-main'), inspector = $('.arch-inspector-content'), reader = $('.arch-reader');
+-  const graph = $('.arch-graph');
++  const graph = $('.arch-graph'), picker = $('.arch-picker-dialog');
+   const state = { macroId: null, unidadId: null, momentoId: null, subId: null };
+   let model = null, rels = null, capas = null, fichas = null, puentes = null, redFichas = null, fichaActiva = null, fichaPasoId = null, fichaEnlaceId = null;
+   let redVisible = true, redFichaSeleccionada = null, redEnlaceSeleccionado = null;
++  let marcoAbierto = false, ultimoGrafo = null;
+   let perspectiva = 'orientacion', puenteSeleccionado = null;
+   let modo = 'momentos', relacionId = null, relacionSubId = null;
+   let moduloId = null, enlaceId = null;
+@@ -304,6 +316,8 @@ export async function createLabArchitectureView(App) {
+     const argumentativo = disponible && modo === 'relaciones';
+     $('.arch-perspectivas').hidden = redVisible || !ficha;
+     $('[data-arch-network]').setAttribute('aria-pressed', String(redVisible));
++    $('[data-arch-current-ficha]').textContent = redVisible ? 'Vista general · siete fichas'
++      : ficha ? ficha.titulo : 'Archivo estructural del Libro I';
+     for (const b of el.querySelectorAll('[data-arch-perspectiva]')) b.setAttribute('aria-pressed', String(b.dataset.archPerspectiva === perspectiva));
+     $('.arch-modes').hidden = !(disponible && !!ficha);
+     $('[data-arch-back="libro"]').hidden = redVisible || !!ficha;
+@@ -312,6 +326,11 @@ export async function createLabArchitectureView(App) {
+     const descripcion = $('.arch-ficha-panel');
+     descripcion.hidden = !ficha;
+     descripcion.innerHTML = ficha ? fichaIntroHtml(ficha) : '';
++    const marco = descripcion.querySelector('.arch-ficha-intro');
++    if (marco) {
++      marco.open = marcoAbierto;
++      marco.addEventListener('toggle', () => { marcoAbierto = marco.open; });
++    }
+     for (const b of el.querySelectorAll('[data-arch-card]')) b.setAttribute('aria-pressed', String(b.dataset.archCard === fichaActiva));
+     const vistaActiva = sintetico ? 'modulos' : argumentativo ? 'relaciones' : 'momentos';
+     for (const b of el.querySelectorAll('[data-arch-mode]')) b.setAttribute('aria-pressed', String(b.dataset.archMode === vistaActiva));
+@@ -334,15 +353,21 @@ export async function createLabArchitectureView(App) {
+       // Posiciones independientes para cada ficha y resolución.
+       const posGroup = redVisible ? 'red-fichas:' : puenteVisible ? `puente:${ficha.id}:${perspectiva}:` : faq ? `ficha:${faq.id}:` : sintetico ? 'modulos:' : argumentativo ? 'relaciones:' : 'estructura:';
+       for (const e of elements) if (e.group === 'nodes' && e.data.tipo !== 'modulo_contenedor' && positions.has(posGroup + e.data.id)) e.position = positions.get(posGroup + e.data.id);
++      // Mantener el encuadre al inspeccionar nodos y aristas del MISMO grafo.
++      // En cambios de ficha/perspectiva sí se ajusta el nuevo conjunto de nodos.
++      const vistaAnterior = ultimoGrafo === posGroup ? { zoom: cy.zoom(), pan: { ...cy.pan() } } : null;
+       cy.batch(() => { cy.elements().remove(); cy.add(elements); });
+-      cy.resize(); cy.fit(cy.elements(), 38);
++      cy.resize();
++      if (vistaAnterior) { cy.zoom(vistaAnterior.zoom); cy.pan(vistaAnterior.pan); }
++      else cy.fit(cy.elements(), 38);
++      ultimoGrafo = posGroup;
+     }
+   }
+   function volverLectura() {
+     ++readerTicket; readerModel = null; chapterNumber = null;
+     reader.hidden = true; main.hidden = false;
+     $('[data-arch-reader-body]').replaceChildren();
+-    if (cy) { cy.resize(); cy.fit(cy.elements(), 38); }
++    if (cy) cy.resize(); // Conserva el zoom elegido al volver de la lectura bilingüe.
+   }
+   function pintarLectura() {
+     if (!readerModel?.ok || destroyed) return;
+@@ -391,14 +416,21 @@ export async function createLabArchitectureView(App) {
+     }
+   }
+   el.addEventListener('click', event => {
+-    if (event.target.closest('[data-arch-network]')) { redVisible = true; fichaActiva = null; redFichaSeleccionada = null; redEnlaceSeleccionado = null; dibujar(); return; }
++    if (event.target === picker) { picker.close(); return; } // Clic fuera del contenido del modal.
++    if (event.target.closest('[data-arch-picker-close]')) { picker.close(); return; }
++    if (event.target.closest('[data-arch-picker-open]')) {
++      if (fichas && !picker.open) picker.showModal();
++      return;
++    }
++    if (event.target.closest('[data-arch-network]')) { redVisible = true; fichaActiva = null; marcoAbierto = false; redFichaSeleccionada = null; redEnlaceSeleccionado = null; dibujar(); return; }
+     if (event.target.closest('[data-arch-red-list]')) { redFichaSeleccionada = null; redEnlaceSeleccionado = null; dibujar(); return; }
+     const redLink = event.target.closest('[data-arch-red-link]');
+     if (redLink && redFichas?.porId.has(redLink.dataset.archRedLink)) { redEnlaceSeleccionado = redLink.dataset.archRedLink; redFichaSeleccionada = null; redVisible = true; fichaActiva = null; dibujar(); return; }
+     const cardButton = event.target.closest('[data-arch-card]');
+     if (cardButton && fichas?.porId.has(cardButton.dataset.archCard)) {
+       const id = cardButton.dataset.archCard;
+-      redVisible = false; fichaActiva = id; fichaPasoId = null; fichaEnlaceId = null; puenteSeleccionado = null; perspectiva = 'orientacion';
++      if (picker.open) picker.close();
++      marcoAbierto = false; redVisible = false; fichaActiva = id; fichaPasoId = null; fichaEnlaceId = null; puenteSeleccionado = null; perspectiva = 'orientacion';
+       if (id === 'proemio') {
+         const macro = model.macros.find(m => m.unidades.some(u => u.id === 'proemio'));
+         if (!macro) return;
+@@ -505,6 +537,9 @@ export async function createLabArchitectureView(App) {
+       if (next) { chapterNumber = next.number; pintarLectura(); }
+     }
+   });
++  picker.addEventListener('close', () => {
++    if (!destroyed) $('[data-arch-picker-open]')?.focus();
++  });
+   reader.addEventListener('change', event => {
+     if (!event.target.matches('[data-reader-chapter]') || !readerModel?.ok) return;
+     const next = readerModel.book.chapters.find(c => c.number === Number(event.target.value));
+@@ -527,9 +562,7 @@ export async function createLabArchitectureView(App) {
+     fichas = construirFichasArquitectura(model, capas, await f.json());
+     puentes = construirPuentesExplicativos(model, fichas, await v.json());
+     ({ fichas, puentes, red: redFichas } = construirAmpliacionFichas(model, fichas, puentes, await z.json()));
+-    const nav = $('.arch-fichas-nav');
+-    nav.innerHTML = `<span>Fichas y problemas:</span><button type="button" data-arch-network aria-pressed="true">Red de fichas</button>` +
+-      fichas.fichas.map(c => `<button type="button" data-arch-card="${safe(c.id)}" aria-pressed="false">${safe(c.titulo)}</button>`).join('');
++    $('.arch-picker-options').innerHTML = opcionesModalFichasHtml(fichas.fichas);
+     const macroProemio = model.macros.find(m => m.unidades.some(u => u.id === 'proemio'));
+     if (!macroProemio) throw new Error('No se encuentra el Proemio en el mapa de macrounidades.');
+     Object.assign(state, { macroId: macroProemio.id, unidadId: 'proemio', momentoId: null, subId: null });
+@@ -542,7 +575,7 @@ export async function createLabArchitectureView(App) {
+       const cytoscape = await cargarCytoscape();
+       if (destroyed) return { el, destroy() {} };
+       cy = cytoscape({ container: graph, elements: [], style: graphStyle(), layout: { name: 'preset' },
+-        minZoom: 0.22, maxZoom: 2.5, wheelSensitivity: 0.16, boxSelectionEnabled: false });
++        minZoom: 0.22, maxZoom: 2.5, wheelSensitivity: ZOOM_SENSITIVITY_TRIPLE, boxSelectionEnabled: false });
+       cy.on('tap', 'node', event => {
+         const n = event.target;
+         if (redVisible && n.data('tipo') === 'ficha_red') { redFichaSeleccionada = n.data('key'); redEnlaceSeleccionado = null; dibujar(); return; }
+@@ -614,5 +647,5 @@ export async function createLabArchitectureView(App) {
+       status.classList.add('arch-status--error');
+     }
+   }
+-  return { el, destroy() { destroyed = true; abort.abort(); ++readerTicket; cy?.destroy(); css.remove(); } };
++  return { el, destroy() { destroyed = true; if (picker.open) picker.close(); abort.abort(); ++readerTicket; cy?.destroy(); css.remove(); } };
+ }
+diff --git a/public/scripts/check-lab-arquitectura-n1u8.mjs b/public/scripts/check-lab-arquitectura-n1u8.mjs
+new file mode 100644
+index 0000000..41ae56d
+--- /dev/null
++++ b/public/scripts/check-lab-arquitectura-n1u8.mjs
+@@ -0,0 +1,43 @@
++// N1-U.8 · Smoke checks de estado, marcado, datos, tamaño y selectores.
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++import { dirname, resolve } from 'node:path';
++import { ZOOM_SENSITIVITY_ANTERIOR, ZOOM_SENSITIVITY_TRIPLE, opcionesModalFichasHtml } from '../js/lab/architectureUiControls.js';
++const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
++const view = readFileSync(resolve(root, 'js/views/labArchitectureView.js'), 'utf8');
++const css = readFileSync(resolve(root, 'css/lab-arquitectura-n1u2.css'), 'utf8');
++const cards = readFileSync(resolve(root, 'js/lab/architectureCards.js'), 'utf8');
++const fixture = JSON.parse(readFileSync(resolve(root, 'lab/n1u7-fichas-red-piloto.json'), 'utf8'));
++assert.equal(ZOOM_SENSITIVITY_TRIPLE, ZOOM_SENSITIVITY_ANTERIOR * 3);
++assert(Math.abs(ZOOM_SENSITIVITY_TRIPLE - .48) < 1e-12);
++assert.match(view, /wheelSensitivity:\s*ZOOM_SENSITIVITY_TRIPLE/);
++assert.match(view, /minZoom:\s*0\.22,\s*maxZoom:\s*2\.5/);
++assert.match(view, /data-arch-picker-open/);
++assert.match(view, /<dialog\s+class="arch-picker-dialog"/);
++assert.match(view, /picker\.showModal\(\)/);
++assert.match(view, /picker\.close\(\)/);
++assert.match(view, /picker\.addEventListener\('close'/);
++assert.match(view, /opcionesModalFichasHtml\(fichas\.fichas\)/);
++assert.doesNotMatch(view, /nav\.innerHTML\s*=\s*`<span>Fichas y problemas/);
++assert.match(view, /ultimoGrafo === posGroup/);
++assert.match(view, /cy\.zoom\(vistaAnterior\.zoom\)/);
++assert.match(view, /cy\.pan\(vistaAnterior\.pan\)/);
++assert.match(view, /arch-legend-details/);
++assert.match(view, /arch-footer"><summary>Fuentes y estado editorial/);
++assert.match(css, /grid-template-columns:\s*minmax\(0, 2\.5fr\) minmax\(280px, \.9fr\)/);
++assert.match(css, /\.arch-picker-dialog::backdrop/);
++assert.match(css, /grid-auto-rows:\s*85px/);
++assert.match(cards, /<details class="arch-ficha-intro">/);
++assert.doesNotMatch(cards, /<details class="arch-ficha-intro" open>/);
++const fichas = [
++  { id: 'proemio', titulo: 'Proemio', tipo: 'proemio' },
++  { id: 'faq.etica.intro', titulo: '¿Qué es la ética?', tipo: 'faq', fuente_editorial: { origen: 'registrado' } },
++  ...fixture.fichas.map(f => ({...f, tipo: 'faq'}))
++];
++const options = opcionesModalFichasHtml(fichas);
++assert.equal((options.match(/data-arch-card=/g) || []).length, fichas.length);
++for (const f of fichas) assert(options.includes(`data-arch-card="${f.id}"`));
++const escaped = opcionesModalFichasHtml([{id:'<abc>', titulo:'<script>&"', tipo:'faq'}]);
++assert(!escaped.includes('<script>') && escaped.includes('&lt;script&gt;') && escaped.includes('&quot;'));
++console.log('N1-U.8: OK · zoom 3×, selector modal, tarjetas homogéneas, grafo ampliado, encuadre conservado y escape HTML.');

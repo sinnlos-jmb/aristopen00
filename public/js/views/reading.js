@@ -2,12 +2,15 @@
 import { esc } from '../ui.js';
 import { renderChapter } from '../reader/render.js';
 import { renderCatalogHeader, renderSiteFooter } from './shared.js';
+import { controlesTamanoLector, actualizarLectura, cambiarTamanoLector } from '../reader/fontPreferences.js';
 
 export async function createReadingView(App) {
   const el = document.createElement('div');
   el.className = 'scrollable has-scroll catalog-view reading-catalog';
   let chapters = new Map();
   let loading = false;
+  const sincronizarTamano = () => actualizarLectura(el);
+  document.addEventListener?.('agora:reader-font-change', sincronizarTamano);
 
   function chapterKey(book, chapter) { return `${book}:${chapter}`; }
 
@@ -47,6 +50,7 @@ export async function createReadingView(App) {
             title: 'Ética nicomáquea',
             description: 'Texto original y traducción al castellano. El texto se carga progresivamente; el tagueo avanza por capítulos.',
           })}
+          <div class="agora-reading-controls">${controlesTamanoLector()}</div>
           ${books.map((book, index) => `
             <details class="reader-book" ${index === 0 ? 'open' : ''}>
               <summary><span>Libro ${esc(book.id)} · ${esc(book.title)}</span><span class="reader-summary__icon" aria-hidden="true">↓</span></summary>
@@ -58,6 +62,7 @@ export async function createReadingView(App) {
             </details>`).join('')}
         </div>
         ${renderSiteFooter()}`;
+      actualizarLectura(el);
     } catch (error) {
       el.innerHTML = `<div class="empty reading-catalog__error">
         <p>No se pudo conectar al servidor Bekker: ${esc(error.message)}</p>
@@ -69,9 +74,11 @@ export async function createReadingView(App) {
   }
 
   el.addEventListener('click', event => {
+    const ajuste = event.target.closest('[data-reader-font-step]');
+    if (ajuste) { cambiarTamanoLector(el, Number(ajuste.dataset.readerFontStep)); return; }
     if (event.target.closest('[data-retry]')) loadAndRender();
   });
 
   await loadAndRender();
-  return { el };
+  return { el, destroy() { document.removeEventListener?.('agora:reader-font-change', sincronizarTamano); } };
 }

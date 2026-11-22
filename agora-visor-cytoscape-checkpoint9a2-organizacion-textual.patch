@@ -1,0 +1,588 @@
+diff --git a/public/js/lab/graphTextContext.js b/public/js/lab/graphTextContext.js
+--- a/public/js/lab/graphTextContext.js
++++ b/public/js/lab/graphTextContext.js
+@@ -1,12 +1,12 @@
+-// 9A.1: proyección *visual* contextual de las unidades; nunca edita ni deduce el corpus.
+-// Una sola ancla por exploración: concepto, FAQ o arista funcional documentada.
++// Grafo documental contextual (9A.2): identidad editorial intacta, agrupadores visuales.
++// Las flechas de orden representan continuidad textual, NO relaciones filosóficas.
+ import { idUnidadTexto, idSubunidadTexto } from './graphTextNavigation.js';
+ 
+ const array = x => Array.isArray(x) ? x : [];
+-const uniqueIds = x => [...new Set(array(x).filter(id => typeof id === 'string' && id.length > 0 && id.length <= 300))].slice(0, 50);
++const uniqueIds = x => [...new Set(array(x).filter(id => typeof id === 'string' && id.length > 0 && id.length <= 300))].slice(0, 100);
+ const validPosition = p => p && Number.isFinite(p.x) && Number.isFinite(p.y) && Math.abs(p.x) <= 1e7 && Math.abs(p.y) <= 1e7;
+-const MAX_CONTEXTOS = 32;
+-const MAX_POSICIONES = 250;
++const MAX_CONTEXTOS = 32, MAX_POSICIONES = 250, MAX_GRUPOS = 12;
++const clean = x => typeof x === 'string' ? x.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 90) : '';
+ 
+ export function claveContextoTextual(ancla) {
+   if (!ancla || !['concepto', 'faq', 'arista_funcional'].includes(ancla.tipo)
+@@ -14,18 +14,26 @@
+   return `${ancla.tipo}:${ancla.id}`;
+ }
+ 
+-export const estadoContextoInicial = () => ({ todasUnidades: false, unidadesAbiertas: [], unidadesCompletas: [], posiciones: {} });
++export const estadoContextoInicial = () => ({ todasUnidades: false, unidadesAbiertas: [], unidadesCompletas: [], posiciones: {},
++  grupos: [], gruposAbiertos: [], seleccionGrupo: [] });
+ export function normalizarEstadoContexto(raw) {
+   const state = estadoContextoInicial();
+   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return state;
+   state.todasUnidades = raw.todasUnidades === true;
+   state.unidadesAbiertas = uniqueIds(raw.unidadesAbiertas);
+   state.unidadesCompletas = uniqueIds(raw.unidadesCompletas);
++  state.seleccionGrupo = uniqueIds(raw.seleccionGrupo);
+   if (raw.posiciones && typeof raw.posiciones === 'object' && !Array.isArray(raw.posiciones)) {
+     state.posiciones = Object.fromEntries(Object.entries(raw.posiciones)
+       .filter(([id, p]) => typeof id === 'string' && id.length <= 300 && validPosition(p))
+       .slice(0, MAX_POSICIONES).map(([id, p]) => [id, { x: p.x, y: p.y }]));
+   }
++  const used = new Set();
++  state.grupos = array(raw.grupos).filter(g => g && typeof g === 'object' && !Array.isArray(g))
++    .map(g => ({ id: clean(g.id), titulo: clean(g.titulo), miembros: uniqueIds(g.miembros) }))
++    .filter(g => g.id && /^[a-zA-Z0-9_-]+$/.test(g.id) && g.titulo && g.miembros.length && !used.has(g.id) && (used.add(g.id), true))
++    .slice(0, MAX_GRUPOS);
++  state.gruposAbiertos = uniqueIds(raw.gruposAbiertos).filter(id => state.grupos.some(g => g.id === id));
+   return state;
+ }
+ 
+@@ -38,8 +46,31 @@
+ }
+ 
+ export const idAnclaContextual = ancla => `texto:contexto:${claveContextoTextual(ancla)}`;
++export const idGrupoTexto = id => `texto:grupo:${id}`;
+ 
+-export function construirGrafoContextual(ancla, titulo, unidades, rawState) {
++export function crearGrupoTexto(rawState, titulo, miembros) {
++  const state = normalizarEstadoContexto(rawState);
++  const nombre = clean(titulo);
++  const ids = uniqueIds(miembros);
++  if (!nombre || !ids.length || state.grupos.length >= MAX_GRUPOS) return null;
++  const taken = new Set(state.grupos.flatMap(g => g.miembros));
++  const libres = ids.filter(id => !taken.has(id) && (id.startsWith('texto:unidad:') || id.startsWith('texto:subunidad:')));
++  if (!libres.length) return null;
++  const n = Math.max(0, ...state.grupos.map(g => Number(g.id.slice(1)) || 0)) + 1;
++  const id = `g${n}`;
++  return normalizarEstadoContexto({ ...state, grupos: [...state.grupos, { id, titulo: nombre, miembros: libres }],
++    seleccionGrupo: [], gruposAbiertos: state.gruposAbiertos.filter(x => x !== id) });
++}
++
++// Orden textual opcional, extraído de la secuencia explícita tags.unidades/subunidades.
++// No conectar unidades que son solo vecinas en la selección, sino sucesivas en el corpus.
++export function ordenTextualDe(S = {}) {
++  const ordenUnidades = array(S.tags?.unidades).map(u => u.id);
++  const ordenSubs = Object.fromEntries(array(S.tags?.unidades).map(u => [u.id, array(u.subunidades).map(s => s.id)]));
++  return { ordenUnidades, ordenSubs };
++}
++
++export function construirGrafoContextual(ancla, titulo, unidades, rawState, opciones = {}) {
+   const key = claveContextoTextual(ancla);
+   const state = normalizarEstadoContexto(rawState);
+   if (!key) return { elementos: [], posicionesSugeridas: {}, unidadesVisibles: 0, subunidadesVisibles: 0 };
+@@ -48,13 +79,30 @@
+   const elementos = [{ group: 'nodes', data: { id: root, label: String(titulo || ancla.id),
+     tipo: 'texto_ancla', foco: 1, anclaContextual: 1 } }];
+   const posicionesSugeridas = { [root]: { x: 0, y: 0 } };
++  const edges = [];
++  const addEdge = (id, source, target, nombre, extra = {}) => edges.push({ group: 'edges', data: {
++    id, source, target, tipo: 'navegacion_textual_visual', navegacionTextual: 1,
++    fuente: 'presentacion', nombreAristaVisible: nombre, relacion: nombre,
++    relacionDocumental: 0, ...extra } });
++  const unidadIds = new Set(list.map(u => u.id));
++  const nodosTexto = new Map();
++  const nombresVinculo = {
++    destino_arista_funcional: 'documenta arista',
++    extremo_relacion_editorial: 'relación editorial',
++    concepto_clave: 'concepto clave',
++    pasaje_faq_subunidad: 'FAQ cita subunidad',
++    pasaje_faq_unidad: 'FAQ cita unidad',
++    tag_parrafo_contexto_unidad: 'tag de párrafo',
++  };
+   let subCount = 0;
+   for (const [i, u] of list.entries()) {
+     const id = idUnidadTexto(u.id);
+-    elementos.push({ group: 'nodes', data: { id, label: u.titulo, tipo: 'texto_navegacion',
++    nodosTexto.set(id, { group: 'nodes', data: { id, label: u.titulo, tipo: 'texto_navegacion',
+       navegacionTextual: 1, unidadTexto: 1, unidadId: u.id } });
+-    elementos.push({ group: 'edges', data: { id: `texto:contexto:unidad:${key}:${u.id}`, source: root, target: id,
+-      tipo: 'navegacion_textual_visual', navegacionTextual: 1, agrupacionVisual: 1, fuente: 'presentacion', nombreAristaVisible: '' } });
++    const mejorMotivo = array(u.motivos).find(m => nombresVinculo[m.via]);
++    const nombreVinculo = nombresVinculo[mejorMotivo?.via] || 'vínculo documental';
++    addEdge(`texto:contexto:unidad:${key}:${u.id}`, root, id, nombreVinculo,
++      { agrupacionVisual: 1, via: mejorMotivo?.via || '' });
+     const angle = -Math.PI / 2 + 2 * Math.PI * i / Math.max(1, list.length);
+     const radius = list.length < 4 ? 200 : 260;
+     posicionesSugeridas[id] = { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
+@@ -65,13 +113,87 @@
+       : array(u.subunidades);
+     for (const sub of subs) {
+       const sid = idSubunidadTexto(sub.id);
+-      elementos.push({ group: 'nodes', data: { id: sid, label: sub.titulo, tipo: 'texto_navegacion',
++      nodosTexto.set(sid, { group: 'nodes', data: { id: sid, label: sub.titulo, tipo: 'texto_navegacion',
+         navegacionTextual: 1, subunidadTexto: 1, subunidadId: sub.id, unidadId: u.id,
+         referencia: sub.bekker, vinculada: vinculadas.has(sub.id) ? 1 : 0 } });
+-      elementos.push({ group: 'edges', data: { id: `texto:contexto:sub:${key}:${u.id}:${sub.id}`, source: id, target: sid,
+-        tipo: 'navegacion_textual_visual', navegacionTextual: 1, agrupacionVisual: 1, fuente: 'presentacion', nombreAristaVisible: '' } });
++      addEdge(`texto:contexto:sub:${key}:${u.id}:${sub.id}`, id, sid, 'contiene', { pertenenciaTextual: 1 });
+       subCount++;
+     }
+   }
+-  return { elementos, posicionesSugeridas, unidadesVisibles: list.length, subunidadesVisibles: subCount };
++  // Conexiones de secuencia únicamente cuando ambos elementos son consecutivos EN EL CORPUS.
++  const unitOrder = array(opciones.ordenUnidades);
++  for (let i = 1; i < unitOrder.length; i++) {
++    const prev = unitOrder[i - 1], next = unitOrder[i];
++    if (unidadIds.has(prev) && unidadIds.has(next)) addEdge(`texto:orden:unidad:${prev}:${next}`,
++      idUnidadTexto(prev), idUnidadTexto(next), 'sigue en texto', { ordenTextual: 1 });
++  }
++  for (const u of list) {
++    const seq = array(opciones.ordenSubs?.[u.id]);
++    for (let i = 1; i < seq.length; i++) {
++      const a = idSubunidadTexto(seq[i - 1]), b = idSubunidadTexto(seq[i]);
++      if (nodosTexto.has(a) && nodosTexto.has(b)) addEdge(`texto:orden:sub:${u.id}:${seq[i - 1]}:${seq[i]}`,
++        a, b, 'continúa', { ordenTextual: 1 });
++    }
++  }
++  // Los agrupadores sustituyen visualmente miembros contraídos y restauran relaciones al abrirse.
++  const gruposVisibles = [];
++  const sustituciones = new Map();
++  for (const g of state.grupos) {
++    const presentes = g.miembros.filter(id => nodosTexto.has(id));
++    if (!presentes.length) continue;
++    const gid = idGrupoTexto(g.id);
++    gruposVisibles.push({ group: 'nodes', data: { id: gid, label: `${g.titulo} (${presentes.length})`,
++      tipo: 'grupo_textual_usuario', grupoUsuario: 1, grupoId: g.id, navegacionTextual: 1 } });
++    const coords = presentes.map(id => posicionesSugeridas[id]).filter(Boolean);
++    posicionesSugeridas[gid] = coords.length ? { x: coords.reduce((n,p) => n + p.x,0)/coords.length,
++      y: coords.reduce((n,p) => n + p.y,0)/coords.length } : { x: 160, y: -120 };
++    if (!state.gruposAbiertos.includes(g.id)) {
++      presentes.forEach(id => sustituciones.set(id, gid));
++      // Contraer una unidad incluye sus subunidades, sin borrar las relaciones originales.
++      for (const id of presentes.filter(id => id.startsWith('texto:unidad:'))) {
++        for (const n of nodosTexto.values()) if (n.data.subunidadTexto && id === idUnidadTexto(n.data.unidadId))
++          sustituciones.set(n.data.id, gid);
++      }
++    }
++  }
++  const visibles = [...nodosTexto.values()].filter(n => !sustituciones.has(n.data.id));
++  elementos.push(...visibles, ...gruposVisibles);
++  const visibleIds = new Set(elementos.map(e => e.data.id));
++  const rendered = new Map();
++  for (const e of edges) {
++    const d = e.data;
++    const source = sustituciones.get(d.source) || d.source;
++    const target = sustituciones.get(d.target) || d.target;
++    if (source === target || !visibleIds.has(source) || !visibleIds.has(target)) continue;
++    const keyEdge = `${source}|${target}|${d.ordenTextual ? 'orden' : 'navegacion'}`;
++    if (rendered.has(keyEdge)) continue;
++    rendered.set(keyEdge, { group: 'edges', data: { ...d, id: source === d.source && target === d.target ? d.id : `texto:agrupada:${key}:${rendered.size}`,
++      source, target, nombreAristaVisible: source === d.source && target === d.target ? d.nombreAristaVisible : 'agrupa',
++      agrupacionVisual: source !== d.source || target !== d.target ? 1 : d.agrupacionVisual || 0 } });
++  }
++  // Para que cada agrupador aislado permanezca alcanzable desde el foco contextual.
++  for (const g of gruposVisibles) if (![...rendered.values()].some(e => e.data.source === g.data.id || e.data.target === g.data.id))
++    addEdge(`texto:grupo:enlace:${key}:${g.data.grupoId}`, root, g.data.id, 'agrupa', { agrupacionVisual: 1 });
++  elementos.push(...rendered.values(), ...edges.filter(e => e.data.id.startsWith('texto:grupo:enlace:')));
++  // Focos restantes únicamente orientativos: identidad y dirección de las aristas originales conservadas.
++  const focoIds = [...new Set(array(opciones.focos).filter(id => typeof id === 'string'))].slice(0, 5);
++  const orientados = new Map();
++  for (const [i, fid] of focoIds.entries()) {
++    const nid = `texto:orientativo:${fid}`;
++    const nombre = opciones.etiquetasFoco?.[fid] || fid.split(':').pop();
++    elementos.push({ group: 'nodes', data: { id: nid, label: nombre, tipo: 'foco_orientativo',
++      orientativo: 1, navegacionTextual: 1, focoActivoOrientativo: fid === ancla.nodo ? 1 : 0 } });
++    orientados.set(fid, nid);
++    posicionesSugeridas[nid] = { x: (i - (focoIds.length - 1)/2) * 175, y: -470 };
++  }
++  for (const edge of array(opciones.aristasFoco)) {
++    const d = edge.data || edge;
++    if (!orientados.has(d.source) || !orientados.has(d.target)) continue;
++    elementos.push({ group: 'edges', data: { id: `texto:orientativo:arista:${d.id}`,
++      source: orientados.get(d.source), target: orientados.get(d.target), tipo: 'arista_focal_orientativa',
++      orientativo: 1, relacion: d.relacion || d.label || '', fuente: d.fuente || 'corpus',
++      nombreAristaVisible: d.relacion || d.label || '', relacionDocumental: 1 } });
++  }
++  return { elementos, posicionesSugeridas, unidadesVisibles: list.length, subunidadesVisibles: subCount,
++    gruposVisibles: gruposVisibles.length };
+ }
+diff --git a/public/js/lab/cytoscapeRenderer.js b/public/js/lab/cytoscapeRenderer.js
+--- a/public/js/lab/cytoscapeRenderer.js
++++ b/public/js/lab/cytoscapeRenderer.js
+@@ -36,6 +36,8 @@
+       } },
+       { selector: 'node[tipo = "faq"]', style: { 'background-color': '#f4e6bf' } },
+       { selector: 'node[tipo = "subunidad"]', style: { 'background-color': '#e4dcf0' } },
++      { selector: 'node[grupoUsuario = 1]', style: { 'background-color': '#d6d0ed', 'border-color': '#7561a3', 'border-width': 3, 'width': 138, 'font-weight': 'bold' } },
++      { selector: 'node[orientativo = 1]', style: { 'background-color': '#f1f3f5', 'border-color': '#aab8c2', 'border-style': 'dashed', 'color': '#687986', 'opacity': 0.8 } },
+       { selector: 'node[anclaContextual = 1]', style: { 'background-color': '#c3dbea', 'border-color': '#28618c', 'border-width': 3.5, 'width': 138, 'font-weight': 'bold' } },
+       { selector: 'node[grupoTexto = 1]', style: { 'background-color': '#c8e2e0', 'border-color': '#39837b', 'border-width': 2.6, 'width': 136 } },
+       { selector: 'node[unidadTexto = 1]', style: { 'background-color': '#dce9da', 'border-color': '#68885a', 'width': 122 } },
+@@ -55,8 +57,11 @@
+         'line-style': 'dashed', 'line-color': '#c6a266', 'target-arrow-shape': 'none', 'opacity': 0.6,
+       } },
+       { selector: 'edge[navegacionTextual = 1]', style: {
+-        'line-style': 'dotted', 'line-color': '#6b9187', 'target-arrow-shape': 'none', 'opacity': 0.8, 'width': 1.5,
++        'line-style': 'dotted', 'line-color': '#6b9187', 'target-arrow-shape': 'triangle', 'target-arrow-color': '#6b9187', 'opacity': 0.8, 'width': 1.5,
+       } },
++      { selector: 'edge[ordenTextual = 1]', style: { 'line-style': 'dashed', 'line-color': '#8d7a9e', 'target-arrow-shape': 'triangle', 'target-arrow-color': '#8d7a9e', 'width': 1.3 } },
++      { selector: 'edge[pertenenciaTextual = 1]', style: { 'line-style': 'solid', 'line-color': '#628a70', 'target-arrow-shape': 'triangle', 'target-arrow-color': '#628a70', 'width': 1.6 } },
++      { selector: 'edge[orientativo = 1]', style: { 'line-style': 'solid', 'line-color': '#b4bdc5', 'target-arrow-shape': 'triangle', 'target-arrow-color': '#b4bdc5', 'opacity': 0.65 } },
+       { selector: 'edge[conexionFocos = 1]', style: {
+         'width': 3.2, 'line-color': '#376f93', 'target-arrow-color': '#376f93', 'opacity': 1,
+         'z-index': 20,
+@@ -86,6 +91,7 @@
+   let previous = { id: null, at: 0 };
+   cy.on('tap', 'node', evt => {
+     const item = evt.target;
++    if (item.data('orientativo')) { previous = { id: null, at: 0 }; item.unselect(); return; }
+     const now = Date.now();
+     if (item.id() === previous.id && now - previous.at < 350) {
+       previous = { id: null, at: 0 };
+@@ -96,7 +102,7 @@
+     previous = { id: item.id(), at: now };
+     alSeleccionar({ clase: 'nodo', ...item.data() });
+   });
+-  cy.on('tap', 'edge', evt => { previous = { id: null, at: 0 }; alSeleccionar({ clase: 'arista', ...evt.target.data() }); });
++  cy.on('tap', 'edge', evt => { previous = { id: null, at: 0 }; if (evt.target.data('orientativo')) { evt.target.unselect(); return; } alSeleccionar({ clase: 'arista', ...evt.target.data() }); });
+   cy.on('tap', evt => { if (evt.target === cy) { previous = { id: null, at: 0 }; alSeleccionar(null); } });
+ 
+   return {
+diff --git a/public/js/views/labGraphPilotView.js b/public/js/views/labGraphPilotView.js
+--- a/public/js/views/labGraphPilotView.js
++++ b/public/js/views/labGraphPilotView.js
+@@ -10,7 +10,7 @@
+ import { huellaGrafo, claveDisposicion, leerDisposicion, guardarDisposicion, decorarAristasFocales, normalizarTituloArista, MAX_TITULO_ARISTA } from '../lab/graphLayoutPersistence.js';
+ import { crearNotificadorGrafo } from '../lab/graphUiFeedback.js';
+ import { buscarVinculosTextuales, estadoTextualInicial } from '../lab/graphTextNavigation.js';
+-import { claveContextoTextual, normalizarEstadoContexto, construirGrafoContextual } from '../lab/graphTextContext.js';
++import { claveContextoTextual, normalizarEstadoContexto, construirGrafoContextual, crearGrupoTexto, ordenTextualDe } from '../lab/graphTextContext.js';
+ 
+ // Checkpoint 2: Cytoscape permanece como visor experimental; el corpus es de sólo lectura.
+ // Focos estables + expansión local reversible + inspector lateral. Sin Relate/MariaDB.
+@@ -149,13 +149,21 @@
+         <div class="lab-graph-text-toolbar">
+           <button type="button" id="gv-text-more" class="lab-btn lab-btn--ghost" hidden>Mostrar todas las unidades</button>
+           <button type="button" id="gv-text-fit" class="lab-btn lab-btn--ghost">Ajustar vista</button>
+-          <span class="hint">Doble clic sobre una unidad: desplegar o contraer subunidades.</span>
++          <button type="button" id="gv-text-save" class="lab-btn">Guardar disposición textual</button>
++          <button type="button" id="gv-text-recover" class="lab-btn lab-btn--ghost">Recuperar guardada</button>
++          <span class="hint">Doble clic: desplegar unidad o agrupador. Flechas: vínculos documentales y orden textual.</span>
+         </div>
+         <div class="lab-graph-text-content">
+           <div id="gv-text-canvas" class="lab-graph-text-canvas" role="region" aria-label="Unidades textuales relacionadas"></div>
+           <aside id="gv-text-inspector" class="lab-panel lab-graph-text-inspector" aria-label="Procedencia textual"><h3>Procedencia</h3><p>Seleccioná una unidad o subunidad.</p></aside>
+         </div>
+-        <p id="gv-text-status" role="status" class="hint">Las líneas representan navegación documental, no relaciones filosóficas.</p>
++        <form id="gv-text-group-form" class="lab-graph-text-group-bar">
++          <label for="gv-text-group-name">Agrupador de elementos elegidos</label>
++          <input id="gv-text-group-name" class="lab-input" maxlength="90" placeholder="Ej. Contextos secundarios" />
++          <button type="submit" class="lab-btn lab-btn--ghost">Crear grupo</button>
++          <small id="gv-text-group-count" aria-live="polite">0 seleccionados</small>
++        </form>
++        <p id="gv-text-status" role="status" class="hint">Las flechas «contiene» indican pertenencia; «sigue en texto» y «continúa» indican orden de lectura, no inferencias filosóficas.</p>
+         <p class="hint">El lector de pasajes y el Lab de pasajes se incorporarán en checkpoints posteriores; por ahora se muestran las referencias disponibles.</p>
+       </div>
+     </dialog>`;
+@@ -216,10 +224,19 @@
+   let exploradorTexto = null;
+   let generacionTexto = 0;
+   let origenDialogo = null;
++  const ordenTexto = ordenTextualDe(App.S);
++  function actualizarCantidadGrupo() {
++    const n = exploradorTexto?.estado.seleccionGrupo?.length || 0;
++    $('#gv-text-group-count').textContent = `${n} seleccionados`;
++  }
+   const estadoExplorador = () => exploradorTexto?.estado;
+   const actualizarEstadoExplorador = patch => {
+     if (!exploradorTexto) return;
++    // Capturar coordenadas antes de repintar, incluso si algunos nodos desaparecen en un grupo.
++    if (exploradorTexto.visor) exploradorTexto.estado.posiciones = {
++      ...exploradorTexto.estado.posiciones, ...exploradorTexto.visor.posiciones() };
+     exploradorTexto.estado = normalizarEstadoContexto({ ...exploradorTexto.estado, ...patch });
++    actualizarCantidadGrupo();
+     void renderExploradorTexto();
+   };
+   function conservarPosicionesTexto() {
+@@ -254,6 +271,38 @@
+   });
+   $('#gv-text-dismiss').addEventListener('click', cerrarExploradorTexto);
+   $('#gv-text-fit').addEventListener('click', () => exploradorTexto?.visor?.ajustar());
++  $('#gv-text-recover').addEventListener('click', () => {
++    if (!exploradorTexto) return;
++    const persisted = leerDisposicion(almacenamiento, claveActual());
++    const saved = persisted?.exploradoresTexto?.[exploradorTexto.key];
++    if (!saved) { $('#gv-text-status').textContent = 'No hay una disposición textual guardada para este contexto.'; return; }
++    exploradorTexto.estado = normalizarEstadoContexto(saved);
++    preferencias.exploradoresTexto = { ...preferencias.exploradoresTexto, [exploradorTexto.key]: exploradorTexto.estado };
++    // Rehacer la instancia para aplicar las coordenadas guardadas incluso a nodos preexistentes.
++    ++generacionTexto;
++    exploradorTexto.visor?.destruir();
++    exploradorTexto.visor = null;
++    $('#gv-text-canvas').replaceChildren();
++    actualizarCantidadGrupo();
++    void renderExploradorTexto();
++    $('#gv-text-status').textContent = 'Disposición textual recuperada.';
++  });
++  $('#gv-text-save').addEventListener('click', () => {
++    if (!exploradorTexto || !viewer || modo !== 'focal') return;
++    conservarPosicionesTexto();
++    preferencias.posiciones = { ...preferencias.posiciones, ...viewer.posiciones() };
++    const ok = guardarDisposicion(almacenamiento, claveActual(), preferencias);
++    $('#gv-text-status').textContent = ok ? 'Disposición textual guardada para esta consulta y estos focos.' : 'No se pudo guardar en el navegador.';
++  });
++  $('#gv-text-group-form').addEventListener('submit', event => {
++    event.preventDefault();
++    if (!exploradorTexto) return;
++    const result = crearGrupoTexto(exploradorTexto.estado, $('#gv-text-group-name').value,
++      exploradorTexto.estado.seleccionGrupo);
++    if (!result) { $('#gv-text-status').textContent = 'Elegí unidades o subunidades y escribí un nombre válido (máximo 12 grupos).'; return; }
++    $('#gv-text-group-name').value = '';
++    actualizarEstadoExplorador(result);
++  });
+   $('#gv-text-more').addEventListener('click', () => {
+     const st = estadoExplorador();
+     if (st) actualizarEstadoExplorador({ todasUnidades: !st.todasUnidades });
+@@ -262,6 +311,22 @@
+   function inspeccionarContextoTexto(item) {
+     const out = $('#gv-text-inspector');
+     if (!exploradorTexto) return;
++    if (item?.grupoUsuario) {
++      const group = exploradorTexto.estado.grupos.find(g => g.id === item.grupoId);
++      if (!group) return;
++      const open = exploradorTexto.estado.gruposAbiertos.includes(group.id);
++      out.innerHTML = `<h3>${esc(group.titulo)}</h3><p class="hint">Agrupador personal de ${group.miembros.length} elementos. No modifica la pertenencia textual.</p>
++        <form data-tm-rename="${esc(group.id)}"><label>Nombre visible <input class="lab-input" maxlength="90" required value="${esc(group.titulo)}" /></label>
++        <button class="lab-btn" type="submit">Renombrar</button></form>
++        <div class="lab-graph-inspector-actions"><button class="lab-btn lab-btn--ghost" type="button" data-tm-toggle-group="${esc(group.id)}">${open ? 'Contraer grupo' : 'Expandir grupo'}</button>
++        <button class="lab-btn lab-btn--ghost" type="button" data-tm-remove-group="${esc(group.id)}">Desagrupar</button></div>`;
++      return;
++    }
++    if (item?.clase === 'arista') {
++      out.innerHTML = `<h3>Conexión dirigida</h3><p><strong>${esc(item.relacion || item.nombreAristaVisible || item.tipo || '')}</strong></p>
++        <p class="hint">${item.pertenenciaTextual ? 'Pertenencia editorial unidad → subunidad.' : item.ordenTextual ? 'Sucesión en el orden textual registrado, no relación filosófica.' : 'Conexión de navegación visual, no evidencia filosófica.'}</p>`;
++      return;
++    }
+     if (!item || item.anclaContextual) {
+       out.innerHTML = `<h3>Procedencia</h3><p>Unidades vinculadas con la selección.</p>
+         <p class="hint">Una relación textual explícita y una asociación por tags de párrafo no tienen la misma fuerza documental.</p>`;
+@@ -280,7 +345,8 @@
+         <div class="lab-graph-inspector-actions">
+           <button class="lab-btn" type="button" data-tm-unit="${esc(u.id)}">${abierta ? 'Contraer subunidades' : 'Mostrar subunidades vinculadas'}</button>
+           <button class="lab-btn lab-btn--ghost" type="button" data-tm-all="${esc(u.id)}">${completa ? 'Solo las vinculadas' : 'Incluir todas como contexto'}</button>
+-        </div><p class="hint">Los tags de párrafo no acreditan una subunidad concreta.</p>`;
++        </div><button class="lab-btn lab-btn--ghost" type="button" data-tm-select="${esc(item.id)}">${st.seleccionGrupo.includes(item.id) ? 'Quitar de agrupación' : 'Elegir para agrupar'}</button>
++        <p class="hint">Los tags de párrafo no acreditan una subunidad concreta.</p>`;
+       return;
+     }
+     if (item.subunidadTexto) {
+@@ -292,6 +358,7 @@
+         <p><strong>Bekker:</strong> ${esc(sub?.bekker || item.referencia || 'No consignada')}</p>
+         <p class="hint">${vinculada ? 'Vínculo registrado con esta consulta.' : 'Subunidad mostrada como contexto de la unidad; no constituye evidencia directa.'}</p>
+         ${vinculada ? `<ul>${sub.motivos.map(m => `<li>${esc(m.via.replaceAll('_',' '))}${m.referencia ? ` · ${esc(m.referencia)}` : ''}</li>`).join('')}</ul>` : ''}
++        <button class="lab-btn lab-btn--ghost" type="button" data-tm-select="${esc(item.id)}">${exploradorTexto.estado.seleccionGrupo.includes(item.id) ? 'Quitar de agrupación' : 'Elegir para agrupar'}</button>
+         <p class="hint">La lectura griega/castellana y su resaltado se incorporarán en 9B.</p>`;
+     }
+   }
+@@ -299,7 +366,11 @@
+     const contexto = exploradorTexto;
+     if (!contexto || !dialogoTexto.open) return;
+     const ticket = ++generacionTexto;
+-    const resultado = construirGrafoContextual(contexto.ancla, contexto.titulo, contexto.unidades, contexto.estado);
++    const resultado = construirGrafoContextual(contexto.ancla, contexto.titulo, contexto.unidades, contexto.estado, {
++      ...ordenTexto, focos: estado.focos, etiquetasFoco: Object.fromEntries(estado.focos.map(id => [id, etiqueta(id)])),
++      aristasFoco: todos.filter(e => e.group === 'edges' && e.data.tipo === 'arista_funcional'
++        && estado.focos.includes(e.data.source) && estado.focos.includes(e.data.target)),
++    });
+     const posiciones = { ...resultado.posicionesSugeridas, ...contexto.estado.posiciones };
+     $('#gv-text-more').hidden = contexto.unidades.length <= 6;
+     $('#gv-text-more').textContent = contexto.estado.todasUnidades
+@@ -307,7 +378,7 @@
+     $('#gv-text-status').textContent = `${resultado.unidadesVisibles} unidades · ${resultado.subunidadesVisibles} subunidades visibles. Navegación documental, no prueba filosófica.`;
+     if (contexto.visor) {
+       contexto.estado.posiciones = { ...contexto.estado.posiciones, ...contexto.visor.posiciones() };
+-      contexto.visor.actualizarElementos(resultado.elementos, { posiciones });
++      contexto.visor.actualizarElementos(resultado.elementos, { posiciones: contexto.estado.posiciones });
+       inspeccionarContextoTexto(null);
+       return;
+     }
+@@ -316,6 +387,12 @@
+         layoutContextual: true, posicionesIniciales: posiciones,
+         alSeleccionar: inspeccionarContextoTexto,
+         alDobleClick: item => {
++          if (item.grupoUsuario && exploradorTexto) {
++            const open = new Set(exploradorTexto.estado.gruposAbiertos);
++            if (open.has(item.grupoId)) open.delete(item.grupoId); else open.add(item.grupoId);
++            actualizarEstadoExplorador({ gruposAbiertos: [...open] });
++            return;
++          }
+           if (!item.unidadTexto || !exploradorTexto) return;
+           const prev = new Set(exploradorTexto.estado.unidadesAbiertas);
+           if (prev.has(item.unidadId)) prev.delete(item.unidadId); else prev.add(item.unidadId);
+@@ -339,13 +416,41 @@
+     origenDialogo = document.activeElement;
+     const estadoTextual = normalizarEstadoContexto(preferencias.exploradoresTexto?.[key]);
+     exploradorTexto = { key, ancla, titulo, unidades, estado: estadoTextual, visor: null };
++    actualizarCantidadGrupo();
+     $('#gv-text-title').textContent = `Unidades relacionadas · ${titulo}`;
+     $('#gv-text-summary').textContent = `Foco contextual: ${titulo}. ${unidades.length} unidades con vínculos registrados o asociaciones de indexación; sin añadir nodos al grafo principal.`;
+     dialogoTexto.showModal();
+     void renderExploradorTexto();
+   }
++  $('#gv-text-inspector').addEventListener('submit', event => {
++    const form = event.target.closest('[data-tm-rename]');
++    if (!form || !exploradorTexto) return;
++    event.preventDefault();
++    const id = form.dataset.tmRename;
++    const nombre = form.querySelector('input').value.replace(/\s+/g,' ').trim().slice(0, 90);
++    if (!nombre) return;
++    actualizarEstadoExplorador({ grupos: exploradorTexto.estado.grupos.map(g => g.id === id ? { ...g, titulo: nombre } : g) });
++  });
+   $('#gv-text-inspector').addEventListener('click', event => {
+     if (!exploradorTexto) return;
++    const select = event.target.closest('[data-tm-select]');
++    if (select) {
++      const ids = new Set(exploradorTexto.estado.seleccionGrupo);
++      if (ids.has(select.dataset.tmSelect)) ids.delete(select.dataset.tmSelect); else ids.add(select.dataset.tmSelect);
++      actualizarEstadoExplorador({ seleccionGrupo: [...ids] });
++      return;
++    }
++    const tg = event.target.closest('[data-tm-toggle-group]');
++    if (tg) {
++      const ids = new Set(exploradorTexto.estado.gruposAbiertos);
++      if (ids.has(tg.dataset.tmToggleGroup)) ids.delete(tg.dataset.tmToggleGroup); else ids.add(tg.dataset.tmToggleGroup);
++      actualizarEstadoExplorador({ gruposAbiertos: [...ids] }); return;
++    }
++    const rm = event.target.closest('[data-tm-remove-group]');
++    if (rm) {
++      actualizarEstadoExplorador({ grupos: exploradorTexto.estado.grupos.filter(g => g.id !== rm.dataset.tmRemoveGroup),
++        gruposAbiertos: exploradorTexto.estado.gruposAbiertos.filter(id => id !== rm.dataset.tmRemoveGroup) }); return;
++    }
+     const b = event.target.closest('[data-tm-unit]');
+     if (b) {
+       const opened = new Set(estadoExplorador().unidadesAbiertas);
+diff --git a/public/css/lab-graph-text-modal-9a1.css b/public/css/lab-graph-text-modal-9a1.css
+--- a/public/css/lab-graph-text-modal-9a1.css
++++ b/public/css/lab-graph-text-modal-9a1.css
+@@ -42,3 +42,15 @@
+   .lab-graph-text-content { grid-template-columns: 1fr; grid-template-rows: minmax(250px, 1fr) minmax(110px, 30%); }
+   .lab-graph-text-inspector { overflow-y: auto; }
+ }
++/* 9A.2: barra compacta de agrupaciones en el modal (sin tapar el grafo). */
++.lab-graph-text-group-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
++.lab-graph-text-group-bar label { font-size: .85rem; font-weight: 600; }
++.lab-graph-text-group-bar input { flex: 1 1 190px; max-width: 320px; min-width: 130px; }
++.lab-graph-text-group-bar small { color: var(--muted, #667783); }
++.lab-graph-text-inspector form[data-tm-rename] { display: grid; gap: 8px; margin: 10px 0; }
++.lab-graph-text-inspector form[data-tm-rename] input { width: 100%; box-sizing: border-box; }
++@media (max-width: 700px) {
++  .lab-graph-text-group-bar { gap: 5px; }
++  .lab-graph-text-group-bar input { flex-basis: 140px; }
++  .lab-graph-text-toolbar .hint { display: none; }
++}
+diff --git a/public/scripts/check-visor-texto-9a2.mjs b/public/scripts/check-visor-texto-9a2.mjs
+new file mode 100644
+--- /dev/null
++++ b/public/scripts/check-visor-texto-9a2.mjs
+@@ -0,0 +1,51 @@
++import assert from 'node:assert/strict';
++import { construirGrafoContextual, crearGrupoTexto, normalizarEstadoContexto, ordenTextualDe,
++  claveContextoTextual } from '../js/lab/graphTextContext.js';
++import { normalizarDisposicion } from '../js/lab/graphLayoutPersistence.js';
++
++const ancla = { tipo: 'concepto', id: 'arete', nodo: 'concepto_estatico:arete' };
++const unidades = [
++  { id: 'u1', titulo: 'Virtud', subunidades: [{ id: 's1', titulo: 'Ejemplo', bekker: '1094a1', motivos: [] },
++    { id: 's2', titulo: 'Otro', bekker: '1094a2', motivos: [] }],
++    todasSubunidades: [{ id: 's1', titulo: 'Ejemplo' }, { id: 's2', titulo: 'Otro' }] },
++  { id: 'u2', titulo: 'Felicidad', subunidades: [], todasSubunidades: [] },
++];
++const S = { tags: { unidades: [{ id: 'u1', subunidades: [{ id: 's1' }, { id: 's2' }] },
++  { id: 'u2', subunidades: [] }, { id: 'u3', subunidades: [] }] } };
++const opts = { ...ordenTextualDe(S), focos: ['concepto_estatico:arete','concepto_estatico:eudaimonia'],
++  etiquetasFoco: { 'concepto_estatico:arete': 'Areté', 'concepto_estatico:eudaimonia': 'Felicidad' },
++  aristasFoco: [{ data: { id: 'a10', source: 'concepto_estatico:arete', target: 'concepto_estatico:eudaimonia', relacion: 'condicion' } }] };
++const base = normalizarEstadoContexto({ unidadesAbiertas: ['u1'] });
++let graph = construirGrafoContextual(ancla, 'Areté', unidades, base, opts);
++const nodes = () => graph.elementos.filter(e => e.group === 'nodes');
++const edges = () => graph.elementos.filter(e => e.group === 'edges');
++assert.equal(nodes().filter(n => n.data.anclaContextual).length, 1);
++assert.equal(nodes().filter(n => n.data.orientativo).length, 2);
++const rela = edges().find(e => e.data.id === 'texto:orientativo:arista:a10');
++assert.equal(rela.data.nombreAristaVisible, 'condicion');
++assert.equal(rela.data.source, 'texto:orientativo:concepto_estatico:arete');
++assert.equal(rela.data.target, 'texto:orientativo:concepto_estatico:eudaimonia');
++assert.equal(edges().find(e => e.data.source === 'texto:unidad:u1' && e.data.target === 'texto:subunidad:s1').data.nombreAristaVisible, 'contiene');
++assert.equal(edges().find(e => e.data.source === 'texto:unidad:u1' && e.data.target === 'texto:unidad:u2').data.nombreAristaVisible, 'sigue en texto');
++assert.ok(!edges().some(e => e.data.target === 'texto:unidad:u3'));
++assert.equal(edges().find(e => e.data.source === 'texto:subunidad:s1' && e.data.target === 'texto:subunidad:s2').data.nombreAristaVisible, 'continúa');
++assert.equal(nodes().length, 7); // ancla, 2 focos de orientación, 2 unidades, 2 subunidades
++const group = crearGrupoTexto(base, 'Contextos secundarios', ['texto:unidad:u1']);
++assert.ok(group);assert.equal(group.grupos.length, 1);
++assert.equal(crearGrupoTexto(group, 'Repetido', ['texto:unidad:u1']), null);
++graph = construirGrafoContextual(ancla, 'Areté', unidades, group, opts);
++assert.ok(nodes().some(n => n.data.grupoUsuario));
++assert.ok(!nodes().some(n => n.data.id === 'texto:unidad:u1'));
++assert.ok(!nodes().some(n => n.data.id === 'texto:subunidad:s1')); // no queda hijo suelto
++assert.ok(!edges().some(e => e.data.source === 'texto:unidad:u1'));
++const expanded = normalizarEstadoContexto({ ...group, gruposAbiertos: [group.grupos[0].id],
++  posiciones: { 'texto:unidad:u1': { x: 432, y: 89 }, 'texto:grupo:g1': { x: 250, y: 0 } } });
++graph = construirGrafoContextual(ancla, 'Areté', unidades, expanded, opts);
++assert.ok(nodes().some(n => n.data.id === 'texto:unidad:u1'));
++assert.equal(expanded.posiciones['texto:unidad:u1'].x, 432);
++const saved = normalizarDisposicion({ exploradoresTexto: { [claveContextoTextual(ancla)]: expanded } });
++assert.equal(saved.exploradoresTexto['concepto:arete'].grupos[0].titulo, 'Contextos secundarios');
++assert.equal(saved.exploradoresTexto['concepto:arete'].posiciones['texto:unidad:u1'].x, 432);
++assert.equal(saved.exploradoresTexto['concepto:arete'].gruposAbiertos[0], 'g1');
++assert.equal(normalizarEstadoContexto({ grupos: [{ id: 'x<>', titulo: 'Invalido', miembros: ['texto:unidad:u1'] }] }).grupos.length, 0);
++console.log('OK: 9A.2 aristas documentales dirigidas, sucesión textual, focos orientativos, grupos y persistencia.');
+diff --git a/docs/LAB_VISOR_CHECKPOINT9A2_ORGANIZACION_TEXTO.md b/docs/LAB_VISOR_CHECKPOINT9A2_ORGANIZACION_TEXTO.md
+new file mode 100644
+--- /dev/null
++++ b/docs/LAB_VISOR_CHECKPOINT9A2_ORGANIZACION_TEXTO.md
+@@ -0,0 +1,45 @@
++# Ágora · Checkpoint 9A.2 — Organización del explorador textual
++
++Este checkpoint se aplica **después de 9A.1**, sin modificar MariaDB ni incorporar el lector 9B.
++
++## Disposición contextual
++
++- El botón **Guardar disposición textual** guarda explícitamente los cambios de posición y las expansiones del modal usando el mismo almacenamiento local versionado por huella y conjunto de focos del visor.
++- **Recuperar guardada** reconstruye el modal con el último estado persistido de esa combinación de focos y elemento consultado. Los cambios intermedios no sobrescriben el estado guardado.
++- El grafo principal no recibe nodos documentales y no se modifica al reorganizar unidades y subunidades.
++
++## Agrupadores personales
++
++1. Seleccionar una unidad o subunidad en el modal, pulsar **Elegir para agrupar**, y repetir con otros elementos.
++2. Escribir un nombre en la barra inferior y pulsar **Crear grupo**.
++3. El agrupador cerrado sustituye visualmente sus elementos (y, en caso de unidad, las subunidades que cuelgan de ella); el doble clic permite abrirlo y cerrarlo.
++4. En el inspector del agrupador se puede **Renombrar** y **Desagrupar**. La información editorial original se conserva.
++5. Las posiciones conocidas permanecen guardadas durante agrupaciones y expansiones.
++
++Los agrupadores no alteran el parentesco editorial unidad/subunidad. Por simplicidad, el primer incremento limita a 12 grupos por consulta y a 100 miembros por grupo. El formato previo `exploradoresTexto` sigue siendo válido.
++
++## Flechas: qué representan y qué NO representan
++
++- `vincula`: ancla de la consulta → unidad. Proyección de vínculos documentales y asociaciones de indexación ya identificados en 9A; el inspector de unidad distingue la procedencia.
++- `contiene`: unidad → subunidad. Pertenencia editorial registrada.
++- `sigue en texto`: unidad → siguiente unidad **solo si son consecutivas en el orden total** de `tags.unidades` y ambas están visibles.
++- `continúa`: subunidad → siguiente subunidad **solo si son consecutivas dentro de su unidad**.
++- `agrupa`: conexión de presentación creada por el usuario.
++
++Las flechas del orden de lectura **no son relaciones causales, lógicas o filosóficas**. No se deducen conexiones conceptuales nuevas de la mera sucesión; las futuras relaciones dirigidas filosóficas entre unidades/subunidades exigirán datos editoriales explícitos que identifiquen ambos extremos y la clase de relación.
++
++## Focos orientativos
++
++Los focos del grafo inicial aparecen en el modal en una franja superior, acompañados exclusivamente por aristas funcionales originales que los conecten directamente. Los elementos de orientación no son seleccionables ni expandibles. La consulta textual sigue centrada en un único concepto, FAQ o arista funcional seleccionada.
++
++## Pruebas
++
++```sh
++node public/scripts/check-visor-texto-9a2.mjs
++node public/scripts/check-visor-contexto-9a1.mjs
++node public/scripts/check-visor-texto-9a.mjs
++node public/scripts/check-visor-disposiciones.mjs
++node public/scripts/check-visor-controles-8b.mjs
++```
++
++Prueba manual: abrir `/#/lab/visor-grafos`, explorar las unidades de areté, reordenar y guardar, crear un agrupador de unidades y subunidades, cerrar/abrirlo, recuperar disposición; repetir desde otro foco y comprobar que las posiciones no se transfieren. Validar las etiquetas y flechas dirigidas. El navegador real y los datos actuales de MariaDB deben verificarse en la instalación del usuario.

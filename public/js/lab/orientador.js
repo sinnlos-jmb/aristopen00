@@ -1,8 +1,10 @@
 import { analyze } from './analyze.js';
+import { interpretarInquietud } from './sentidos.js';
+import { diagnosticarContinuidad, validarEvaluacionPiloto } from '../../shared/orientador-piloto.js';
 
-// V1: contrato de consulta y bitácora; NO calcula trayectos ni interpreta tags.
+// V2: conserva el contrato de consulta y agrega una lectura contextual provisional.
 // Todas las transiciones devuelven una sesión nueva, sin mutar las anteriores.
-export const ORIENTADOR_VERSION = 1;
+export const ORIENTADOR_VERSION = 2;
 
 const PREGUNTAS = Object.freeze({
   tema: {
@@ -11,7 +13,7 @@ const PREGUNTAS = Object.freeze({
   },
   intencion: {
     texto: '¿Qué te gustaría hacer con ese tema?',
-    opciones: [['definir', 'Precisar su significado'], ['explorar', 'Explorarlo paso a paso'], ['relacionar', 'Relacionarlo con otro concepto']],
+    opciones: [['definir', 'Precisar su significado'], ['caracterizar', 'Examinar sus cualidades'], ['explorar', 'Explorarlo paso a paso'], ['relacionar', 'Relacionarlo con otro concepto'], ['distinguir', 'Distinguirlo de otros conceptos'], ['evaluar', 'Examinar su excelencia o valor'], ['justificar', 'Buscar su fundamento'], ['explicar_genesis', 'Comprender cómo surge o se adquiere']],
   },
   destino: {
     texto: '¿Con qué concepto querés relacionarlo?',
@@ -27,11 +29,17 @@ const PREGUNTAS = Object.freeze({
   },
   origen: {
     texto: '¿Querés fijar un punto de partida pedagógico?',
-    opciones: [['phusis', 'Comenzar por phýsis'], ['tema', 'Comenzar por el tema elegido'], ['sin_preferencia', 'Dejarlo abierto']],
+    opciones: [['tema', 'Comenzar por el concepto elegido'], ['sin_preferencia', 'Dejarlo abierto'], ['phusis', 'Comenzar por phýsis (si corresponde)']],
   },
 });
 
 const hasValue = value => value !== null && value !== undefined;
+const idsIniciales = sesion => sesion.interpretacion?.conceptos || sesion.analisis.conceptosDetectados;
+const nombreConcepto = (S, id) => S?.N?.[id]?.label || S?.FN?.[id]?.label ||
+  PREGUNTAS.tema.opciones.find(([v]) => v === id)?.[1] || id;
+const otrosIniciales = sesion => idsIniciales(sesion).includes(sesion.consulta.tema)
+  ? idsIniciales(sesion).filter(id => id !== sesion.consulta.tema) : [];
+const esRelacion = intencion => ['relacionar', 'distinguir'].includes(intencion);
 const clone = value => JSON.parse(JSON.stringify(value));
 
 function bitacora(sesion, tipo, datos) {
@@ -144,8 +152,9 @@ export function iniciarOrientacion(texto) {
   const pregunta = String(texto || '').trim();
   if (!pregunta) throw new Error('Escribí primero tu inquietud.');
   const analisis = analyze(pregunta);
-  // Una detección léxica es una hipótesis inicial, no una interpretación confirmada.
-  const conceptos = [...new Set(analisis.conceptos.map(c => c.id))];
+  const interpretacion = interpretarInquietud(pregunta, analisis);
+  // La lectura de V2 preserva la forma de la pregunta sin confirmar sus hipótesis.
+  const conceptos = interpretacion.conceptos;
   const sesion = {
     version: ORIENTADOR_VERSION,
     estado: 'en_refinamiento',
@@ -156,9 +165,12 @@ export function iniciarOrientacion(texto) {
       activadores: analisis.conceptos.map(c => ({ id: c.id, palabra: c.word })),
       intencionDetectada: analisis.primaryMode?.id || null,
     },
+    interpretacion,
+    aclaracionSentido: null,
+    evaluacionPiloto: null,
     consulta: {
       tema: conceptos.length === 1 ? conceptos[0] : null,
-      intencion: null, destino: null, nivel: null, extension: null, origen: null,
+      intencion: null, destino: null, conceptosRelacionados: [], nivel: null, extension: null, origen: null,
     },
     candidatos: [], // Se conectará al grafo y a las FAQ en V2.
     evaluacion: 'no_disponible_v1',
@@ -168,7 +180,8 @@ export function iniciarOrientacion(texto) {
     texto: pregunta,
     hipotesisTema: sesion.consulta.tema,
     intencionDetectada: sesion.analisis.intencionDetectada,
-    nota: 'El léxico aporta una hipótesis; ninguna preferencia se presupone.',
+    interpretacionInicial: { operacion: interpretacion.operacion, forma: interpretacion.forma },
+    nota: 'El léxico y la forma de la pregunta son hipótesis; ninguna preferencia se presupone.',
   });
   return sesion;
 }
@@ -179,7 +192,7 @@ export function siguientePregunta(sesion, S = null) {
   let clave = null;
   if (!hasValue(c.tema)) clave = 'tema';
   else if (!hasValue(c.intencion)) clave = 'intencion';
-  else if (c.intencion === 'relacionar' && !hasValue(c.destino)) clave = 'destino';
+  else if (esRelacion(c.intencion) && !hasValue(c.destino) && !c.conceptosRelacionados?.length) clave = 'destino';
   else if (!hasValue(c.nivel)) clave = 'nivel';
   else if (!hasValue(c.extension)) clave = 'extension';
   else if (!hasValue(c.origen)) clave = 'origen';
@@ -188,19 +201,42 @@ export function siguientePregunta(sesion, S = null) {
   const originales = spec.opciones
     .filter(([v]) => clave !== 'destino' || v !== c.tema)
     .map(([valor, etiqueta]) => ({ valor, etiqueta, fuente: 'opcion_general' }));
+  if (clave === 'intencion') {
+    const otros = otrosIniciales(sesion);
+    const nombre = nombreConcepto(S, c.tema);
+    const texto = otros.length
+      ? `Empezando por ${nombre}, ¿qué querés indagar?`
+      : spec.texto;
+    const sugerida = sesion.interpretacion?.operacion;
+    const opciones = originales.map(o => {
+      if (otros.length && esRelacion(o.valor)) return {
+        ...o, etiqueta: o.valor === 'distinguir'
+          ? `Compararlo con ${otros.map(id => nombreConcepto(S, id)).join(' y ')}`
+          : `Relacionarlo con ${otros.map(id => nombreConcepto(S, id)).join(' y ')}`,
+      };
+      return o;
+    });
+    const prioritaria = opciones.find(o => o.valor === sugerida);
+    return { clave, texto, opciones: [
+      ...(prioritaria ? [{ ...prioritaria, fuente: 'hipotesis_inicial' }] : []),
+      ...opciones.filter(o => o.valor !== prioritaria?.valor),
+    ] };
+  }
   if (clave === 'tema') {
-    const reconocidos = sesion.analisis.conceptosDetectados.map(id => ({
-      valor: id, etiqueta: S?.N?.[id]?.label || S?.FN?.[id]?.label || originales.find(o => o.valor === id)?.etiqueta || id,
-      fuente: 'pregunta_inicial',
+    const reconocidos = idsIniciales(sesion).map(id => ({
+      valor: id, etiqueta: nombreConcepto(S, id), fuente: 'pregunta_inicial',
     }));
-    const unicos = new Map();
-    for (const opcion of [...reconocidos, ...originales]) {
-      if (!unicos.has(opcion.valor)) unicos.set(opcion.valor, opcion);
-    }
-    return { clave, texto: spec.texto, opciones: [...unicos.values()] };
+    // Si la pregunta ya nombró conceptos, no añadir opciones ajenas como si
+    // formaran parte de la pregunta. «Otro concepto…» sigue disponible en la UI.
+    if (reconocidos.length) return {
+      clave, texto: '¿Por cuál de los conceptos mencionados querés empezar?',
+      opciones: reconocidos,
+      aclaracion: 'Elegir un punto de partida no elimina los demás conceptos de tu pregunta.',
+    };
+    return { clave, texto: spec.texto, opciones: originales };
   }
   if (clave === 'destino') {
-    const reconocidos = sesion.analisis.conceptosDetectados
+    const reconocidos = (sesion.interpretacion?.conceptos || sesion.analisis.conceptosDetectados)
       .filter(id => id !== c.tema)
       .map(id => ({ valor: id, etiqueta: S?.N?.[id]?.label || S?.FN?.[id]?.label || originales.find(o => o.valor === id)?.etiqueta || id, fuente: 'pregunta_inicial' }));
     const aristas = sugerirRelaciones(S, c.tema).slice(0, 8);
@@ -224,13 +260,37 @@ export function responderOrientacion(sesion, valor, S = null) {
   const opcion = pregunta.opciones.find(o => o.valor === valor);
   if (!opcion) throw new Error('Opción no válida para la pregunta actual.');
   const previo = clone(sesion.consulta);
-  const nueva = { ...sesion, consulta: { ...sesion.consulta, [pregunta.clave]: valor } };
+  const consulta = { ...sesion.consulta, [pregunta.clave]: valor };
+  if (pregunta.clave === 'intencion') {
+    consulta.conceptosRelacionados = esRelacion(valor) ? otrosIniciales(sesion) : [];
+    consulta.destino = null;
+  }
+  const nueva = { ...sesion, consulta };
   nueva.bitacora = bitacora(nueva, 'respuesta', {
     pregunta: pregunta.clave,
     formulacion: pregunta.texto,
     opcion: { ...opcion },
     anterior: previo[pregunta.clave],
-    efecto: `Se registra ${pregunta.clave}; la priorización de trayectos queda pendiente de V2/V3.`,
+    efecto: consulta.conceptosRelacionados?.length && pregunta.clave === 'intencion'
+      ? 'Se retoman los demás conceptos de la pregunta inicial sin suponer aristas entre ellos.'
+      : `Se registra ${pregunta.clave}; la priorización de trayectos queda pendiente de V2/V3.`,
+    ...(pregunta.clave === 'intencion' ? { conceptosRelacionados: [...consulta.conceptosRelacionados] } : {}),
+  });
+  return nueva;
+}
+
+// El estudiante puede precisar su acepción sin inventar un nodo o etiqueta editorial.
+// Es opcional, reversible mediante una nueva precisión y queda en la bitácora.
+export function precisarSentido(sesion, texto) {
+  if (sesion?.estado !== 'en_refinamiento') throw new Error('Esta orientación ya terminó.');
+  if (!hasValue(sesion.consulta.tema)) throw new Error('Elegí primero el tema.');
+  const literal = String(texto || '').trim().replace(/\s+/g, ' ');
+  if (!literal || literal.length > 400) throw new Error('Precisá el sentido entre 1 y 400 caracteres.');
+  const nueva = { ...sesion, aclaracionSentido: literal };
+  nueva.bitacora = bitacora(nueva, 'precision_sentido', {
+    tema: nueva.consulta.tema, texto: literal, anterior: sesion.aclaracionSentido || null,
+    fuente: 'texto_estudiante',
+    nota: 'La precisión expresa el sentido buscado, sin acreditar una acepción editorial ni una arista.',
   });
   return nueva;
 }
@@ -238,7 +298,7 @@ export function responderOrientacion(sesion, valor, S = null) {
 export function cerrarOrientacion(sesion, motivo) {
   if (sesion?.estado !== 'en_refinamiento') throw new Error('La sesión no está activa.');
   if (!['conforme', 'abandonado'].includes(motivo)) throw new Error('Cierre no reconocido.');
-  const nueva = { ...sesion, estado: motivo };
+  const nueva = { ...sesion, estado: motivo, trazabilidadIntencion: diagnosticarContinuidad(sesion) };
   nueva.bitacora = bitacora(nueva, 'cierre', {
     motivo,
     completa: siguientePregunta(sesion) === null,
@@ -247,6 +307,13 @@ export function cerrarOrientacion(sesion, motivo) {
       : 'Abandono registrado sin inferir disconformidad.',
   });
   return nueva;
+}
+
+// La evaluación se puede guardar tras el cierre sin alterar la bitácora:
+// su último evento debe seguir siendo 'cierre' para el contrato de persistencia.
+export function registrarEvaluacionPiloto(sesion, respuestas) {
+  if (!sesion || sesion.estado === 'en_refinamiento') throw new Error('La sesión debe estar cerrada.');
+  return { ...sesion, evaluacionPiloto: validarEvaluacionPiloto(respuestas) };
 }
 
 export function resumenOrientacion(sesion) {

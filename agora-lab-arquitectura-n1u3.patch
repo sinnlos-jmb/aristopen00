@@ -1,0 +1,487 @@
+diff --git a/docs/LAB_N1U3_RELACIONES_PROEMIO.md b/docs/LAB_N1U3_RELACIONES_PROEMIO.md
+new file mode 100644
+index 0000000..a93de84
+--- /dev/null
++++ b/docs/LAB_N1U3_RELACIONES_PROEMIO.md
+@@ -0,0 +1,53 @@
++# Ágora · Checkpoint N1-U.3 — Relaciones argumentativas del Proemio
++
++**Base requerida:** N1-U.2 sobre la versión de Ágora con lector bilingüe 9B. Incremento de solo lectura; **no aplica migraciones ni escribe en MariaDB**.
++
++## Acceso y uso
++
++1. Abrir `/#/lab/arquitectura`.
++2. Seleccionar `I–V → Proemio: el bien y la política`.
++3. En la barra del grafo, alternar **Momentos** y **Relaciones propuestas**.
++4. En *Relaciones propuestas*, se muestran las 12 subunidades del Proemio con 10 flechas argumentativas propuestas. Cada flecha es dirigida, tiene título propio, clasificación editorial y fundamento. Ninguna procede de una inferencia automática de continuidad o de relaciones conceptuales existentes.
++5. Pulsar una arista para inspeccionar su origen, destino y justificación; los botones **Leer origen** y **Leer destino** invocan el mismo lector bilingüe de N1-U.2.
++6. Pulsar un nodo para revisar su título, referencia Bekker e incidencia con las relaciones propuestas. La subunidad final `1094b10-11` aún no recibe arista en esta versión: esto no constituye una tesis sobre su función.
++7. Volver a **Momentos** o navegar a otras unidades. Su representación canónica no se modifica.
++
++## Proveniencia
++
++- Fuente canónica en tiempo de ejecución: `/api/labo/lectura`, con `revision`.
++- Momentos N1-U.2: `/lab/n1u1-propuestas-libro-i.json`.
++- Hipótesis N1-U.3: `/lab/n1u3-relaciones-proemio.json`.
++- Las referencias Bekker y títulos de las doce subunidades coinciden con la exportación incorporada en N1-U.2. El archivo de prueba de N1-U.2 **no** incorpora las introducciones editoriales completas: los fundamentos de N1-U.3 son **propuestas interpretativas**, destinadas a contrastarse con la lectura de ambos idiomas antes de cualquier validación.
++- Todas las relaciones tienen `estado=propuesta_no_validada`, y `construirRelacionesProemio()` rechaza estado, revisión o extremos incompatibles. No se promueven automáticamente.
++- Las cuatro macrounidades y las articulaciones previas se conservan. La traducción acordada es «virtud completa en una vida entera».
++
++## Aristas propuestas
++
++| ID | Nombre | Origen → destino |
++|---|---|---|
++| r01 | distingue formas de fin | 1094a1-3 → 1094a3-6 |
++| r02 | abre pluralidad de fines | 1094a3-6 → 1094a6-9 |
++| r03 | ordena fines | 1094a6-9 → 1094a9-16 |
++| r04 | acota la jerarquía | 1094a9-16 → 1094a16-18 |
++| r05 | plantea el fin último | 1094a9-16 → 1094a18-22 |
++| r06 | motiva su búsqueda | 1094a18-22 → 1094a22-24 |
++| r07 | formula el programa | 1094a22-24 → 1094a24-26 |
++| r08 | identifica el saber rector | 1094a24-26 → 1094a26-b3 |
++| r09 | determina el bien humano | 1094a26-b3 → 1094b4-7 |
++| r10 | amplía la escala política | 1094b4-7 → 1094b7-10 |
++
++Estas flechas no equivalen a relaciones de implicación lógica demostrada: son propuestas de lectura, con orientación textual y función dialéctica que deben ser discutidas filosóficamente.
++
++## Comprobaciones
++
++En la raíz del repositorio, **después de aplicar N1-U.2**:
++
++```powershell
++git apply --check "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u3.patch"
++git apply "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u3.patch"
++node public/scripts/check-lab-arquitectura-n1u2.mjs
++node public/scripts/check-lab-arquitectura-n1u3.mjs
++node public/scripts/check-visor-lectura-9b.mjs
++```
++
++Las pruebas locales usan el fixture de la exportación N1-U.2; no requieren MariaDB ni conexión de red. La comprobación del lector 9B requiere el código completo de Ágora, que no está incluido en este parche. Quedan pendientes la verificación de carga en el navegador, Cytoscape y lectura griega/castellana contra tu servidor y MariaDB activos.
+diff --git a/public/css/lab-arquitectura-n1u2.css b/public/css/lab-arquitectura-n1u2.css
+index 4423ff2..83c6e36 100644
+--- a/public/css/lab-arquitectura-n1u2.css
++++ b/public/css/lab-arquitectura-n1u2.css
+@@ -63,3 +63,10 @@
+ .arch-remisiones ul { margin: 10px 0; padding-left: 21px; }
+ .arch-remisiones li { margin-bottom: 10px; }
+ .arch-remisiones li p { margin: 3px 0 0; font-size: .82rem; }
++
++/* N1-U.3 · Las aristas propuestas se distinguen de la navegación estructural. */
++.arch-modes { display: flex; gap: 4px; padding: 3px; border-radius: 9px; border: 1px solid var(--border, #b3c6ce); }
++.arch-modes[hidden] { display: none !important; }
++.arch-modes button[aria-pressed="true"] { background: #e9eee9; border-color: #9e673e; font-weight: 700; }
++.arch-minor { display: block; width: 100%; padding: 9px 10px; border: 1px solid #9daeb7; border-radius: 7px; background: var(--bg-elevated, #fff); color: inherit; text-align: left; font: inherit; cursor: pointer; margin: 8px 0; }
++.arch-minor:hover, .arch-minor:focus-visible { border-color: #995c32; }
+diff --git a/public/js/lab/architectureRelations.js b/public/js/lab/architectureRelations.js
+new file mode 100644
+index 0000000..e05f5f3
+--- /dev/null
++++ b/public/js/lab/architectureRelations.js
+@@ -0,0 +1,51 @@
++// N1-U.3 · Aristas editoriales hipotéticas para el Proemio. Sin escrituras a MariaDB.
++const fail = msg => { throw new Error(`Relaciones del Proemio: ${msg}`); };
++const TIPOS = new Set(['especifica', 'multiplica', 'ordena', 'acota', 'plantea', 'motiva', 'formula', 'identifica', 'determina', 'amplia']);
++const clean = v => typeof v === 'string' && v.trim().length > 0;
++
++export function construirRelacionesProemio(modelo, propuesta) {
++  if (propuesta?.schema !== 'agora.lab.n1u3.relaciones_argumentativas.v1') fail('schema no reconocido');
++  if (!modelo?.revision || propuesta.fuente?.revision !== modelo.revision) fail('revisión distinta de la API');
++  if (propuesta.fuente?.unidad_id !== 'proemio') fail('unidad de procedencia distinta de proemio');
++  if (propuesta.estado !== 'propuesta_no_validada' || !Array.isArray(propuesta.relaciones)) fail('no se recibió una lista explícita de propuestas');
++  const unidad = modelo.unidades.get('proemio');
++  if (!unidad) fail('no existe proemio en la revisión actual');
++  const ids = new Set(unidad.subunidades.map(s => s.id));
++  const relaciones = [], idsUsados = new Set(), pares = new Set();
++  for (const r of propuesta.relaciones) {
++    if (!clean(r?.id) || idsUsados.has(r.id)) fail(`id vacío o repetido: ${String(r?.id)}`);
++    if (!ids.has(r.de) || !ids.has(r.a) || r.de === r.a) fail(`extremos inválidos para ${r.id}`);
++    if (!clean(r.nombre) || !clean(r.fundamento) || !TIPOS.has(r.tipo)) fail(`semántica incompleta para ${r.id}`);
++    if (r.estado !== 'propuesta_no_validada') fail(`no se puede elevar ${r.id} a relación validada desde el Lab`);
++    const par = `${r.de}->${r.a}`;
++    if (pares.has(par)) fail(`arista duplicada: ${par}`);
++    pares.add(par); idsUsados.add(r.id);
++    relaciones.push(Object.freeze({ ...r }));
++  }
++  if (!relaciones.length) fail('no hay relaciones propuestas');
++  return Object.freeze({ unidadId: 'proemio', revision: modelo.revision,
++    nota: String(propuesta.nota || ''),
++    relaciones: Object.freeze(relaciones),
++    porId: new Map(relaciones.map(r => [r.id, r])),
++    subIds: Object.freeze(unidad.subunidades.map(s => s.id)),
++  });
++}
++
++export function elementosRelacionesProemio(modelo, grupo, seleccion = {}) {
++  if (grupo.revision !== modelo.revision) fail('se intentó dibujar otra revisión');
++  // Grilla serpenteante para mantener próximos los nodos de la secuencia del texto.
++  const nodes = grupo.subIds.map((id, i) => {
++    const col = Math.floor(i / 4), fila = col % 2 ? 3 - i % 4 : i % 4;
++    const s = modelo.subs.get(id);
++    return { group: 'nodes', data: { id: `sub:${id}`, key: id, tipo: 'subunidad',
++      label: `${s.titulo}\n${Array.isArray(s.bekker) ? s.bekker.join('–') : id}`,
++      seleccionado: seleccion.subId === id ? 1 : 0 },
++      position: { x: 170 + col * 395, y: 105 + fila * 158 } };
++  });
++  const edges = grupo.relaciones.map(r => ({ group: 'edges', data: {
++    id: `rel:${r.id}`, key: r.id, source: `sub:${r.de}`, target: `sub:${r.a}`,
++    tipo: 'argumentativa_propuesta', label: r.nombre,
++    seleccionado: seleccion.relacionId === r.id ? 1 : 0,
++  } }));
++  return [...nodes, ...edges];
++}
+diff --git a/public/js/views/labArchitectureView.js b/public/js/views/labArchitectureView.js
+index 391e213..decd3e7 100644
+--- a/public/js/views/labArchitectureView.js
++++ b/public/js/views/labArchitectureView.js
+@@ -2,6 +2,7 @@
+ import { esc } from '../ui.js';
+ import { cargarCytoscape } from '../lab/cytoscapeLoader.js';
+ import { construirModeloArquitectura, obtenerContexto, elementosArquitectura } from '../lab/architectureModel.js';
++import { construirRelacionesProemio, elementosRelacionesProemio } from '../lab/architectureRelations.js';
+ import { localizarSubunidadEnBiblioteca, representarLecturaContextual } from '../lab/graphPassageReader.js';
+ 
+ const safe = x => esc(String(x ?? ''));
+@@ -80,6 +81,42 @@ function inspectorHtml(model, state) {
+     <h3>Alcance</h3><p class="arch-muted">${model.stats.unidades} unidades · ${model.stats.subunidades} subunidades · ${model.stats.momentosRegistrados} momentos registrados · ${model.stats.momentosPropuestos} propuestos.</p>`;
+ }
+ 
++
++// El modo argumentativo no reemplaza la ficha canónica: presenta hipótesis revisables.
++function inspectorRelacionesHtml(model, grupo, relacionId, subId) {
++  const sub = id => model.subs.get(id);
++  const etiqueta = id => `${sub(id)?.titulo || id} · ${ref(sub(id)?.bekker)}`;
++  const relaciones = grupo.relaciones;
++  if (relacionId) {
++    const r = grupo.porId.get(relacionId);
++    if (r) return `<div class="arch-inspector-heading">${chip('Relación argumentativa · hipótesis', 'propuesto')}</div>
++      <h2>${safe(r.nombre)}</h2><p class="arch-muted">Tipo editorial propuesto: ${safe(r.tipo)}</p>
++      <h3>De · pasaje de origen</h3><p>${safe(etiqueta(r.de))}</p>
++      <button type="button" class="arch-minor" data-arch-read="${safe(r.de)}">Leer origen en griego y castellano</button>
++      <h3>A · pasaje de destino</h3><p>${safe(etiqueta(r.a))}</p>
++      <button type="button" class="arch-minor" data-arch-read="${safe(r.a)}">Leer destino en griego y castellano</button>
++      <h3>Fundamento editorial para discutir</h3><p>${safe(r.fundamento)}</p>
++      <p class="arch-muted">Arista propuesta y dirigida. No registrada en MariaDB ni inferida automáticamente de una coincidencia conceptual.</p>
++      <button type="button" class="arch-minor" data-arch-rel-list>Volver a las 10 propuestas</button>`;
++  }
++  if (subId && grupo.subIds.includes(subId)) {
++    const s = sub(subId);
++    const conectadas = relaciones.filter(r => r.de === subId || r.a === subId);
++    return `<div class="arch-inspector-heading">${chip('Subunidad registrada')} ${chip('Relaciones hipotéticas', 'propuesto')}</div>
++      <h2>${safe(s.titulo)}</h2><p class="arch-muted">${safe(ref(s.bekker))}</p>
++      <h3>Contenido de MariaDB</h3><p>${text(s.intro)}</p>
++      <button type="button" class="arch-minor" data-arch-read="${safe(subId)}">Leer pasaje bilingüe</button>
++      <h3>Propuestas incidentes (${conectadas.length})</h3>
++      ${conectadas.length ? `<div class="arch-nav-list">${conectadas.map(r => `<button type="button" data-arch-rel-select="${safe(r.id)}">${safe(r.de === subId ? 'Sale hacia' : 'Llega desde')}: ${safe(r.nombre)}<small>${safe(etiqueta(r.de === subId ? r.a : r.de))}</small></button>`).join('')}</div>` : '<p class="arch-muted">Todavía no se propuso una arista para esta subunidad. Esto no significa que carezca de función en el argumento.</p>'}
++      <button type="button" class="arch-minor" data-arch-rel-list>Ver todas las propuestas</button>`;
++  }
++  return `<div class="arch-inspector-heading">${chip('N1-U.3 · hipótesis editoriales', 'propuesto')}</div>
++    <h2>Relaciones argumentativas del Proemio</h2>
++    <p>${relaciones.length} relaciones dirigidas, propuestas entre las ${grupo.subIds.length} subunidades registradas. Seleccioná una flecha o una subunidad del grafo.</p>
++    <p class="arch-muted">${safe(grupo.nota)} Las justificaciones son hipótesis para comprobar mediante lectura; no son datos registrados ni conclusiones validadas.</p>
++    <h3>Aristas para revisar</h3><div class="arch-nav-list">${relaciones.map(r => `<button type="button" data-arch-rel-select="${safe(r.id)}">${safe(r.nombre)}<small>${safe(ref(sub(r.de)?.bekker))} → ${safe(ref(sub(r.a)?.bekker))}</small></button>`).join('')}</div>`;
++}
++
+ function graphStyle() {
+   return [
+     { selector: 'node', style: {
+@@ -104,6 +141,8 @@ function graphStyle() {
+     } },
+     { selector: 'edge[tipo = "orden_textual"]', style: { 'line-style': 'dashed', 'line-color': '#aaa', 'target-arrow-color': '#aaa' } },
+     { selector: 'edge[tipo = "articula"]', style: { 'line-style': 'dashed', 'line-color': '#b99d54', 'target-arrow-color': '#b99d54' } },
++    { selector: 'edge[tipo = "argumentativa_propuesta"]', style: { 'width': 3, 'line-style': 'dashed', 'line-color': '#bc7548', 'target-arrow-color': '#bc7548', 'font-size': 12, 'text-rotation': 'none' } },
++    { selector: 'edge[tipo = "argumentativa_propuesta"][seleccionado = 1]', style: { 'width': 6, 'line-color': '#a24d20', 'target-arrow-color': '#a24d20' } },
+   ];
+ }
+ 
+@@ -115,7 +154,7 @@ export async function createLabArchitectureView(App) {
+   css.rel = 'stylesheet'; css.href = '/css/lab-arquitectura-n1u2.css'; css.dataset.agoraLabArquitectura = '1';
+   document.head.append(css);
+   el.innerHTML = `<div class="arch-page">
+-    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.2 · Experimento de lectura · Solo consulta</span></nav>
++    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.3 · Experimento de lectura · Solo consulta</span></nav>
+     <h1>Arquitectura argumentativa del Libro I</h1>
+     <p class="arch-intro">Macrounidades propuestas y unidades reales de MariaDB. La virtud completa en una vida entera.</p>
+     <p class="arch-status" role="status" aria-live="polite">Cargando la revisión editorial…</p>
+@@ -125,8 +164,12 @@ export async function createLabArchitectureView(App) {
+         <button type="button" data-arch-back="macro" hidden>Volver a macrounidad</button>
+         <button type="button" data-arch-back="unidad" hidden>Volver a unidad</button>
+         <button type="button" data-arch-back="momento" hidden>Volver a momento</button>
++        <div class="arch-modes" role="group" aria-label="Vista del argumento" hidden>
++          <button type="button" data-arch-mode="momentos" aria-pressed="true">Momentos</button>
++          <button type="button" data-arch-mode="relaciones" aria-pressed="false">Relaciones propuestas</button>
++        </div>
+         <button type="button" data-arch-fit>Ajustar grafo</button>
+-        <span class="arch-legend">Línea continua: pertenencia · Punteada: orden o articulación editorial</span>
++        <span class="arch-legend">Estructura y lectura · Las flechas anaranjadas son hipótesis argumentativas, no registros</span>
+       </div>
+       <div class="arch-columns">
+         <section class="arch-graph-shell" aria-label="Grafo del libro">
+@@ -135,7 +178,7 @@ export async function createLabArchitectureView(App) {
+         </section>
+         <aside class="arch-inspector" aria-label="Ficha editorial"><div class="arch-inspector-content"></div></aside>
+       </div>
+-      <p class="arch-footer">Las macrounidades y los momentos de I–V son propuestas del Lab. Las unidades, subunidades y los restantes momentos provienen de MariaDB. Ninguna de las conexiones de navegación acredita por sí sola una relación filosófica.</p>
++      <p class="arch-footer">Las relaciones argumentativas del Proemio son hipótesis editoriales N1-U.3, no registros canónicos. Las subunidades provienen de MariaDB y conservan sus identificadores. La lectura bilingüe permite contrastar cada propuesta.</p>
+     </div>
+     <section class="arch-reader" hidden>
+       <div class="arch-reader-head"><button type="button" data-arch-reader-back>← Volver al grafo</button><div><h2 data-arch-reader-title>Lectura</h2><p class="arch-muted" data-arch-reader-ref></p></div></div>
+@@ -148,7 +191,8 @@ export async function createLabArchitectureView(App) {
+   const main = $('.arch-main'), inspector = $('.arch-inspector-content'), reader = $('.arch-reader');
+   const graph = $('.arch-graph');
+   const state = { macroId: null, unidadId: null, momentoId: null, subId: null };
+-  let model = null, cy = null, destroyed = false, readerModel = null, chapterNumber = null, readerTicket = 0;
++  let model = null, rels = null, modo = 'momentos', relacionId = null, relacionSubId = null;
++  let cy = null, destroyed = false, readerModel = null, chapterNumber = null, readerTicket = 0;
+   const abort = new AbortController();
+   const positions = new Map();
+   const selected = () => obtenerContexto(model, state);
+@@ -171,19 +215,28 @@ export async function createLabArchitectureView(App) {
+       if (!selected().momento?.subIds.includes(id)) return;
+       state.subId = id;
+     }
++    // La selección de una nueva unidad invalida la selección argumentativa anterior.
++    relacionId = null; relacionSubId = null;
+     dibujar();
+   }
+   function dibujar() {
+     if (!model || destroyed) return;
+-    inspector.innerHTML = inspectorHtml(model, state);
+     const ctx = selected();
++    const disponible = ctx.unidad?.id === 'proemio' && !!rels;
++    const argumentativo = disponible && modo === 'relaciones';
++    $('.arch-modes').hidden = !disponible;
++    for (const b of el.querySelectorAll('[data-arch-mode]')) b.setAttribute('aria-pressed', String(b.dataset.archMode === (argumentativo ? 'relaciones' : 'momentos')));
++    inspector.innerHTML = argumentativo ? inspectorRelacionesHtml(model, rels, relacionId, relacionSubId) : inspectorHtml(model, state);
+     $('[data-arch-back="macro"]').hidden = !ctx.macro;
+     $('[data-arch-back="unidad"]').hidden = !ctx.unidad;
+     $('[data-arch-back="momento"]').hidden = !ctx.momento;
+     if (cy) {
+-      const elements = elementosArquitectura(model, state);
++      const elements = argumentativo
++        ? elementosRelacionesProemio(model, rels, { relacionId, subId: relacionSubId })
++        : elementosArquitectura(model, state);
+       // Conserva posiciones manuales de los nodos que continúan visibles durante la sesión.
+-      for (const e of elements) if (e.group === 'nodes' && positions.has(e.data.id)) e.position = positions.get(e.data.id);
++      const posGroup = argumentativo ? 'relaciones:' : 'estructura:';
++      for (const e of elements) if (e.group === 'nodes' && positions.has(posGroup + e.data.id)) e.position = positions.get(posGroup + e.data.id);
+       cy.batch(() => { cy.elements().remove(); cy.add(elements); });
+       cy.resize(); cy.fit(cy.elements(), 38);
+     }
+@@ -241,6 +294,17 @@ export async function createLabArchitectureView(App) {
+     }
+   }
+   el.addEventListener('click', event => {
++    const modeButton = event.target.closest('[data-arch-mode]');
++    if (modeButton) {
++      if (selected().unidad?.id !== 'proemio' || !rels) return;
++      modo = modeButton.dataset.archMode === 'relaciones' ? 'relaciones' : 'momentos';
++      relacionId = null; relacionSubId = null; dibujar(); return;
++    }
++    const relButton = event.target.closest('[data-arch-rel-select]');
++    if (relButton && rels?.porId.has(relButton.dataset.archRelSelect)) {
++      relacionId = relButton.dataset.archRelSelect; relacionSubId = null; dibujar(); return;
++    }
++    if (event.target.closest('[data-arch-rel-list]')) { relacionId = null; relacionSubId = null; dibujar(); return; }
+     const nav = event.target.closest('[data-arch-kind]');
+     if (nav) { navegar(nav.dataset.archKind, nav.dataset.archId); return; }
+     const back = event.target.closest('[data-arch-back]');
+@@ -270,15 +334,17 @@ export async function createLabArchitectureView(App) {
+     if (next) { chapterNumber = next.number; pintarLectura(); }
+   });
+   try {
+-    const [r, p] = await Promise.all([
++    const [r, p, a] = await Promise.all([
+       fetch('/api/labo/lectura', { cache: 'no-store', signal: abort.signal }),
+       fetch('/lab/n1u1-propuestas-libro-i.json', { cache: 'no-store', signal: abort.signal }),
++      fetch('/lab/n1u3-relaciones-proemio.json', { cache: 'no-store', signal: abort.signal }),
+     ]);
+-    if (!r.ok || !p.ok) throw new Error(`No se pudieron cargar las fuentes (MariaDB: ${r.status}; propuestas: ${p.status}).`);
++    if (!r.ok || !p.ok || !a.ok) throw new Error(`No se pudieron cargar las fuentes (MariaDB: ${r.status}; momentos: ${p.status}; relaciones: ${a.status}).`);
+     model = construirModeloArquitectura(await r.json(), await p.json());
++    rels = construirRelacionesProemio(model, await a.json());
+     if (destroyed) return { el, destroy() {} };
+     main.hidden = false;
+-    status.textContent = `Revisión ${model.revision.slice(0, 12)}… · ${model.stats.unidades} unidades · ${model.stats.subunidades} subunidades · sin modificar datos`;
++    status.textContent = `Revisión ${model.revision.slice(0, 12)}… · ${model.stats.unidades} unidades · ${model.stats.subunidades} subunidades · ${rels.relaciones.length} relaciones propuestas en Proemio · sin modificar datos`;
+     dibujar();
+     try {
+       const cytoscape = await cargarCytoscape();
+@@ -287,10 +353,20 @@ export async function createLabArchitectureView(App) {
+         minZoom: 0.22, maxZoom: 2.5, wheelSensitivity: 0.16, boxSelectionEnabled: false });
+       cy.on('tap', 'node', event => {
+         const n = event.target;
++        if (modo === 'relaciones' && selected().unidad?.id === 'proemio') {
++          relacionSubId = n.data('key'); relacionId = null; dibujar(); return;
++        }
+         const kind = ({ macro: 'macro', unidad: 'unidad', momento: 'momento', subunidad: 'subunidad' })[n.data('tipo')];
+         if (kind) navegar(kind, n.data('key'));
+       });
+-      cy.on('dragfree', 'node', event => positions.set(event.target.id(), { ...event.target.position() }));
++      cy.on('tap', 'edge[tipo = "argumentativa_propuesta"]', event => {
++        if (modo !== 'relaciones' || selected().unidad?.id !== 'proemio') return;
++        relacionId = event.target.data('key'); relacionSubId = null; dibujar();
++      });
++      cy.on('dragfree', 'node', event => {
++        const group = modo === 'relaciones' && selected().unidad?.id === 'proemio' ? 'relaciones:' : 'estructura:';
++        positions.set(group + event.target.id(), { ...event.target.position() });
++      });
+       dibujar();
+     } catch (error) {
+       $('.arch-graph-fallback').hidden = false;
+diff --git a/public/lab/n1u3-relaciones-proemio.json b/public/lab/n1u3-relaciones-proemio.json
+new file mode 100644
+index 0000000..84cb4ec
+--- /dev/null
++++ b/public/lab/n1u3-relaciones-proemio.json
+@@ -0,0 +1,103 @@
++{
++  "schema": "agora.lab.n1u3.relaciones_argumentativas.v1",
++  "fuente": {
++    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
++    "unidad_id": "proemio",
++    "base": "Exportación de etiquetas de N1-U.2, identificadores y títulos; verificar cada interpretación con la lectura bilingüe de la revisión activa"
++  },
++  "estado": "propuesta_no_validada",
++  "criterio": "Hipótesis de articulación entre subunidades; las aristas no se derivan del orden textual, ni de las remisiones mapa, ni de relaciones conceptuales de MariaDB",
++  "nota": "La subunidad 1094b10-11 queda sin arista propuesta en esta primera ronda. La ausencia de arista no implica independencia argumentativa.",
++  "relaciones": [
++    {
++      "id": "r01",
++      "de": "1094a1-3",
++      "a": "1094a3-6",
++      "nombre": "distingue formas de fin",
++      "tipo": "especifica",
++      "fundamento": "La afirmación inicial de la orientación al bien se precisa mediante la diferencia entre la actividad y su producto: no se introduce otro bien supremo, sino una distinción en la forma del fin.",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "r02",
++      "de": "1094a3-6",
++      "a": "1094a6-9",
++      "nombre": "abre pluralidad de fines",
++      "tipo": "multiplica",
++      "fundamento": "La distinción de fines de actividades y obras prepara el reconocimiento de que los fines son múltiples, según las artes y acciones consideradas.",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "r03",
++      "de": "1094a6-9",
++      "a": "1094a9-16",
++      "nombre": "ordena fines",
++      "tipo": "ordena",
++      "fundamento": "De la pluralidad de fines se pasa a una relación de subordinación entre artes y actividades; pluralidad no equivale a ausencia de orden.",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "r04",
++      "de": "1094a9-16",
++      "a": "1094a16-18",
++      "nombre": "acota la jerarquía",
++      "tipo": "acota",
++      "fundamento": "La distinción entre actividad y obra no altera la prioridad de los fines rectores: esta subunidad matiza el argumento de subordinación.",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "r05",
++      "de": "1094a9-16",
++      "a": "1094a18-22",
++      "nombre": "plantea el fin último",
++      "tipo": "plantea",
++      "fundamento": "La jerarquía de fines habilita la pregunta condicional por un fin querido por sí mismo. La arista no presupone que Aristóteles haya demostrado ya su existencia.",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "r06",
++      "de": "1094a18-22",
++      "a": "1094a22-24",
++      "nombre": "motiva su búsqueda",
++      "tipo": "motiva",
++      "fundamento": "El problema del fin último recibe una motivación práctica con la imagen de los arqueros y el blanco: conocer el fin orienta la acción.",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "r07",
++      "de": "1094a22-24",
++      "a": "1094a24-26",
++      "nombre": "formula el programa",
++      "tipo": "formula",
++      "fundamento": "La comparación con el blanco conduce a precisar qué es el bien buscado y a qué ciencia corresponde estudiarlo.",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "r08",
++      "de": "1094a24-26",
++      "a": "1094a26-b3",
++      "nombre": "identifica el saber rector",
++      "tipo": "identifica",
++      "fundamento": "El programa de determinar la ciencia del bien se responde provisionalmente con la política como saber arquitectónico respecto de otras capacidades.",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "r09",
++      "de": "1094a26-b3",
++      "a": "1094b4-7",
++      "nombre": "determina el bien humano",
++      "tipo": "determina",
++      "fundamento": "El carácter rector de la política permite presentar su fin como comprensivo de los otros fines y caracterizarlo como bien humano.",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "r10",
++      "de": "1094b4-7",
++      "a": "1094b7-10",
++      "nombre": "amplía la escala política",
++      "tipo": "amplia",
++      "fundamento": "La referencia al bien humano abre la comparación entre el bien de un individuo y el bien de la ciudad, sin confundir sus escalas.",
++      "estado": "propuesta_no_validada"
++    }
++  ]
++}
+diff --git a/public/scripts/check-lab-arquitectura-n1u3.mjs b/public/scripts/check-lab-arquitectura-n1u3.mjs
+new file mode 100644
+index 0000000..09ed3d9
+--- /dev/null
++++ b/public/scripts/check-lab-arquitectura-n1u3.mjs
+@@ -0,0 +1,42 @@
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import { construirModeloArquitectura, obtenerContexto, elementosArquitectura } from '../js/lab/architectureModel.js';
++import { construirRelacionesProemio, elementosRelacionesProemio } from '../js/lab/architectureRelations.js';
++
++const file = url => JSON.parse(fs.readFileSync(new URL(url, import.meta.url), 'utf8'));
++const lectura = file('./fixtures/n1u2-unidades.json');
++const momentos = file('../lab/n1u1-propuestas-libro-i.json');
++const propuesta = file('../lab/n1u3-relaciones-proemio.json');
++const before = JSON.stringify(lectura);
++const modelo = construirModeloArquitectura(lectura, momentos);
++const relaciones = construirRelacionesProemio(modelo, propuesta);
++assert.equal(relaciones.relaciones.length, 10);
++assert.equal(relaciones.subIds.length, 12);
++assert.equal(relaciones.relaciones[0].nombre, 'distingue formas de fin');
++assert(relaciones.relaciones.some(r => r.nombre === 'ordena fines'));
++assert(relaciones.relaciones.some(r => r.nombre === 'plantea el fin último'));
++assert(relaciones.relaciones.some(r => r.nombre === 'identifica el saber rector'));
++assert(relaciones.relaciones.every(r => r.estado === 'propuesta_no_validada' && r.fundamento.length > 40));
++const elementos = elementosRelacionesProemio(modelo, relaciones, { relacionId: 'r03', subId: null });
++assert.equal(elementos.filter(e => e.group === 'nodes').length, 12);
++assert.equal(elementos.filter(e => e.group === 'edges').length, 10);
++assert(elementos.filter(e => e.group === 'edges').every(e => e.data.tipo === 'argumentativa_propuesta'));
++assert(elementos.some(e => e.data.id === 'sub:1094b10-11'));
++assert(elementos.find(e => e.data.id === 'rel:r03').data.seleccionado === 1);
++for (const e of elementos.filter(e => e.group === 'edges')) {
++  assert(elementos.some(n => n.data.id === e.data.source));
++  assert(elementos.some(n => n.data.id === e.data.target));
++}
++assert.equal(obtenerContexto(modelo, { macroId: 'macro:I-V', unidadId: 'proemio', momentoId: null, subId: null }).momentos.length, 4);
++assert(elementosArquitectura(modelo, { macroId: 'macro:VI-VII', unidadId: 'idea_bien', momentoId: null, subId: null }).every(e => e.data.tipo !== 'argumentativa_propuesta'));
++assert.equal(JSON.stringify(lectura), before, 'los tags canónicos deben quedar intactos');
++
++const invalid = change => { const p = structuredClone(propuesta); change(p); return p; };
++assert.throws(() => construirRelacionesProemio(modelo, invalid(p => { p.fuente.revision = 'otra'; })), /revisión distinta/);
++assert.throws(() => construirRelacionesProemio(modelo, invalid(p => { p.relaciones[0].a = '1095a2-6'; })), /extremos inválidos/);
++assert.throws(() => construirRelacionesProemio(modelo, invalid(p => { p.relaciones[0].a = p.relaciones[0].de; })), /extremos inválidos/);
++assert.throws(() => construirRelacionesProemio(modelo, invalid(p => { p.relaciones[1].id = 'r01'; })), /id vacío o repetido/);
++assert.throws(() => construirRelacionesProemio(modelo, invalid(p => { p.relaciones[1].de = p.relaciones[0].de; p.relaciones[1].a = p.relaciones[0].a; })), /arista duplicada/);
++assert.throws(() => construirRelacionesProemio(modelo, invalid(p => { p.relaciones[1].estado = 'validado'; })), /no se puede elevar/);
++assert.throws(() => construirRelacionesProemio(modelo, invalid(p => { p.relaciones[1].tipo = 'secuencia_inferida'; })), /semántica incompleta/);
++console.log('N1-U.3 OK: 12 subunidades visibles, 10 aristas propuestas con dirección y fundamento, selección, integridad, revisión y read-only.');

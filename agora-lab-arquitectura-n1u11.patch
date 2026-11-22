@@ -1,0 +1,540 @@
+diff --git a/docs/LAB_N1U11_FICHAS_SUBFICHAS_FAQ_Y_RESPALDO.md b/docs/LAB_N1U11_FICHAS_SUBFICHAS_FAQ_Y_RESPALDO.md
+new file mode 100644
+index 0000000..8cba24d
+--- /dev/null
++++ b/docs/LAB_N1U11_FICHAS_SUBFICHAS_FAQ_Y_RESPALDO.md
+@@ -0,0 +1,42 @@
++# Ágora · N1-U.11 — Fichas, subfichas, FAQ y grafo estructural contextualizado
++
++**Estado:** experimento del Lab. Sin migraciones, escrituras en MariaDB ni modificaciones a trayectos publicados.
++
++## Decisión editorial
++
++- **Ficha base:** explicación autónoma y reutilizable (siete fichas existentes). Constituye la unidad explicativa y de navegación, aunque sus identificadores históricos coincidan con el de una FAQ.
++- **Subficha:** adaptación dependiente de **una** ficha base, con foco, justificación, pasajes elegidos entre los apoyos curatoriales de la ficha de origen y una FAQ anfitriona. **No** duplica ni modifica automáticamente la ficha base. Si una adaptación se vuelve suficientemente independiente, requerirá decisión editorial explícita para promoverla a ficha.
++- **FAQ:** pregunta que **compone** referencias ordenadas a fichas y subfichas. Una FAQ puede reutilizar fichas sin reescribirlas; las subfichas registran la reinterpretación contextual. Los seis pasos de las cuatro FAQ piloto permanecen tal como estaban en N1-U.7, y las dos FAQ publicadas conservan sus trayectos de seis y cuatro pasos.
++
++El catálogo JSON `public/lab/n1u11-catalogo-explicativo.json` tiene `fichas`, `subfichas` y `faqs` como entidades separadas. Sus IDs son editoriales de Lab, no filas nuevas de MariaDB. Incluye siete fichas base, siete composiciones FAQ y **dos subfichas de ejemplo**:
++
++1. `subficha.etica.proemio` — encuadra el Proemio desde el carácter práctico de la investigación, para la FAQ introductoria de la Ética.
++2. `subficha.felicidad.ergon` — reutiliza la explicación del argumento de la función humana desde la pregunta por la felicidad.
++
++## Grafo estructural en la perspectiva «1 · Respaldo estructural»
++
++Se despliegan en el mismo grafo la **ficha**, sus **macrounidades y unidades explícitamente seleccionadas** y **sus pasajes de apoyo explícitos**. Se utilizan los vínculos editoriales ya registrados en N1-U.6/N1-U.7. No se añaden nodos por coincidencias de etiquetas ni se incluyen subunidades no escogidas.
++
++Hay dos clases de aristas:
++
++- `contexto_ficha` (trazo curatorial): ficha → macrounidad seleccionada, con rol explicativo registrado.
++- `pertenencia_estructural` (trazo gris punteado): macrounidad → unidad seleccionada y unidad → pasaje seleccionado. Esta última es **solo pertenencia documental verificable**, no una relación argumentativa ni un puente filosófico inferido.
++
++El inspector de la ficha muestra la fundamentación de cada nodo seleccionado, ofrece lectura bilingüe y mantiene un apartado plegable de **composición de FAQ** para explorar fichas y subfichas. Las otras perspectivas, «Diagrama explicativo» y «Pasajes de apoyo», permanecen accesibles. Se conserva el guardado de posiciones N1-U.10, y el parche no toca CSS ni `wheelSensitivity`.
++
++## Integración futura
++
++1. Acordar identidades separadas de FAQ y ficha en MariaDB/API (hoy hay aliases históricos). Evitar romper URLs y trayectos publicados.
++2. Curar la semántica de los enlaces, el nivel de justificación de cada subficha y el tratamiento de variantes académicas.
++3. Incorporar la red al frontend principal después de validar la visualización en el Lab.
++
++## Prueba local
++
++```powershell
++# Aplicar solo con N1-U.10 instalado y validado.
++git apply --check "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u11.patch"
++git apply "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u11.patch"
++node public/scripts/check-lab-arquitectura-n1u11.mjs
++```
++
++Pruebas sin DB: identidad, referencias, revisión, cobertura de vínculos, HTML seguro y estructura del grafo. Pendiente validar integración visual con el servidor y MariaDB activos.
+diff --git a/public/js/lab/architectureEditorialNetwork.js b/public/js/lab/architectureEditorialNetwork.js
+new file mode 100644
+index 0000000..1fa7c88
+--- /dev/null
++++ b/public/js/lab/architectureEditorialNetwork.js
+@@ -0,0 +1,59 @@
++// N1-U.11 · FAQ = composición de fichas/subfichas; subficha = adaptación de ficha base.
++// Se trata de una proyección editorial solo-lectura. Las identidades canónicas de MariaDB no cambian.
++const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({
++  '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
++})[c]);
++const fail = msg => { throw new Error(`Catálogo explicativo N1-U.11: ${msg}`); };
++const has = x => typeof x === 'string' && x.trim().length > 0;
++
++export function construirCatalogoExplicativo(modelo, fichas, puentes, recurso) {
++  if (recurso?.schema !== 'agora.lab.n1u11.catalogo-explicativo.v1' || recurso.estado !== 'borrador_editorial_para_curaduria') fail('esquema/estado no esperado');
++  if (!modelo?.revision || modelo.revision !== fichas?.revision || fichas.revision !== puentes?.revision || recurso.fuente?.revision !== modelo.revision) fail('revisión editorial distinta');
++  if (recurso.fichas?.length !== fichas.fichas.length || !Array.isArray(recurso.subfichas) || !Array.isArray(recurso.faqs)) fail('cantidades de fichas y FAQ incompletas');
++  const base = new Map(), sub = new Map(), faq = new Map(), faqPorFicha = new Map();
++  for (const ficha of recurso.fichas) {
++    if (!has(ficha?.id) || ficha.tipo !== 'base' || !has(ficha.titulo) || base.has(ficha.id) || fichas.porId.get(ficha.id)?.titulo !== ficha.titulo) fail('ficha base sin respaldo o duplicada');
++    base.set(ficha.id, Object.freeze(ficha));
++  }
++  if (base.size !== fichas.porId.size) fail('alguna ficha base no está representada');
++  for (const item of recurso.subfichas) {
++    const padre = base.get(item?.ficha_base_id), puente = puentes.porFicha.get(item?.ficha_base_id);
++    if (!has(item?.id) || sub.has(item.id) || base.has(item.id) || item.tipo !== 'subficha' || !padre ||
++      !has(item.faq_id) || !has(item.titulo) || !has(item.foco) || !has(item.adaptacion) ||
++      item.estado !== 'borrador_editorial' || !Array.isArray(item.pasajes) || !item.pasajes.length ||
++      new Set(item.pasajes).size !== item.pasajes.length || !item.pasajes.every(id => puente?.apoyos.some(a => a.sub_id === id) && modelo.subs.has(id))) fail(`subficha sin origen o evidencia permitida: ${item?.id}`);
++    sub.set(item.id, Object.freeze(item));
++  }
++  for (const item of recurso.faqs) {
++    if (!has(item?.id) || faq.has(item.id) || !has(item.titulo) || !base.has(item.ficha_principal) ||
++      !Array.isArray(item.componentes) || !item.componentes.length || item.componentes[0]?.id !== item.ficha_principal ||
++      item.componentes[0]?.tipo !== 'ficha') fail('FAQ sin ficha principal válida');
++    const usados = new Set();
++    for (const componente of item.componentes) {
++      if (!['ficha','subficha'].includes(componente?.tipo) || !has(componente.id) || !has(componente.rol) || usados.has(componente.id)) fail(`composición inválida: ${item.id}`);
++      if (componente.tipo === 'ficha' && !base.has(componente.id)) fail(`ficha enlazada inexistente: ${componente.id}`);
++      if (componente.tipo === 'subficha' && sub.get(componente.id)?.faq_id !== item.id) fail(`subficha no pertenece a esta FAQ: ${item.id}`);
++      usados.add(componente.id);
++    }
++    if (faqPorFicha.has(item.ficha_principal)) fail('una ficha principal no puede ser el inicio de dos FAQ piloto');
++    faqPorFicha.set(item.ficha_principal,item); faq.set(item.id,Object.freeze(item));
++  }
++  if (faq.size !== base.size || [...sub.values()].some(s => !faq.get(s.faq_id)?.componentes.some(c => c.tipo === 'subficha' && c.id === s.id))) fail('FAQ o subficha huérfana');
++  return Object.freeze({ revision:modelo.revision, base, sub, faq, faqPorFicha });
++}
++
++export function composicionFaqHtml(catalogo, fichaId) {
++  const pregunta = catalogo?.faqPorFicha.get(fichaId);
++  if (!pregunta) return '';
++  return `<details class="arch-remisiones arch-composicion-faq"><summary>FAQ · Fichas y subfichas (${pregunta.componentes.length})</summary>
++    <p class="arch-muted">${safe(pregunta.titulo)} · Composición pedagógica en revisión. La ficha base permanece independiente de sus adaptaciones.</p>
++    <div class="arch-nav-list">${pregunta.componentes.map(c => {
++      const sub = c.tipo === 'subficha' ? catalogo.sub.get(c.id) : null;
++      const base = sub ? catalogo.base.get(sub.ficha_base_id) : catalogo.base.get(c.id);
++      return `<div class="arch-composicion-item"><strong>${safe(sub ? 'Subficha dependiente' : 'Ficha base')}: ${safe(sub?.titulo || base?.titulo)}</strong>
++        <p class="arch-muted">${safe(c.rol)}</p>${sub ? `<p><strong>Adaptación:</strong> ${safe(sub.adaptacion)}</p><p><strong>Foco:</strong> ${safe(sub.foco)}</p>
++          <p class="arch-muted">Hereda su identidad editorial de «${safe(base.titulo)}». Pasajes seleccionados: ${sub.pasajes.map(safe).join(' · ')}</p>` : ''}
++        <button type="button" class="arch-minor" data-arch-card="${safe(base.id)}">${sub ? 'Ver ficha de origen' : 'Abrir ficha'}</button>
++      </div>`;
++    }).join('')}</div><p class="arch-muted">Esta FAQ agrupa explicaciones; la secuencia de pasos y los datos publicados en MariaDB no se modifican.</p></details>`;
++}
+diff --git a/public/js/lab/architectureStructuralContext.js b/public/js/lab/architectureStructuralContext.js
+new file mode 100644
+index 0000000..e203871
+--- /dev/null
++++ b/public/js/lab/architectureStructuralContext.js
+@@ -0,0 +1,58 @@
++// N1-U.11 · Grafo de respaldo de una ficha. SOLO nodos seleccionados en puentes editoriales.
++// La inclusión de subunidad en unidad y de unidad en macrounidad es una relación
++// documental distinta del vínculo explicativo de la ficha con su evidencia.
++const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({
++  '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
++})[c]);
++const fail = msg => { throw new Error(`Grafo de respaldo N1-U.11: ${msg}`); };
++
++export function elementosContextoEstructural(modelo, fichas, puentes, fichaId, seleccion={}) {
++  if (!modelo?.revision || modelo.revision !== fichas?.revision || modelo.revision !== puentes?.revision) fail('revisión editorial incompatible');
++  const f = fichas.porId.get(fichaId), puente = puentes.porFicha.get(fichaId);
++  if (!f || !puente) fail('ficha o puentes inexistentes');
++  const macros = new Map(modelo.macros.map(m => [m.id,m]));
++  const nodes = [{ group:'nodes', data:{ id:`puente:ficha:${fichaId}`, tipo:'ficha_central',key:'ficha',label:f.titulo }, position:{x:60,y:390} }];
++  const edges = [], mIds = new Set(puente.contextos.macros.map(m => m.id));
++  const uIds = new Set(puente.contextos.unidades.map(u => u.id));
++  const mark = key => seleccion.id === key ? 1 : 0;
++  puente.contextos.macros.forEach((item,i) => {
++    const m = macros.get(item.id); if (!m) fail('macrounidad no registrada');
++    const id=`puente:${fichaId}:macro:${item.id}`, key=`macro:${item.id}`;
++    nodes.push({group:'nodes',data:{id,tipo:'macro_referida',key,label:`${m.capitulos} · ${m.titulo}`,seleccionado:mark(key)},position:{x:480,y:130+i*330}});
++    edges.push({group:'edges',data:{id:`puente-arista:${fichaId}:macro:${item.id}`,tipo:'contexto_ficha',source:`puente:ficha:${fichaId}`,target:id,key,label:item.rol,seleccionado:mark(key)}});
++  });
++  puente.contextos.unidades.forEach((item,i) => {
++    const unidad = modelo.unidades.get(item.id); if (!unidad) fail('unidad no registrada');
++    const macro = [...macros.values()].find(m=>m.unidades.some(u=>u.id === item.id) && mIds.has(m.id));
++    if (!macro) fail('unidad de contexto sin macrounidad editorial');
++    const id=`puente:${fichaId}:unidad:${item.id}`,key=`unidad:${item.id}`;
++    nodes.push({group:'nodes',data:{id,tipo:'unidad_referida',key,label:`${unidad.titulo}\n${item.rol}`,seleccionado:mark(key)},position:{x:850,y:80+i*175}});
++    edges.push({group:'edges',data:{id:`puente-pertenece:${fichaId}:unidad:${item.id}`,tipo:'pertenencia_estructural',source:`puente:${fichaId}:macro:${macro.id}`,target:id,key,label:'contiene',seleccionado:mark(key)}});
++  });
++  const cuenta = new Map();
++  puente.apoyos.forEach((item,i) => {
++    const sub = modelo.subs.get(item.sub_id); if (!sub || !uIds.has(sub.unidad)) fail('pasaje fuera de unidad contextual seleccionada');
++    const local=cuenta.get(sub.unidad)||0;cuenta.set(sub.unidad,local+1);
++    const id=`puente:${fichaId}:sub:${item.sub_id}`,key=`sub:${item.sub_id}`;
++    nodes.push({group:'nodes',data:{id,tipo:'subunidad_referida',key,label:`${sub.titulo}\n${item.sub_id}`,seleccionado:mark(key)},position:{x:1260,y:80+i*142}});
++    edges.push({group:'edges',data:{id:`puente-pertenece:${fichaId}:sub:${item.sub_id}`,tipo:'pertenencia_estructural',source:`puente:${fichaId}:unidad:${sub.unidad}`,target:id,key,label:'pasaje',seleccionado:mark(key)}});
++  });
++  return [...nodes,...edges];
++}
++
++export function inspectorContextoEstructuralHtml(modelo, fichas, puentes, fichaId, seleccionado=null) {
++  const f = fichas.porId.get(fichaId), p = puentes.porFicha.get(fichaId);
++  if (!f || !p) fail('ficha sin puentes');
++  const macro = p.contextos.macros.map(a => ({key:`macro:${a.id}`, ...a, tipo:'Macrounidad', titulo:modelo.macros.find(m=>m.id===a.id)?.titulo}));
++  const unidad = p.contextos.unidades.map(a => ({key:`unidad:${a.id}`, ...a,tipo:'Unidad',titulo:modelo.unidades.get(a.id)?.titulo}));
++  const apoyos = p.apoyos.map(a => ({key:`sub:${a.sub_id}`, ...a,tipo:'Pasaje',titulo:modelo.subs.get(a.sub_id)?.titulo}));
++  const items=[...macro,...unidad,...apoyos], active=items.find(a=>a.key===seleccionado);
++  return `<div class="arch-inspector-heading"><span class="arch-chip arch-chip--propuesto">Respaldo estructural · selección editorial</span></div>
++    <h2>${safe(active?.titulo || f.titulo)}</h2>
++    ${active ? `<p class="arch-muted">${safe(active.tipo)} · ${safe(active.id || active.sub_id)}</p><h3>Función en esta explicación</h3><p><strong>${safe(active.rol)}</strong>. ${safe(active.explicacion)}</p>
++      ${active.sub_id ? `<button class="arch-primary" type="button" data-arch-read="${safe(active.sub_id)}">Leer pasaje bilingüe</button>${active.paso_id ? `<button class="arch-minor" type="button" data-arch-guide-step="${safe(active.paso_id)}">Ir al paso explicativo</button>` : ''}` : ''}
++      ${active.tipo === 'Unidad' ? `<button class="arch-minor" type="button" data-arch-go-unit="${safe(active.id)}">Abrir unidad del archivo estructural</button>` : ''}` :
++      `<p>El mapa presenta solo los contextos y pasajes <strong>seleccionados editorialmente</strong> para esta ficha. Las flechas entre macrounidades, unidades y subunidades indican pertenencia documental, <em>no</em> inferencias filosóficas.</p>`}
++    <details class="arch-remisiones"><summary>Explorar apoyos y contexto (${items.length})</summary><div class="arch-nav-list">${items.map(x=>`<button type="button" data-arch-bridge="${safe(x.key)}">${safe(x.titulo)}<small>${safe(x.tipo)} · ${safe(x.rol)}</small></button>`).join('')}</div></details>
++    <p class="arch-muted">Los anclajes provienen del corpus y de los puentes N1-U.6/7. No se han importado automáticamente otras subunidades ni relaciones entre conceptos.</p>`;
++}
+diff --git a/public/js/views/labArchitectureView.js b/public/js/views/labArchitectureView.js
+index 2136e1a..bd4649f 100644
+--- a/public/js/views/labArchitectureView.js
++++ b/public/js/views/labArchitectureView.js
+@@ -12,2 +12,4 @@ import { localizarSubunidadEnBiblioteca, representarLecturaContextual } from '..
+ import { guiaExplicativaHtml } from '../lab/architectureTextGuide.js';
++import { construirCatalogoExplicativo, composicionFaqHtml } from '../lab/architectureEditorialNetwork.js';
++import { elementosContextoEstructural, inspectorContextoEstructuralHtml } from '../lab/architectureStructuralContext.js';
+ import { LAYOUT_STORAGE_KEY, layoutParaGuardar, leerLayout, cargarLayoutLocal, guardarLayoutLocal, limpiarGrupo } from '../lab/architectureLayout.js';
+@@ -198,2 +200,3 @@ function graphStyle() {
+     { selector: 'edge[tipo = "contexto_ficha"]', style: { 'width': 2.5, 'line-style': 'dashed', 'line-color': '#6c9692', 'target-arrow-color': '#6c9692', 'font-size': 10, 'text-rotation': 'none' } },
++    { selector: 'edge[tipo = "pertenencia_estructural"]', style: { 'width': 1.8, 'line-style': 'dotted', 'line-color': '#adb6bb', 'target-arrow-color': '#adb6bb', 'font-size': 9, 'text-rotation': 'none' } },
+     { selector: 'edge[tipo = "respaldo_textual"]', style: { 'width': 2.5, 'line-style': 'solid', 'line-color': '#94774b', 'target-arrow-color': '#94774b', 'font-size': 11, 'text-rotation': 'none' } },
+@@ -237,3 +240,3 @@ export async function createLabArchitectureView(App) {
+       <div class="arch-perspectivas" role="group" aria-label="Enfoque de la ficha" hidden>
+-        <button type="button" data-arch-perspectiva="orientacion" aria-pressed="true">1 · Contexto en el Libro I</button>
++        <button type="button" data-arch-perspectiva="orientacion" aria-pressed="true">1 · Respaldo estructural</button>
+         <button type="button" data-arch-perspectiva="diagrama" aria-pressed="false">2 · Diagrama explicativo</button>
+@@ -282,3 +285,3 @@ export async function createLabArchitectureView(App) {
+   const state = { macroId: null, unidadId: null, momentoId: null, subId: null };
+-  let model = null, rels = null, capas = null, fichas = null, puentes = null, redFichas = null, fichaActiva = null, fichaPasoId = null, fichaEnlaceId = null;
++  let model = null, rels = null, capas = null, fichas = null, puentes = null, redFichas = null, catalogo = null, fichaActiva = null, fichaPasoId = null, fichaEnlaceId = null;
+   let redVisible = true, redFichaSeleccionada = null, redEnlaceSeleccionado = null;
+@@ -344,3 +347,3 @@ export async function createLabArchitectureView(App) {
+     $('[data-arch-legacy]').hidden = redVisible || !ficha;
+-    $('[data-arch-legend]').textContent = redVisible ? 'Las flechas representan relaciones propuestas entre fichas, no conexiones automáticas derivadas del tagueo.' : puenteVisible ? (perspectiva === 'orientacion' ? 'Vínculos editoriales con macrounidades y unidades; no son inferencias a partir de tags.' : 'Pasajes vinculados directamente con la explicación; consulta bilingüe disponible.') : faq ? (faq.fuente_editorial?.origen === 'propuesta_lab' ? 'Las flechas punteadas muestran un orden explicativo propuesto, todavía no publicado.' : 'Las flechas punteadas indican el orden del trayecto publicado, no demostraciones.') : 'Las relaciones argumentativas del Proemio son hipótesis todavía no validadas.';
++    $('[data-arch-legend]').textContent = redVisible ? 'Las flechas representan relaciones propuestas entre fichas, no conexiones automáticas derivadas del tagueo.' : puenteVisible ? (perspectiva === 'orientacion' ? 'Solo pasajes y unidades elegidos por la ficha: las líneas tenues representan pertenencia documental, no inferencias filosóficas.' : 'Pasajes vinculados directamente con la explicación; consulta bilingüe disponible.') : faq ? (faq.fuente_editorial?.origen === 'propuesta_lab' ? 'Las flechas punteadas muestran un orden explicativo propuesto, todavía no publicado.' : 'Las flechas punteadas indican el orden del trayecto publicado, no demostraciones.') : 'Las relaciones argumentativas del Proemio son hipótesis todavía no validadas.';
+     const descripcion = $('.arch-ficha-panel');
+@@ -357,3 +360,3 @@ export async function createLabArchitectureView(App) {
+     inspector.innerHTML = redVisible ? inspectorRedFichasHtml(fichas, redFichas, redFichaSeleccionada, redEnlaceSeleccionado)
+-      : puenteVisible ? inspectorPuentesHtml(model, fichas, puentes, ficha.id, perspectiva, puenteSeleccionado)
++      : puenteVisible ? (perspectiva === 'orientacion' ? inspectorContextoEstructuralHtml(model, fichas, puentes, ficha.id, puenteSeleccionado) : inspectorPuentesHtml(model, fichas, puentes, ficha.id, perspectiva, puenteSeleccionado))
+       : faq ? inspectorFichaFAQHtml(faq, model, fichaPasoId, fichaEnlaceId)
+@@ -368,3 +371,3 @@ export async function createLabArchitectureView(App) {
+       const bridge = puentes?.porFicha.get(ficha.id);
+-      const seleccionadoApoyo = perspectiva === 'apoyos' && puenteSeleccionado?.startsWith('sub:')
++      const seleccionadoApoyo = ['orientacion','apoyos'].includes(perspectiva) && puenteSeleccionado?.startsWith('sub:')
+         ? bridge?.apoyos.find(a => 'sub:' + a.sub_id === puenteSeleccionado)?.paso_id : null;
+@@ -376,2 +379,4 @@ export async function createLabArchitectureView(App) {
+       }));
++      // Una FAQ compone fichas base y adaptaciones (subfichas), sin copiar el contenido canónico.
++      inspector.insertAdjacentHTML('beforeend', composicionFaqHtml(catalogo, ficha.id));
+     }
+@@ -380,3 +385,3 @@ export async function createLabArchitectureView(App) {
+       const elements = redVisible ? elementosRedFichas(fichas, redFichas, { fichaId:redFichaSeleccionada, enlaceId:redEnlaceSeleccionado })
+-        : puenteVisible ? elementosPuentes(model, fichas, puentes, ficha.id, perspectiva, { id: puenteSeleccionado })
++        : puenteVisible ? (perspectiva === 'orientacion' ? elementosContextoEstructural(model, fichas, puentes, ficha.id, { id: puenteSeleccionado }) : elementosPuentes(model, fichas, puentes, ficha.id, perspectiva, { id: puenteSeleccionado }))
+         : faq ? elementosFichaFAQ(faq, model, { pasoId: fichaPasoId, enlaceId: fichaEnlaceId })
+@@ -533,3 +538,4 @@ export async function createLabArchitectureView(App) {
+       const validos = perspectiva === 'orientacion' ? [
+-        ...grupo.contextos.macros.map(m => `macro:${m.id}`), ...grupo.contextos.unidades.map(u => `unidad:${u.id}`)
++        ...grupo.contextos.macros.map(m => `macro:${m.id}`), ...grupo.contextos.unidades.map(u => `unidad:${u.id}`),
++        ...grupo.apoyos.map(s => `sub:${s.sub_id}`)
+       ] : grupo.apoyos.map(s => `sub:${s.sub_id}`);
+@@ -639,3 +645,3 @@ export async function createLabArchitectureView(App) {
+   try {
+-    const [r, p, a, m, f, v, z] = await Promise.all([
++    const [r, p, a, m, f, v, z, c] = await Promise.all([
+       fetch('/api/labo/lectura', { cache: 'no-store', signal: abort.signal }),
+@@ -647,4 +653,5 @@ export async function createLabArchitectureView(App) {
+       fetch('/lab/n1u7-fichas-red-piloto.json', { cache: 'no-store', signal: abort.signal }),
++      fetch('/lab/n1u11-catalogo-explicativo.json', { cache: 'no-store', signal: abort.signal }),
+     ]);
+-    if (!r.ok || !p.ok || !a.ok || !m.ok || !f.ok || !v.ok || !z.ok) throw new Error(`No se pudieron cargar las fuentes (MariaDB: ${r.status}; momentos: ${p.status}; relaciones: ${a.status}; módulos: ${m.status}; fichas: ${f.status}; puentes: ${v.status}; ampliación: ${z.status}).`);
++    if (!r.ok || !p.ok || !a.ok || !m.ok || !f.ok || !v.ok || !z.ok || !c.ok) throw new Error(`No se pudieron cargar las fuentes (MariaDB: ${r.status}; momentos: ${p.status}; relaciones: ${a.status}; módulos: ${m.status}; fichas: ${f.status}; puentes: ${v.status}; ampliación: ${z.status}; catálogo: ${c.status}).`);
+     model = construirModeloArquitectura(await r.json(), await p.json());
+@@ -655,2 +662,3 @@ export async function createLabArchitectureView(App) {
+     ({ fichas, puentes, red: redFichas } = construirAmpliacionFichas(model, fichas, puentes, await z.json()));
++    catalogo = construirCatalogoExplicativo(model, fichas, puentes, await c.json());
+     $('.arch-picker-options').innerHTML = opcionesModalFichasHtml(fichas.fichas);
+@@ -706,3 +714,3 @@ export async function createLabArchitectureView(App) {
+       });
+-      cy.on('tap', 'edge[tipo = "contexto_ficha"], edge[tipo = "respaldo_textual"]', event => {
++      cy.on('tap', 'edge[tipo = "contexto_ficha"], edge[tipo = "respaldo_textual"], edge[tipo = "pertenencia_estructural"]', event => {
+         if (!fichaActiva || perspectiva === 'diagrama') return;
+diff --git a/public/lab/n1u11-catalogo-explicativo.json b/public/lab/n1u11-catalogo-explicativo.json
+new file mode 100644
+index 0000000..e48f82b
+--- /dev/null
++++ b/public/lab/n1u11-catalogo-explicativo.json
+@@ -0,0 +1,217 @@
++{
++  "schema": "agora.lab.n1u11.catalogo-explicativo.v1",
++  "estado": "borrador_editorial_para_curaduria",
++  "fuente": {
++    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
++    "base": "n1u5-fichas-explicativas.json + n1u7-fichas-red-piloto.json",
++    "puentes": "n1u6-puentes-explicativos.json + n1u7-fichas-red-piloto.json",
++    "nota": "Los ID FAQ y ficha base pueden coincidir como alias heredados; son entidades diferentes. Ninguna FAQ nueva se escribe en MariaDB. No se generan vínculos desde tags ni se alteran trayectos publicados."
++  },
++  "fichas": [
++    {
++      "id": "proemio",
++      "tipo": "base",
++      "titulo": "El Proemio: acción, bienes y política",
++      "contenido_en": "n1u5",
++      "estado": "explicacion_propuesta_lab"
++    },
++    {
++      "id": "faq.etica.intro",
++      "tipo": "base",
++      "titulo": "¿Qué es la ética? ¿Por dónde comienzo?",
++      "contenido_en": "n1u5",
++      "estado": "publicado_en_dump_con_comentario_provisional"
++    },
++    {
++      "id": "faq.agathon.pros_hen",
++      "tipo": "base",
++      "titulo": "¿Cómo se dice el bien? Hacia uno y por analogía",
++      "contenido_en": "n1u5",
++      "estado": "publicado_en_dump_con_comentario_provisional"
++    },
++    {
++      "id": "faq.lab.felicidad",
++      "tipo": "base",
++      "titulo": "¿Qué es la felicidad?",
++      "contenido_en": "n1u7",
++      "estado": "explicacion_propuesta_lab"
++    },
++    {
++      "id": "faq.lab.ergon",
++      "tipo": "base",
++      "titulo": "¿En qué consiste el argumento de la función propia (érgon)?",
++      "contenido_en": "n1u7",
++      "estado": "explicacion_propuesta_lab"
++    },
++    {
++      "id": "faq.lab.alma",
++      "tipo": "base",
++      "titulo": "¿Cuáles son las partes del alma?",
++      "contenido_en": "n1u7",
++      "estado": "explicacion_propuesta_lab"
++    },
++    {
++      "id": "faq.lab.virtudes",
++      "tipo": "base",
++      "titulo": "¿Qué tipos de virtudes hay?",
++      "contenido_en": "n1u7",
++      "estado": "explicacion_propuesta_lab"
++    }
++  ],
++  "subfichas": [
++    {
++      "id": "subficha.etica.proemio",
++      "tipo": "subficha",
++      "ficha_base_id": "proemio",
++      "faq_id": "faq.etica.intro",
++      "titulo": "La Ética como investigación práctica",
++      "foco": "Interpretar los fines del Proemio desde la investigación de las acciones humanas",
++      "adaptacion": "El marco de la praxis aclara por qué la Ética busca orientar la acción y por qué el bien humano aparece como fin. La clasificación entre teoría, práctica y producción sirve de contexto, pero no debe atribuirse literalmente a EN I.1.",
++      "pasajes": [
++        "1094a1-3",
++        "1094b7-10"
++      ],
++      "estado": "borrador_editorial"
++    },
++    {
++      "id": "subficha.felicidad.ergon",
++      "tipo": "subficha",
++      "ficha_base_id": "faq.lab.ergon",
++      "faq_id": "faq.lab.felicidad",
++      "titulo": "La función humana como respuesta a qué es la felicidad",
++      "foco": "Conectar el argumento del érgon con la determinación de la felicidad",
++      "adaptacion": "En esta pregunta no reconstruimos de nuevo el érgon entero: destacamos que la función humana permite precisar el contenido de la felicidad como actividad del alma conforme a virtud, sin confundir el argumento con una definición previa ya demostrada.",
++      "pasajes": [
++        "1097b25-28",
++        "1098a16-18"
++      ],
++      "estado": "borrador_editorial"
++    }
++  ],
++  "faqs": [
++    {
++      "id": "faq.etica.intro",
++      "titulo": "¿Qué es la ética? ¿Por dónde comienzo?",
++      "ficha_principal": "faq.etica.intro",
++      "componentes": [
++        {
++          "tipo": "ficha",
++          "id": "faq.etica.intro",
++          "rol": "Orientación inicial y método"
++        },
++        {
++          "tipo": "subficha",
++          "id": "subficha.etica.proemio",
++          "rol": "Precisión del carácter práctico"
++        },
++        {
++          "tipo": "ficha",
++          "id": "faq.agathon.pros_hen",
++          "rol": "Apertura del problema del bien"
++        }
++      ]
++    },
++    {
++      "id": "faq.agathon.pros_hen",
++      "titulo": "¿Cómo se dice el bien? Hacia uno y por analogía",
++      "ficha_principal": "faq.agathon.pros_hen",
++      "componentes": [
++        {
++          "tipo": "ficha",
++          "id": "faq.agathon.pros_hen",
++          "rol": "Discusión de los sentidos del bien"
++        }
++      ]
++    },
++    {
++      "id": "faq.lab.proemio.guia",
++      "titulo": "¿Cómo se presenta el problema del bien en el Proemio?",
++      "ficha_principal": "proemio",
++      "componentes": [
++        {
++          "tipo": "ficha",
++          "id": "proemio",
++          "rol": "Arquitectura inicial de fines y política"
++        },
++        {
++          "tipo": "ficha",
++          "id": "faq.lab.felicidad",
++          "rol": "Proyección de la pregunta inicial"
++        }
++      ]
++    },
++    {
++      "id": "faq.lab.felicidad",
++      "titulo": "¿Qué es la felicidad?",
++      "ficha_principal": "faq.lab.felicidad",
++      "componentes": [
++        {
++          "tipo": "ficha",
++          "id": "faq.lab.felicidad",
++          "rol": "Caracterización del bien humano"
++        },
++        {
++          "tipo": "subficha",
++          "id": "subficha.felicidad.ergon",
++          "rol": "Determinación de la actividad humana"
++        },
++        {
++          "tipo": "ficha",
++          "id": "faq.lab.virtudes",
++          "rol": "Aclaración del criterio de excelencia"
++        }
++      ]
++    },
++    {
++      "id": "faq.lab.ergon",
++      "titulo": "¿En qué consiste el argumento del érgon?",
++      "ficha_principal": "faq.lab.ergon",
++      "componentes": [
++        {
++          "tipo": "ficha",
++          "id": "faq.lab.ergon",
++          "rol": "Reconstrucción del argumento"
++        },
++        {
++          "tipo": "ficha",
++          "id": "faq.lab.alma",
++          "rol": "Proyección hacia la psicología ética"
++        }
++      ]
++    },
++    {
++      "id": "faq.lab.alma",
++      "titulo": "¿Cuáles son las partes del alma?",
++      "ficha_principal": "faq.lab.alma",
++      "componentes": [
++        {
++          "tipo": "ficha",
++          "id": "faq.lab.alma",
++          "rol": "Articulación del alma"
++        },
++        {
++          "tipo": "ficha",
++          "id": "faq.lab.virtudes",
++          "rol": "Consecuencia para la clasificación de virtudes"
++        }
++      ]
++    },
++    {
++      "id": "faq.lab.virtudes",
++      "titulo": "¿Qué tipos de virtudes hay?",
++      "ficha_principal": "faq.lab.virtudes",
++      "componentes": [
++        {
++          "tipo": "ficha",
++          "id": "faq.lab.virtudes",
++          "rol": "Distinción ética y dianoética"
++        },
++        {
++          "tipo": "ficha",
++          "id": "faq.lab.alma",
++          "rol": "Fundamento de la distinción"
++        }
++      ]
++    }
++  ]
++}
+diff --git a/public/scripts/check-lab-arquitectura-n1u11.mjs b/public/scripts/check-lab-arquitectura-n1u11.mjs
+new file mode 100644
+index 0000000..909af2c
+--- /dev/null
++++ b/public/scripts/check-lab-arquitectura-n1u11.mjs
+@@ -0,0 +1,59 @@
++// N1-U.11 · Integridad editorial y proyección estructural selectiva (sin DB/DOM).
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import { construirModeloArquitectura } from '../js/lab/architectureModel.js';
++import { construirRelacionesProemio } from '../js/lab/architectureRelations.js';
++import { construirCapasProemio } from '../js/lab/architectureLayers.js';
++import { construirFichasArquitectura } from '../js/lab/architectureCards.js';
++import { construirPuentesExplicativos } from '../js/lab/architectureBridges.js';
++import { construirAmpliacionFichas } from '../js/lab/architecturePilotNetwork.js';
++import { construirCatalogoExplicativo, composicionFaqHtml } from '../js/lab/architectureEditorialNetwork.js';
++import { elementosContextoEstructural, inspectorContextoEstructuralHtml } from '../js/lab/architectureStructuralContext.js';
++const read = p => JSON.parse(fs.readFileSync(new URL(p, import.meta.url),'utf8'));
++const snapshot = read('./fixtures/n1u2-unidades.json');
++const initial = JSON.stringify(snapshot);
++const model = construirModeloArquitectura(snapshot, read('../lab/n1u1-propuestas-libro-i.json'));
++const rels = construirRelacionesProemio(model,read('../lab/n1u3-relaciones-proemio.json'));
++const capas = construirCapasProemio(model,rels,read('../lab/n1u4-modulos-proemio.json'));
++const fichasBase = construirFichasArquitectura(model,capas,read('../lab/n1u5-fichas-explicativas.json'));
++const puentesBase = construirPuentesExplicativos(model,fichasBase,read('../lab/n1u6-puentes-explicativos.json'));
++const {fichas,puentes} = construirAmpliacionFichas(model,fichasBase,puentesBase,read('../lab/n1u7-fichas-red-piloto.json'));
++const recurso = read('../lab/n1u11-catalogo-explicativo.json');
++const catalogo = construirCatalogoExplicativo(model,fichas,puentes,recurso);
++assert.equal(catalogo.base.size,7); assert.equal(catalogo.faq.size,7); assert.equal(catalogo.sub.size,2);
++assert.equal(catalogo.faq.get('faq.etica.intro').componentes.length,3);
++assert.equal(catalogo.faq.get('faq.lab.felicidad').componentes.length,3);
++for(const ficha of fichas.fichas){
++ const p=puentes.porFicha.get(ficha.id);
++ const els=elementosContextoEstructural(model,fichas,puentes,ficha.id);
++ const nodos=els.filter(e=>e.group==='nodes');const aristas=els.filter(e=>e.group==='edges');
++ assert.equal(nodos.length, 1+p.contextos.macros.length+p.contextos.unidades.length+p.apoyos.length);
++ assert.equal(aristas.length,nodos.length-1);
++ const ids = new Set(nodos.map(n=>n.data.id));
++ assert.equal(ids.size,nodos.length);
++ for(const e of aristas){
++   assert(ids.has(e.data.source)&&ids.has(e.data.target),'sin extremos inventados');
++   assert(['contexto_ficha','pertenencia_estructural'].includes(e.data.tipo));
++   assert.notEqual(e.data.tipo,'argumentativa_propuesta','una pertenencia no es una inferencia');
++ }
++ assert.equal(nodos.filter(n=>n.data.tipo==='subunidad_referida').length,p.apoyos.length,'solo pasajes expresamente escogidos');
++ assert(inspectorContextoEstructuralHtml(model,fichas,puentes,ficha.id,`sub:${p.apoyos[0].sub_id}`).includes('data-arch-read'));
++ assert(composicionFaqHtml(catalogo,ficha.id).includes('arch-composicion-faq'));
++}
++const felicidad = catalogo.sub.get('subficha.felicidad.ergon');
++assert.equal(felicidad.ficha_base_id,'faq.lab.ergon');
++assert(!composicionFaqHtml(catalogo,'faq.lab.felicidad').includes('<script'));
++const clone = fn=>{const x=structuredClone(recurso);fn(x);return x;};
++const build=v=>construirCatalogoExplicativo(model,fichas,puentes,v);
++assert.throws(()=>build(clone(x=>x.fuente.revision='otra')),/revisión/);
++assert.throws(()=>build(clone(x=>x.subfichas[0].ficha_base_id='ficha.fantasma')),/subficha/);
++assert.throws(()=>build(clone(x=>x.subfichas[0].pasajes.push('1098a16-18'))),/subficha/);
++assert.throws(()=>build(clone(x=>x.faqs[0].componentes[1].id='subficha.felicidad.ergon')),/subficha/);
++assert.throws(()=>build(clone(x=>x.faqs[0].componentes.push(x.faqs[0].componentes[0]))),/composición/);
++const hostile=build(clone(x=>x.subfichas[0].adaptacion='<script>alert(1)</script>'));
++assert(!composicionFaqHtml(hostile,'faq.etica.intro').includes('<script'));
++assert(composicionFaqHtml(hostile,'faq.etica.intro').includes('&lt;script&gt;'));
++const view=fs.readFileSync(new URL('../js/views/labArchitectureView.js',import.meta.url),'utf8');
++for(const item of ['elementosContextoEstructural','inspectorContextoEstructuralHtml','composicionFaqHtml','n1u11-catalogo-explicativo.json','pertenencia_estructural']) assert(view.includes(item));
++assert.equal(JSON.stringify(snapshot),initial,'no se cambia la exportación');
++console.log('N1-U.11 OK · 7 fichas base, 2 subfichas, 7 FAQ compuestas, respaldo estructural selectivo, HTML seguro y revisión editorial intacta.');

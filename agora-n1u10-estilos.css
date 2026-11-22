@@ -1,0 +1,20 @@
+
+/* N1-U.10 · Leer el grafo desde textos breves, con controles de disposición compactos. */
+.arch-guide { padding: 9px 10px 10px; border: 1px solid var(--border, #c1d4d0); background: var(--bg-elevated, #f8fbfa); border-radius: 9px; margin-bottom: 12px; }
+.arch-guide-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2px 8px; font-size: .82rem; }
+.arch-guide-head small { font-size: .69rem; color: var(--text-muted, #64777b); }
+.arch-guide-steps { display: flex; flex-wrap: wrap; gap: 5px; margin: 9px 0; }
+.arch-guide-steps button { cursor: pointer; min-width: 30px; min-height: 29px; font: inherit; font-size: .79rem; background: var(--bg-elevated, white); color: inherit; border: 1px solid var(--border, #b3c6c3); border-radius: 6px; }
+.arch-guide-steps button[aria-pressed="true"] { background: #dcece8; color: #1c514a; border: 2px solid #398275; font-weight: 700; }
+.arch-guide-label { display: block; margin-top: 6px; font-size: .88rem; }
+.arch-guide p { font-size: .85rem; line-height: 1.5; margin: 6px 0; }
+.arch-guide .arch-guide-note { color: var(--text-muted, #607579); font-size: .72rem; margin-top: 8px; }
+.arch-guide-actions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+.arch-guide-actions button { cursor: pointer; flex: 1 1 auto; font: inherit; font-size: .73rem; line-height: 1.3; padding: 6px 8px; background: var(--bg-elevated, white); color: inherit; border: 1px solid var(--border, #a2bdbc); border-radius: 6px; }
+.arch-layout-tools { position: relative; font-size: .76rem; }
+.arch-layout-tools summary { cursor: pointer; border: 1px solid var(--border, #aabfc2); border-radius: 7px; background: var(--bg-elevated, white); padding: 7px; }
+.arch-layout-tools[open] { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.arch-layout-tools[open] > summary { margin-right: 3px; }
+.arch-layout-tools input[type="file"][hidden] { display: none; }
+.arch-layout-status { font-size: .72rem; color: var(--text-muted, #506d67); max-width: 300px; }
+@media(max-width:650px) { .arch-layout-status { flex-basis: 100%; } }

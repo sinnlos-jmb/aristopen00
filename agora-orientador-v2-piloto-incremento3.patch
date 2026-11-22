@@ -1,0 +1,511 @@
+diff --git a/docs/PILOTO_ORIENTADOR_V2.md b/docs/PILOTO_ORIENTADOR_V2.md
+new file mode 100644
+index 0000000..f6e73e8
+--- /dev/null
++++ b/docs/PILOTO_ORIENTADOR_V2.md
+@@ -0,0 +1,45 @@
++# Ágora · Orientador V2 — Evaluación piloto (incremento 3)
++
++## Objetivo
++
++Evaluar con colegas **el proceso de determinación de la pregunta**, antes de conectar trayectos, tags, grafos o FAQ. Una sesión «conforme» indica cierre voluntario, no exactitud de la interpretación ni calidad filosófica de una respuesta.
++
++## Protocolo sugerido
++
++1. Invitar inicialmente a un grupo pequeño de colegas (por ejemplo, 5–8); aclarar que se ensaya un orientador experimental y que la participación es voluntaria.
++2. Cada participante escribe 2–3 preguntas *propias*, sin copiar sugerencias. Como casos de control separados, probar «¿Qué es la naturaleza?» y «¿Cuáles son las diferencias entre disposición, virtud y felicidad?».
++3. Completar o abandonar la orientación con libertad. No presentar `phusis` como origen obligatorio.
++4. Al cerrar, responder **opcionalmente** tres preguntas: claridad de las aclaraciones, fidelidad de la consulta final e influencia percibida de las sugerencias. Añadir un comentario breve sin datos personales.
++5. Exportar el JSON de la sesión o usar **Registrar voluntariamente**. Guardar la evaluación en la sesión no transmite datos al servidor: el POST solo ocurre al pulsar Registrar. Si se registra antes de evaluar, la evaluación añadida después no actualiza ese registro.
++
++## Campos nuevos y resguardo de interpretación
++
++- `trazabilidadIntencion` (sesión exportada): comparación descriptiva entre `interpretacion.operacion` y `consulta.intencion`; conserva `precisionInicial`, lista conceptos que no se retomaron y señala `distincionPendiente` si se pasa de `distinguir` a `relacionar`. No atribuye causalidad al bot ni equipara ambas operaciones.
++- `evaluacionPiloto`: objeto **opcional** (`version:1`, `claridad`, `fidelidad`, `influencia`, `comentario`) validado en navegador y servidor.
++- `consulta_json` (MariaDB): solo después del registro voluntario, puede contener `evaluacionPiloto` y `trazabilidadIntencion`; esta última se **recalcula** en servidor desde los campos validados. No hay migración.
++- La bitácora sigue terminando en `cierre`. Una evaluación posterior se adjunta por separado y no altera el historial ni presupone conformidad.
++- No se recoge identidad en el formulario. El texto libre puede contener datos personales si alguien los escribe; solicitar expresamente que no los incluya. No difundir JSON individuales sin revisar su contenido.
++
++## Análisis descriptivo (sin dashboard)
++
++Desde `public/`:
++
++```bash
++node scripts/resumir-orientador-piloto.mjs ../sesion1.json ../sesion2.json
++```
++
++También acepta un archivo JSON con un arreglo de sesiones. Devuelve frecuencias de intención conservada/distinta, distribución de opciones de evaluación, origen elegido y casos donde la distinción se convirtió en relación. **No imprime preguntas ni comentarios**. Las frecuencias de una muestra voluntaria no estiman resultados poblacionales ni explican por qué cambió una pregunta.
++
++## Verificación
++
++```bash
++npm --prefix public run test:orientador
++npm --prefix public run test:views
++node --test src/test/user-queries.test.mjs src/test/user-queries-v2.test.mjs src/test/user-queries-piloto.test.mjs
++cd e2e
++npx playwright test tests/orientador-piloto.spec.mjs
++```
++
++### Criterio para cerrar el piloto
++
++Revisar con los colegas los casos en que la consulta final no representa la inquietud inicial, especialmente `distinguir → relacionar`, y los casos donde una opción sugerida parece haber cambiado el objetivo. Documentar ajustes menores de interfaz antes de iniciar una **capa semántica separada** que recupere definiciones y sentidos editoriales, tags de subunidades, aristas dirigidas con evidencia, y FAQ candidatas, sin convertir coincidencia léxica ni tags de párrafo en prueba textual.
+diff --git a/e2e/tests/orientador-piloto.spec.mjs b/e2e/tests/orientador-piloto.spec.mjs
+new file mode 100644
+index 0000000..ff26dbe
+--- /dev/null
++++ b/e2e/tests/orientador-piloto.spec.mjs
+@@ -0,0 +1,38 @@
++import { test, expect } from '@playwright/test';
++
++test('Piloto V2: evaluación local y registro remoto voluntario', async ({ page }) => {
++  const peticiones = [];
++  await page.route('**/api/user-queries', async route => {
++    peticiones.push(route.request().postDataJSON());
++    await route.fulfill({ status: 201, contentType: 'application/json',
++      body: JSON.stringify({ id: 77, faqMatch: 'sin_match_exacto', aportesLibres: 0 }) });
++  });
++  await page.goto('/#/lab/orientador', { waitUntil: 'domcontentloaded' });
++  await page.locator('#orientador-texto').fill('¿Qué es la naturaleza?');
++  await page.getByRole('button', { name: 'Comenzar orientación' }).click();
++  await page.locator('[data-opcion="distinguir"]').click();
++  await page.locator('#orientador-otra').click();
++  await page.locator('#orientador-busqueda').fill('Técnica');
++  await page.locator('#orientador-libre button[type=submit]').click();
++  await page.locator('[data-opcion="principiante"]').click();
++  await page.locator('[data-opcion="breve"]').click();
++  await page.locator('[data-opcion="sin_preferencia"]').click();
++  await page.locator('#orientador-conforme').click();
++  await expect(page.locator('#orientador-trazabilidad')).toContainText('definir');
++  await expect(page.locator('#orientador-trazabilidad')).toContainText('distinguir');
++  await expect(page.locator('#orientador-evaluacion-panel')).toBeVisible();
++  expect(peticiones).toHaveLength(0);
++  await page.locator('#orientador-piloto-claridad').selectOption('si');
++  await page.locator('#orientador-piloto-fidelidad').selectOption('en_parte');
++  await page.locator('#orientador-piloto-influencia').selectOption('cambio_direccion');
++  await page.locator('#orientador-piloto-comentario').fill('El diálogo me llevó a precisar la comparación.');
++  await page.locator('#orientador-evaluacion button[type=submit]').click();
++  await expect(page.locator('#orientador-evaluacion-guardada')).toBeVisible();
++  await expect(page.locator('#orientador-json')).toContainText('"influencia": "cambio_direccion"');
++  expect(peticiones).toHaveLength(0);
++  await page.locator('#orientador-registrar').click();
++  await expect(page.locator('#orientador-registro')).toContainText('Consulta registrada');
++  expect(peticiones).toHaveLength(1);
++  expect(peticiones[0].evaluacionPiloto.influencia).toBe('cambio_direccion');
++  expect(peticiones[0].bitacora.at(-1).tipo).toBe('cierre');
++});
+diff --git a/public/js/lab/orientador.js b/public/js/lab/orientador.js
+index 5c1a2ee..358fcf0 100644
+--- a/public/js/lab/orientador.js
++++ b/public/js/lab/orientador.js
+@@ -1,5 +1,6 @@
+ import { analyze } from './analyze.js';
+ import { interpretarInquietud } from './sentidos.js';
++import { diagnosticarContinuidad, validarEvaluacionPiloto } from '../../shared/orientador-piloto.js';
+ 
+ // V2: conserva el contrato de consulta y agrega una lectura contextual provisional.
+ // Todas las transiciones devuelven una sesión nueva, sin mutar las anteriores.
+@@ -28,7 +29,7 @@ const PREGUNTAS = Object.freeze({
+   },
+   origen: {
+     texto: '¿Querés fijar un punto de partida pedagógico?',
+-    opciones: [['phusis', 'Comenzar por phýsis'], ['tema', 'Comenzar por el tema elegido'], ['sin_preferencia', 'Dejarlo abierto']],
++    opciones: [['tema', 'Comenzar por el concepto elegido'], ['sin_preferencia', 'Dejarlo abierto'], ['phusis', 'Comenzar por phýsis (si corresponde)']],
+   },
+ });
+ 
+@@ -166,6 +167,7 @@ export function iniciarOrientacion(texto) {
+     },
+     interpretacion,
+     aclaracionSentido: null,
++    evaluacionPiloto: null,
+     consulta: {
+       tema: conceptos.length === 1 ? conceptos[0] : null,
+       intencion: null, destino: null, conceptosRelacionados: [], nivel: null, extension: null, origen: null,
+@@ -296,7 +298,7 @@ export function precisarSentido(sesion, texto) {
+ export function cerrarOrientacion(sesion, motivo) {
+   if (sesion?.estado !== 'en_refinamiento') throw new Error('La sesión no está activa.');
+   if (!['conforme', 'abandonado'].includes(motivo)) throw new Error('Cierre no reconocido.');
+-  const nueva = { ...sesion, estado: motivo };
++  const nueva = { ...sesion, estado: motivo, trazabilidadIntencion: diagnosticarContinuidad(sesion) };
+   nueva.bitacora = bitacora(nueva, 'cierre', {
+     motivo,
+     completa: siguientePregunta(sesion) === null,
+@@ -307,6 +309,13 @@ export function cerrarOrientacion(sesion, motivo) {
+   return nueva;
+ }
+ 
++// La evaluación se puede guardar tras el cierre sin alterar la bitácora:
++// su último evento debe seguir siendo 'cierre' para el contrato de persistencia.
++export function registrarEvaluacionPiloto(sesion, respuestas) {
++  if (!sesion || sesion.estado === 'en_refinamiento') throw new Error('La sesión debe estar cerrada.');
++  return { ...sesion, evaluacionPiloto: validarEvaluacionPiloto(respuestas) };
++}
++
+ export function resumenOrientacion(sesion) {
+   const pendiente = siguientePregunta(sesion);
+   return {
+diff --git a/public/js/views/labOrientadorView.js b/public/js/views/labOrientadorView.js
+index cb4de5c..58234e3 100644
+--- a/public/js/views/labOrientadorView.js
++++ b/public/js/views/labOrientadorView.js
+@@ -1,6 +1,7 @@
+ import { esc } from '../ui.js';
+-import { iniciarOrientacion, siguientePregunta, responderOrientacion, cerrarOrientacion, resumenOrientacion, buscarConceptos, responderLibre, precisarSentido } from '../lab/orientador.js';
++import { iniciarOrientacion, siguientePregunta, responderOrientacion, cerrarOrientacion, resumenOrientacion, buscarConceptos, responderLibre, precisarSentido, registrarEvaluacionPiloto } from '../lab/orientador.js';
+ import { downloadJSON, copyJSON } from '../lab/session.js';
++import { diagnosticarContinuidad } from '../../shared/orientador-piloto.js';
+ 
+ const EJEMPLO = '¿Cuáles son las diferencias entre disposición, virtud y felicidad?';
+ const etiquetas = {
+@@ -9,6 +10,25 @@ const etiquetas = {
+   nivel: 'Punto de partida del estudiante', extension: 'Extensión', origen: 'Origen preferido',
+ };
+ 
++const preguntasPiloto = [
++  { campo: 'claridad', pregunta: '¿Las preguntas de aclaración fueron comprensibles?', opciones: [
++    ['si', 'Sí'], ['parcialmente', 'Parcialmente'], ['no', 'No']] },
++  { campo: 'fidelidad', pregunta: '¿La consulta final representa lo que querías investigar?', opciones: [
++    ['si', 'Sí'], ['en_parte', 'En parte'], ['no', 'No']] },
++  { campo: 'influencia', pregunta: '¿Cómo influyeron las sugerencias del bot?', opciones: [
++    ['ayudo_a_precisar', 'Me ayudaron a precisar'], ['cambio_direccion', 'Me llevaron a cambiar de dirección'],
++    ['no_influyo', 'No influyeron'], ['no_se', 'No estoy seguro/a']] },
++];
++
++// El formulario no recopila identidad ni transmite datos al guardar la evaluación.
++function formEvaluacion(actual = null) {
++  return preguntasPiloto.map(q => `<label for="orientador-piloto-${q.campo}">${esc(q.pregunta)}</label>
++    <select id="orientador-piloto-${q.campo}" name="${q.campo}" class="lab-input" required>
++      <option value="">Elegí una opción</option>
++      ${q.opciones.map(([valor, etiqueta]) => `<option value="${valor}"${actual?.[q.campo] === valor ? ' selected' : ''}>${esc(etiqueta)}</option>`).join('')}
++    </select>`).join('');
++}
++
+ // Experimento aislado: no usa el bot del Chat ni guarda cambios editoriales.
+ export function createLabOrientadorView(App = null) {
+   const el = document.createElement('div');
+@@ -23,9 +43,10 @@ export function createLabOrientadorView(App = null) {
+   function render() {
+     const actual = sesion ? siguientePregunta(sesion, S) : null;
+     const resumen = sesion ? resumenOrientacion(sesion) : null;
++    const continuidad = sesion?.consulta.intencion ? diagnosticarContinuidad(sesion) : null;
+     el.innerHTML = `<div class="lab__inner">
+       <nav class="lab-nav"><a class="btn btn--ghost btn--sm" href="#/lab">← Laboratorio</a></nav>
+-      <header class="lab-exp__header"><h1 class="lab-exp__title">Orientador de consultas · V2 (primer incremento)</h1></header>
++      <header class="lab-exp__header"><h1 class="lab-exp__title">Orientador de consultas · V2 (piloto)</h1></header>
+       <section class="lab-card" id="lab-orientador">
+         <h2>Dar forma a una inquietud</h2>
+         <p class="hint">Un pequeño diálogo para precisar qué buscamos. La V2 conserva la forma de la pregunta y sus posibles sentidos; todavía no construye ni puntúa trayectos. Las preferencias no expresadas permanecen abiertas.</p>
+@@ -61,6 +82,15 @@ export function createLabOrientadorView(App = null) {
+           <button class="lab-btn lab-btn--ghost" type="submit">Conservar precisión</button>
+         </form>` : ''}
+         ${sesion.aclaracionSentido ? `<p><strong>Sentido precisado por el estudiante:</strong> ${esc(sesion.aclaracionSentido)}</p>` : ''}
++        ${continuidad ? `<section class="lab-panel" id="orientador-trazabilidad">
++          <h3>Continuidad de tu pregunta</h3>
++          <p>Primera lectura: <strong>${esc(continuidad.operacionInicial || 'No determinada')}</strong> ·
++             operación elegida: <strong>${esc(continuidad.operacionElegida)}</strong>.</p>
++          ${continuidad.cambio === 'distinta' ? '<p class="hint">Cambió la operación propuesta inicialmente. Esto no indica si el cambio fue deliberado o sugerido por el bot.</p>' : ''}
++          ${continuidad.distincionPendiente ? '<p class="hint">La pregunta inicial pedía distinguir; la consulta final propone relacionar. No son operaciones equivalentes.</p>' : ''}
++          ${continuidad.conceptosNoRetomados.length ? `<p class="hint">Conceptos iniciales no incluidos en la consulta final: ${esc(continuidad.conceptosNoRetomados.join(', '))}.</p>` : ''}
++          ${continuidad.origenPedagogico === 'phusis' ? '<p class="hint">Elegiste phýsis como origen pedagógico; no es una necesidad inferida del grafo.</p>' : ''}
++        </section>` : ''}
+         <p><strong>Estado:</strong> ${esc(sesion.estado)} · ${sesion.bitacora.length} decisiones registradas.</p>
+         ${actual ? `<div class="lab-panel" aria-live="polite">
+           <h3>${esc(actual.texto)}</h3>
+@@ -82,9 +112,22 @@ export function createLabOrientadorView(App = null) {
+           <button type="button" class="lab-btn lab-btn--ghost" id="orientador-exportar">Exportar bitácora JSON</button>
+           <button type="button" class="lab-btn lab-btn--ghost" id="orientador-copiar">Copiar JSON</button>
+         </div>
+-        ${sesion.estado !== 'en_refinamiento' ? `<section class="lab-panel" id="orientador-registro">
++        ${sesion.estado !== 'en_refinamiento' ? `<section class="lab-panel" id="orientador-evaluacion-panel">
++          <h3>Evaluación piloto · para colegas</h3>
++          <p class="hint">Opcional. Ayuda a evaluar el diálogo, no la verdad de la respuesta filosófica. No incluyas nombres ni datos personales en el comentario.</p>
++          ${registrado ? '<p class="hint">La consulta ya fue registrada. La evaluación no puede modificarse en ese registro; podés exportar el JSON de la sesión.</p>' : `
++          <form id="orientador-evaluacion" class="lab-form">
++            ${formEvaluacion(sesion.evaluacionPiloto)}
++            <label for="orientador-piloto-comentario">¿Qué cambiarías? (opcional)</label>
++            <textarea id="orientador-piloto-comentario" name="comentario" class="lab-input" rows="3" maxlength="400" placeholder="Sugerencias sobre términos, opciones o preguntas">${esc(sesion.evaluacionPiloto?.comentario || '')}</textarea>
++            <button type="submit" class="lab-btn lab-btn--ghost">${sesion.evaluacionPiloto ? 'Actualizar evaluación' : 'Guardar evaluación en esta sesión'}</button>
++          </form>`}
++          ${sesion.evaluacionPiloto ? '<p id="orientador-evaluacion-guardada">Evaluación incluida en el JSON de la sesión.</p>' : ''}
++          <p id="orientador-evaluacion-estado" role="status"></p>
++        </section>
++        <section class="lab-panel" id="orientador-registro">
+           <h3>Contribuir al repertorio de preguntas</h3>
+-          <p class="hint">Opcional: se guardará tu inquietud, consulta estructurada y expresiones libres, sin identidad ni bitácora íntegra. La coincidencia con FAQ será comprobada por el servidor. No se publicará automáticamente una FAQ.</p>
++          <p class="hint">Solo si pulsás Registrar: se guardará la inquietud, la consulta, su trazabilidad descriptiva y, si la completaste, la evaluación piloto. No se guarda identidad ni bitácora íntegra. La coincidencia con FAQ se comprueba en el servidor; no se publica ninguna FAQ automáticamente.</p>
+           ${!registrado ? `<button type="button" class="lab-btn lab-btn--ghost" id="orientador-registrar">Registrar esta consulta voluntariamente</button>` : '<p>Consulta registrada.</p>'}
+           <p id="orientador-registro-estado" role="status">${esc(registroEstado)}</p>
+         </section>` : ''}
+@@ -156,6 +199,22 @@ export function createLabOrientadorView(App = null) {
+     el.querySelector('#orientador-reiniciar')?.addEventListener('click', () => {
+       sesion = null; entradaLibre = false; textoLibre = ''; registrado = false; registroEstado = ''; render();
+     });
++    el.querySelector('#orientador-evaluacion')?.addEventListener('submit', event => {
++      event.preventDefault();
++      const form = event.currentTarget;
++      try {
++        sesion = registrarEvaluacionPiloto(sesion, {
++          version: 1,
++          claridad: form.elements.namedItem('claridad').value,
++          fidelidad: form.elements.namedItem('fidelidad').value,
++          influencia: form.elements.namedItem('influencia').value,
++          comentario: form.elements.namedItem('comentario').value,
++        });
++        render();
++      } catch (error) {
++        el.querySelector('#orientador-evaluacion-estado').textContent = error.message;
++      }
++    });
+     el.querySelector('#orientador-registrar')?.addEventListener('click', async event => {
+       event.currentTarget.disabled = true;
+       registroEstado = 'Registrando consulta…';
+@@ -166,7 +225,8 @@ export function createLabOrientadorView(App = null) {
+           method: 'POST', headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ textoInicial: sesion.textoInicial, consulta: sesion.consulta,
+             estado: sesion.estado, bitacora: sesion.bitacora,
+-            interpretacion: sesion.interpretacion || null, aclaracionSentido: sesion.aclaracionSentido || null }),
++            interpretacion: sesion.interpretacion || null, aclaracionSentido: sesion.aclaracionSentido || null,
++            evaluacionPiloto: sesion.evaluacionPiloto || null }),
+         });
+         if (!response.ok) {
+           const detalle = await response.json().catch(() => null);
+diff --git a/public/package.json b/public/package.json
+index a00b527..a3e285b 100644
+--- a/public/package.json
++++ b/public/package.json
+@@ -1,9 +1,11 @@
+ {
+   "type": "module",
+   "scripts": {
+-    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs && node scripts/check-evidence-audit.mjs && node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs && node scripts/check-orientador-libre.mjs && node scripts/check-orientador-sentidos.mjs",
++    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs && node scripts/check-evidence-audit.mjs && node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs && node scripts/check-orientador-libre.mjs && node scripts/check-orientador-sentidos.mjs && node scripts/check-orientador-piloto.mjs",
+     "test:questions": "node scripts/check-question-diagnostic.mjs",
++    "piloto:resumen": "node scripts/resumir-orientador-piloto.mjs",
++    "test:piloto": "node scripts/check-orientador-piloto.mjs",
+     "test:evidence": "node scripts/check-evidence-audit.mjs",
+-    "test:orientador": "node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs && node scripts/check-orientador-libre.mjs && node scripts/check-orientador-sentidos.mjs"
++    "test:orientador": "node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs && node scripts/check-orientador-libre.mjs && node scripts/check-orientador-sentidos.mjs && node scripts/check-orientador-piloto.mjs"
+   }
+ }
+diff --git a/public/scripts/check-orientador-piloto.mjs b/public/scripts/check-orientador-piloto.mjs
+new file mode 100644
+index 0000000..4c07207
+--- /dev/null
++++ b/public/scripts/check-orientador-piloto.mjs
+@@ -0,0 +1,50 @@
++import assert from 'node:assert/strict';
++import { iniciarOrientacion, responderOrientacion, responderLibre, siguientePregunta, cerrarOrientacion,
++  registrarEvaluacionPiloto } from '../js/lab/orientador.js';
++import { diagnosticarContinuidad, validarEvaluacionPiloto, resumirPiloto } from '../shared/orientador-piloto.js';
++
++const ejemplo = iniciarOrientacion('¿Cuáles son las diferencias entre disposición, virtud y felicidad?');
++const primera = responderOrientacion(ejemplo, 'arete');
++const segunda = responderOrientacion(primera, 'relacionar');
++assert.equal(siguientePregunta(segunda).clave, 'nivel', 'No debe volver a preguntar por los conceptos');
++assert.deepEqual(segunda.consulta.conceptosRelacionados, ['hexis', 'eudaimonia']);
++const transicion = diagnosticarContinuidad(segunda);
++assert.equal(transicion.operacionInicial, 'distinguir');
++assert.equal(transicion.operacionElegida, 'relacionar');
++assert.equal(transicion.cambio, 'distinta');
++assert.equal(transicion.distincionPendiente, true, 'Relacionar no equivale a distinguir');
++assert.deepEqual(transicion.conceptosNoRetomados, []);
++
++let completo = responderOrientacion(segunda, 'intermedio');
++completo = responderOrientacion(completo, 'extensa');
++assert.deepEqual(siguientePregunta(completo).opciones.map(o => o.valor),
++  ['tema', 'sin_preferencia', 'phusis'], 'No priorizar phýsis por defecto');
++completo = responderOrientacion(completo, 'phusis');
++const cerrado = cerrarOrientacion(completo, 'conforme');
++assert.equal(cerrado.trazabilidadIntencion.origenPedagogico, 'phusis');
++assert.equal(cerrado.bitacora.at(-1).tipo, 'cierre');
++assert.throws(() => registrarEvaluacionPiloto(completo, { version: 1 }), /cerrada/);
++const respuestas = { version: 1, claridad: 'si', fidelidad: 'en_parte', influencia: 'cambio_direccion',
++  comentario: 'La distinción inicial parecía diluirse.' };
++const evaluada = registrarEvaluacionPiloto(cerrado, respuestas);
++assert.deepEqual(evaluada.evaluacionPiloto, respuestas);
++assert.equal(cerrado.evaluacionPiloto, null, 'No mutar la sesión anterior');
++assert.equal(evaluada.bitacora.at(-1).tipo, 'cierre', 'La bitácora conserva su cierre final');
++assert.throws(() => validarEvaluacionPiloto({ ...respuestas, influencia: 'inventada' }), /inválida/);
++assert.throws(() => validarEvaluacionPiloto({ ...respuestas, comentario: 'x'.repeat(401) }), /extenso/);
++assert.equal(validarEvaluacionPiloto(null), null, 'El feedback es optativo');
++
++let naturaleza = iniciarOrientacion('¿Qué es la naturaleza?');
++naturaleza = responderOrientacion(naturaleza, 'distinguir');
++naturaleza = responderLibre(naturaleza, 'techne', { FN: { techne: { label: 'Arte' } } }, 'techne');
++const cambio = diagnosticarContinuidad(naturaleza);
++assert.equal(cambio.operacionInicial, 'definir');
++assert.equal(cambio.operacionElegida, 'distinguir');
++assert.equal(cambio.cambio, 'distinta');
++assert.deepEqual(cambio.conceptosFinales, ['phusis', 'techne']);
++const agregado = resumirPiloto([evaluada, cerrado]);
++assert.equal(agregado.sesionesV2, 2);
++assert.equal(agregado.evaluacionesCompletadas, 1);
++assert.equal(agregado.cambiosOperacion.distinta, 2);
++assert.equal(agregado.influenciaPercibida.cambio_direccion, 1);
++console.log('OK: trazabilidad de intención, evaluación piloto optativa e inmutable, origen neutral.');
+diff --git a/public/scripts/resumir-orientador-piloto.mjs b/public/scripts/resumir-orientador-piloto.mjs
+new file mode 100644
+index 0000000..d8a43ff
+--- /dev/null
++++ b/public/scripts/resumir-orientador-piloto.mjs
+@@ -0,0 +1,16 @@
++import { readFileSync } from 'node:fs';
++import { resumirPiloto } from '../shared/orientador-piloto.js';
++
++const archivos = process.argv.slice(2);
++if (!archivos.length) {
++  console.error('Uso: node scripts/resumir-orientador-piloto.mjs sesion1.json sesion2.json ...');
++  process.exitCode = 1;
++} else {
++  const sesiones = [];
++  for (const archivo of archivos) {
++    const valor = JSON.parse(readFileSync(archivo, 'utf8'));
++    if (Array.isArray(valor)) sesiones.push(...valor);
++    else sesiones.push(valor);
++  }
++  console.log(JSON.stringify(resumirPiloto(sesiones), null, 2));
++}
+diff --git a/public/shared/orientador-piloto.js b/public/shared/orientador-piloto.js
+new file mode 100644
+index 0000000..6c1311c
+--- /dev/null
++++ b/public/shared/orientador-piloto.js
+@@ -0,0 +1,72 @@
++// Contrato puro compartido por navegador y registro voluntario.
++// Una valoración del estudiante no es un juicio editorial sobre el corpus.
++export const RESPUESTAS_PILOTO = Object.freeze({
++  claridad: ['si', 'parcialmente', 'no'],
++  fidelidad: ['si', 'en_parte', 'no'],
++  influencia: ['ayudo_a_precisar', 'cambio_direccion', 'no_influyo', 'no_se'],
++});
++
++export function validarEvaluacionPiloto(valor) {
++  if (valor == null) return null; // Participación optativa.
++  if (typeof valor !== 'object' || Array.isArray(valor) || valor.version !== 1)
++    throw new Error('Evaluación piloto inválida.');
++  const limpia = { version: 1 };
++  for (const [campo, opciones] of Object.entries(RESPUESTAS_PILOTO)) {
++    if (!opciones.includes(valor[campo])) throw new Error(`Evaluación piloto inválida: ${campo}.`);
++    limpia[campo] = valor[campo];
++  }
++  if (valor.comentario != null && typeof valor.comentario !== 'string')
++    throw new Error('Evaluación piloto inválida: comentario.');
++  const comentario = String(valor.comentario || '').trim();
++  if (comentario.length > 400) throw new Error('Evaluación piloto inválida: comentario demasiado extenso.');
++  limpia.comentario = comentario;
++  return limpia;
++}
++
++// Describe el cambio entre las dos formulaciones. No explica sus causas
++// ni equipara «distinguir» y «relacionar».
++export function diagnosticarContinuidad(sesion) {
++  const original = sesion?.interpretacion?.operacion || null;
++  const elegida = sesion?.consulta?.intencion || null;
++  const conceptosIniciales = [...new Set(sesion?.interpretacion?.conceptos || [])];
++  const c = sesion?.consulta || {};
++  const conceptosFinales = [...new Set([c.tema, ...(c.conceptosRelacionados || []), c.destino]
++    .filter(v => typeof v === 'string' && v.trim()))];
++  return {
++    operacionInicial: original,
++    operacionElegida: elegida,
++    cambio: !original || !elegida ? 'sin_determinar' : original === elegida ? 'conservada' : 'distinta',
++    precisionInicial: sesion?.interpretacion?.precision || null,
++    conceptosIniciales,
++    conceptosFinales,
++    conceptosNoRetomados: conceptosIniciales.filter(id => !conceptosFinales.includes(id)),
++    distincionPendiente: original === 'distinguir' && elegida === 'relacionar',
++    origenPedagogico: c.origen || null,
++    nota: 'Diagnóstico descriptivo, no prueba de comprensión ni de influencia de las sugerencias.',
++  };
++}
++
++// Conteos exploratorios de archivos exportados. Nunca incluyen texto de las
++// preguntas ni comentarios en el resultado agregado.
++export function resumirPiloto(sesiones) {
++  const conteos = valores => valores.reduce((obj, valor) => {
++    const clave = valor || 'sin_dato';
++    obj[clave] = (obj[clave] || 0) + 1;
++    return obj;
++  }, Object.create(null));
++  const validas = sesiones.filter(s => s && typeof s === 'object' && s.version === 2 && s.consulta);
++  const evaluadas = validas.map(s => s.evaluacionPiloto).filter(Boolean);
++  const continuidades = validas.map(diagnosticarContinuidad);
++  return {
++    sesionesV2: validas.length,
++    evaluacionesCompletadas: evaluadas.length,
++    cierres: conteos(validas.map(s => s.estado)),
++    cambiosOperacion: conteos(continuidades.map(c => c.cambio)),
++    comparacionesInicialesReformuladasComoRelacion: continuidades.filter(c => c.distincionPendiente).length,
++    origenPedagogico: conteos(continuidades.map(c => c.origenPedagogico)),
++    claridad: conteos(evaluadas.map(e => e.claridad)),
++    fidelidad: conteos(evaluadas.map(e => e.fidelidad)),
++    influenciaPercibida: conteos(evaluadas.map(e => e.influencia)),
++    advertencia: 'Frecuencias descriptivas de una muestra voluntaria. No miden comprensión ni causalidad.',
++  };
++}
+diff --git a/src/services/user-queries.contract.js b/src/services/user-queries.contract.js
+index da50767..9d68d06 100644
+--- a/src/services/user-queries.contract.js
++++ b/src/services/user-queries.contract.js
+@@ -1,3 +1,4 @@
++import { diagnosticarContinuidad, validarEvaluacionPiloto } from '../../public/shared/orientador-piloto.js';
+ const norm = value => String(value || '').toLowerCase().normalize('NFD')
+   .replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}\s]/gu, ' ')
+   .replace(/\s+/g, ' ').trim();
+@@ -63,7 +64,9 @@ export function validarQuery(payload) {
+   const agregados = payload.bitacora.filter(e => e?.tipo === 'respuesta' && e?.datos?.opcion?.fuente === 'texto_libre')
+     .map(e => ({ campo: e.datos.pregunta, texto: e.datos.opcion.textoBuscado }))
+     .filter(e => keyNames.includes(e.campo) && typeof e.texto === 'string' && e.texto.length > 0 && e.texto.length <= 400);
++  const evaluacionPiloto = validarEvaluacionPiloto(payload.evaluacionPiloto);
++  const trazabilidadIntencion = interpretacion ? diagnosticarContinuidad({ interpretacion, consulta }) : null;
+   return { textoInicial: texto.trim(), estado: payload.estado, consulta, agregados,
+-    aclaracionSentido: sentido?.trim() || null, interpretacion };
++    aclaracionSentido: sentido?.trim() || null, interpretacion, evaluacionPiloto, trazabilidadIntencion };
+ }
+ 
+diff --git a/src/services/user-queries.service.js b/src/services/user-queries.service.js
+index 51cbfc6..026bf20 100644
+--- a/src/services/user-queries.service.js
++++ b/src/services/user-queries.service.js
+@@ -11,6 +11,8 @@ export async function registrarQuery(body, db = getPool()) {
+     VALUES (?, ?, ?, ?, ?, ?)`, [value.textoInicial, JSON.stringify({ ...value.consulta,
+     ...(value.interpretacion && { interpretacion: value.interpretacion }),
+     ...(value.aclaracionSentido && { aclaracionSentido: value.aclaracionSentido }),
++    ...(value.evaluacionPiloto && { evaluacionPiloto: value.evaluacionPiloto }),
++    ...(value.trazabilidadIntencion && { trazabilidadIntencion: value.trazabilidadIntencion }),
+   }), value.estado,
+     JSON.stringify(value.agregados), match.estado, match.faqId]);
+   return { id: Number(result.insertId), faqMatch: match.estado, faqId: match.faqId, aportesLibres: value.agregados.length };
+diff --git a/src/test/user-queries-piloto.test.mjs b/src/test/user-queries-piloto.test.mjs
+new file mode 100644
+index 0000000..f3ceac3
+--- /dev/null
++++ b/src/test/user-queries-piloto.test.mjs
+@@ -0,0 +1,27 @@
++import assert from 'node:assert/strict';
++import { validarQuery } from '../services/user-queries.contract.js';
++
++const payload = {
++  textoInicial: '¿Cuáles son las diferencias entre disposición, virtud y felicidad?',
++  estado: 'conforme',
++  consulta: { tema: 'arete', intencion: 'relacionar', destino: null,
++    conceptosRelacionados: ['hexis', 'eudaimonia'], nivel: 'intermedio', extension: 'extensa', origen: 'phusis' },
++  interpretacion: { version: 2, operacion: 'distinguir', precision: 'diferencia',
++    forma: 'comparacion_multiple', conceptos: ['hexis', 'arete', 'eudaimonia'] },
++  evaluacionPiloto: { version: 1, claridad: 'si', fidelidad: 'en_parte', influencia: 'cambio_direccion',
++    comentario: 'Preferiría distinguir en lugar de relacionar.' },
++  bitacora: [{ tipo: 'inicio' }, { tipo: 'respuesta' }, { tipo: 'cierre', estado: 'conforme' }],
++};
++const value = validarQuery(payload);
++assert.deepEqual(value.evaluacionPiloto, payload.evaluacionPiloto);
++assert.equal(value.trazabilidadIntencion.cambio, 'distinta');
++assert.equal(value.trazabilidadIntencion.distincionPendiente, true);
++assert.deepEqual(value.trazabilidadIntencion.conceptosNoRetomados, []);
++assert.equal(validarQuery({ ...payload, evaluacionPiloto: null }).evaluacionPiloto, null);
++assert.equal(validarQuery({ ...payload, evaluacionPiloto: undefined }).evaluacionPiloto, null);
++assert.throws(() => validarQuery({ ...payload, evaluacionPiloto: { ...payload.evaluacionPiloto, fidelidad: 'quizas' } }), /inválida/);
++assert.throws(() => validarQuery({ ...payload, evaluacionPiloto: { ...payload.evaluacionPiloto, comentario: 'x'.repeat(401) } }), /inválida/);
++assert.equal(value.trazabilidadIntencion.operacionInicial, 'distinguir');
++// La trazabilidad se calcula a partir de datos validados, no se acepta del cliente.
++assert.equal(validarQuery({ ...payload, trazabilidadIntencion: { cambio: 'conservada' } }).trazabilidadIntencion.cambio, 'distinta');
++console.log('OK: validación y trazabilidad del piloto, compatibilidad sin evaluación.');

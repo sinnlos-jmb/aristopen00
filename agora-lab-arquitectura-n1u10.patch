@@ -1,0 +1,411 @@
+diff --git a/docs/LAB_N1U10_TEXTO_GRAFO_DISPOSICIONES.md b/docs/LAB_N1U10_TEXTO_GRAFO_DISPOSICIONES.md
+new file mode 100644
+index 0000000..0a8193c
+--- /dev/null
++++ b/docs/LAB_N1U10_TEXTO_GRAFO_DISPOSICIONES.md
+@@ -0,0 +1,63 @@
++# Ágora · N1-U.10 · Textos ↔ grafos y disposición persistente
++
++**Estado:** experimento del Lab, sin escrituras en MariaDB, sin cambios en FAQ/trayectos publicados.
++
++## Propósito
++
++La ficha es una explicación inteligible para el lector. Sus pasos editoriales se vinculan
++con los nodos de un grafo y con pasajes escogidos expresamente. Las macrounidades,
++unidades y subunidades continúan siendo infraestructura de respaldo, no el orden
++de presentación predeterminado. No se deducen enlaces por coincidencia de tags.
++
++## Disposición de nodos
++
++- La red de las siete fichas adopta una **aproximación a la captura editorial** proporcionada:
++  Ética arriba; Proemio/Bien en segundo nivel; Felicidad al centro; Virtudes/Érgon debajo;
++  Alma al pie. La imagen no contiene las coordenadas exactas de Cytoscape.
++- Arrastrar un nodo modifica el diseño *en esta sesión*.
++- **Guardar disposición** conserva las posiciones del grafo en el almacenamiento local del navegador,
++  bajo `agora.lab.arquitectura.posiciones.v1`. Esta operación no envía datos al servidor.
++- **Diseño → Restaurar disposición inicial** restaura únicamente la vista actual.
++- **Diseño → Exportar JSON / Importar JSON** permite hacer una copia y transferir
++  la organización a otro navegador o computadora. La importación valida esquema,
++  tamaño, tipos, finitud y rango de coordenadas; no importa nodos/aristas editoriales.
++- Se guardan posiciones de todos los tipos de grafo que el usuario haya modificado,
++  pero solo se aplican si los IDs de nodo coinciden con los actuales.
++- El botón **Ajustar grafo** sigue recalculando el encuadre sin cambiar posiciones.
++
++## Explicación y grafo sincronizados
++
++1. Al abrir una ficha-FAQ, el inspector muestra una **lectura guiada** compacta con 4/6
++   pasos según la ficha. El texto de cada paso proviene del comentario editorial ya existente.
++2. Pulsar un número selecciona el nodo del trayecto. Seleccionar el nodo del grafo
++   actualiza el texto mostrado en la guía.
++3. **Ubicar pasaje en grafo** cambia a la perspectiva de apoyos y selecciona únicamente
++   el pasaje que esa ficha ya vinculaba editorialmente. **Ver contexto estructural**
++   localiza su unidad en el grafo de contexto cuando esa unidad está explícitamente vinculada.
++4. Desde un pasaje seleccionado, **Volver al paso explicativo** devuelve al texto y
++   al nodo correspondiente. La lectura bilingüe se mantiene intacta.
++5. En Proemio, los cuatro módulos tienen una guía equivalente basada en la función
++   argumentativa ya registrada en la propuesta N1-U.4.
++
++## Ruta de instalación
++
++Este archivo forma parte del parche incremental sobre N1-U.8/N1-U.9. Se recomienda
++probar en la instancia real con N1-U.9 instalado:
++
++```powershell
++git apply --check "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u10.patch"
++git apply "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u10.patch"
++node public/scripts/check-lab-arquitectura-n1u10.mjs
++```
++
++Nota de validación: se reconstruyó y comprobó el código N1-U.8 con las fuentes disponibles.
++El parche original de N1-U.9 no estaba disponible para verificar *exactamente* ese estado;
++comprobar `git apply --check` en el repositorio actualizado antes de aplicar.
++
++## Trabajo posterior
++
++- Curaduría filosófica de las transiciones entre fichas, pasos y unidades.
++- Revisar la claridad visual del texto/diagrama con usuarios.
++- Diseñar un registro editorial versionado de conexiones entre fichas y grafos
++  estructurales, sin convertir etiquetas tentativas en relaciones canónicas.
++- Solo después, integrar estas perspectivas en la aplicación principal.
+diff --git a/public/css/lab-arquitectura-n1u2.css b/public/css/lab-arquitectura-n1u2.css
+index 0c0e16a..755af48 100644
+--- a/public/css/lab-arquitectura-n1u2.css
++++ b/public/css/lab-arquitectura-n1u2.css
+@@ -165 +165,21 @@
+ }
++
++/* N1-U.10 · Leer el grafo desde textos breves, con controles de disposición compactos. */
++.arch-guide { padding: 9px 10px 10px; border: 1px solid var(--border, #c1d4d0); background: var(--bg-elevated, #f8fbfa); border-radius: 9px; margin-bottom: 12px; }
++.arch-guide-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2px 8px; font-size: .82rem; }
++.arch-guide-head small { font-size: .69rem; color: var(--text-muted, #64777b); }
++.arch-guide-steps { display: flex; flex-wrap: wrap; gap: 5px; margin: 9px 0; }
++.arch-guide-steps button { cursor: pointer; min-width: 30px; min-height: 29px; font: inherit; font-size: .79rem; background: var(--bg-elevated, white); color: inherit; border: 1px solid var(--border, #b3c6c3); border-radius: 6px; }
++.arch-guide-steps button[aria-pressed="true"] { background: #dcece8; color: #1c514a; border: 2px solid #398275; font-weight: 700; }
++.arch-guide-label { display: block; margin-top: 6px; font-size: .88rem; }
++.arch-guide p { font-size: .85rem; line-height: 1.5; margin: 6px 0; }
++.arch-guide .arch-guide-note { color: var(--text-muted, #607579); font-size: .72rem; margin-top: 8px; }
++.arch-guide-actions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
++.arch-guide-actions button { cursor: pointer; flex: 1 1 auto; font: inherit; font-size: .73rem; line-height: 1.3; padding: 6px 8px; background: var(--bg-elevated, white); color: inherit; border: 1px solid var(--border, #a2bdbc); border-radius: 6px; }
++.arch-layout-tools { position: relative; font-size: .76rem; }
++.arch-layout-tools summary { cursor: pointer; border: 1px solid var(--border, #aabfc2); border-radius: 7px; background: var(--bg-elevated, white); padding: 7px; }
++.arch-layout-tools[open] { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
++.arch-layout-tools[open] > summary { margin-right: 3px; }
++.arch-layout-tools input[type="file"][hidden] { display: none; }
++.arch-layout-status { font-size: .72rem; color: var(--text-muted, #506d67); max-width: 300px; }
++@media(max-width:650px) { .arch-layout-status { flex-basis: 100%; } }
+diff --git a/public/js/lab/architectureBridges.js b/public/js/lab/architectureBridges.js
+index 1f0e904..be260de 100644
+--- a/public/js/lab/architectureBridges.js
++++ b/public/js/lab/architectureBridges.js
+@@ -87,2 +87,3 @@ export function inspectorPuentesHtml(modelo, fichas, puentes, fichaId, vista, se
+       ${active.sub_id ? `<button class="arch-primary" type="button" data-arch-read="${safe(active.sub_id)}">Leer el pasaje bilingüe</button>` : ''}
++      ${active.paso_id ? `<button class="arch-minor" type="button" data-arch-guide-step="${safe(active.paso_id)}">Volver al paso explicativo</button>` : ''}
+       ${active.key.startsWith('unidad:') ? `<button class="arch-minor" type="button" data-arch-go-unit="${safe(active.id)}">Explorar la unidad en el archivo estructural</button>` : ''}` : `<p>${safe(intro)}</p>`}
+diff --git a/public/js/lab/architectureLayout.js b/public/js/lab/architectureLayout.js
+new file mode 100644
+index 0000000..e6d8fc9
+--- /dev/null
++++ b/public/js/lab/architectureLayout.js
+@@ -0,0 +1,54 @@
++// N1-U.10 · Preferencias VISUALES locales; nunca modifica fichas, aristas ni MariaDB.
++export const LAYOUT_STORAGE_KEY = 'agora.lab.arquitectura.posiciones.v1';
++export const LAYOUT_SCHEMA = 'agora.lab.layout.v1';
++const VALID_GROUP = /^(red-fichas:|puente:[\w.:-]+:|ficha:[\w.:-]+:|modulos:|relaciones:|estructura:)$/;
++const MAX_NODES = 600;
++const safeCoord = n => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= 100000;
++
++export function layoutParaGuardar(posiciones) {
++  if (!(posiciones instanceof Map)) throw new TypeError('Las posiciones deben ser un Map');
++  const nodes = [];
++  for (const [key, p] of posiciones) {
++    if (typeof key !== 'string' || key.length > 220 || !p || !safeCoord(p.x) || !safeCoord(p.y)) continue;
++    const sep = key.lastIndexOf(':');
++    // Los IDs de nodo pueden contener dos puntos; detectar grupo por prefijo, no por último separador.
++    const prefix = ['red-fichas:', 'modulos:', 'relaciones:', 'estructura:'].find(s => key.startsWith(s))
++      || (/^(puente:[^:]+:(?:orientacion|apoyos):)/.exec(key)?.[1])
++      || (/^(ficha:[^:]+:)/.exec(key)?.[1]);
++    if (!prefix || !VALID_GROUP.test(prefix) || key.length <= prefix.length) continue;
++    nodes.push({ group: prefix, id: key.slice(prefix.length), x: p.x, y: p.y });
++  }
++  if (nodes.length > MAX_NODES) throw new Error('Demasiados nodos para guardar');
++  return { schema: LAYOUT_SCHEMA, nodes };
++}
++
++export function leerLayout(raw) {
++  const doc = typeof raw === 'string' ? JSON.parse(raw) : raw;
++  if (!doc || doc.schema !== LAYOUT_SCHEMA || !Array.isArray(doc.nodes) || doc.nodes.length > MAX_NODES) throw new Error('Archivo de disposición inválido');
++  const map = new Map();
++  for (const n of doc.nodes) {
++    if (!n || typeof n.group !== 'string' || !VALID_GROUP.test(n.group) ||
++        typeof n.id !== 'string' || !n.id || n.id.length > 180 || !safeCoord(n.x) || !safeCoord(n.y)) throw new Error('Nodo de disposición inválido');
++    const key = n.group + n.id;
++    if (map.has(key)) throw new Error('Nodo duplicado en la disposición');
++    map.set(key, { x: n.x, y: n.y });
++  }
++  return map;
++}
++
++export function cargarLayoutLocal(storage) {
++  try { const raw = storage?.getItem(LAYOUT_STORAGE_KEY); return raw ? leerLayout(raw) : new Map(); }
++  catch { return new Map(); } // Nunca impedir abrir el Lab por un problema de almacenamiento.
++}
++
++export function guardarLayoutLocal(storage, positions) {
++  if (!storage || typeof storage.setItem !== 'function') throw new Error('Almacenamiento local no disponible');
++  const doc = layoutParaGuardar(positions);
++  storage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(doc));
++  return doc.nodes.length;
++}
++
++export function limpiarGrupo(positions, group) {
++  if (!VALID_GROUP.test(group)) throw new Error('Grupo de grafo no reconocido');
++  for (const key of positions.keys()) if (key.startsWith(group)) positions.delete(key);
++}
+diff --git a/public/js/lab/architecturePilotNetwork.js b/public/js/lab/architecturePilotNetwork.js
+index a1e84ec..c843ef2 100644
+--- a/public/js/lab/architecturePilotNetwork.js
++++ b/public/js/lab/architecturePilotNetwork.js
+@@ -78,5 +78,12 @@ export function elementosRedFichas(fichas, red, seleccion = {}) {
+   if (fichas.revision !== red.revision) fail('revisión de la red incompatible');
++  // Disposición orientativa reconstruida de la captura aportada por el editor (N1-U.10).
++  // Las coordenadas exactas originales no se conocen; una vez ajustado el grafo se pueden guardar.
+   const posiciones = [
+-    [100,80], [520,80], [940,80],
+-    [100,330], [520,330], [940,330], [520,570],
++    [828,110],   // ¿Qué es la ética? (arriba, centro)
++    [598,394],   // Proemio (segundo nivel, izquierda)
++    [1103,371],  // Cómo se dice el bien (segundo nivel, derecha)
++    [828,674],   // Felicidad (centro)
++    [1285,949],  // Érgon (abajo, derecha)
++    [821,1220],  // Partes del alma (base)
++    [378,952],   // Tipos de virtudes (abajo, izquierda)
+   ];
+diff --git a/public/js/lab/architectureTextGuide.js b/public/js/lab/architectureTextGuide.js
+new file mode 100644
+index 0000000..2736c46
+--- /dev/null
++++ b/public/js/lab/architectureTextGuide.js
+@@ -0,0 +1,41 @@
++// N1-U.10 · Lectura guiada de borradores editoriales vinculada a nodos reales.
++// No deduce relaciones filosóficas ni fabrica aristas nuevas.
++const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({
++  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
++})[c]);
++
++export function guiaExplicativaHtml(ficha, capas, seleccion = {}) {
++  if (!ficha) return '';
++  if (ficha.tipo === 'faq') {
++    const pasos = ficha.pasos || [];
++    const activo = pasos.find(p => p.id === seleccion.pasoId) || pasos[0];
++    if (!activo) return '';
++    const puente = seleccion.puente;
++    const pasaje = puente?.apoyos?.find(a => a.paso_id === activo.id && a.sub_id === activo.sub_id);
++    return `<section class="arch-guide" aria-label="Lectura guiada de la ficha">
++      <div class="arch-guide-head"><strong>Texto y grafo · ${pasos.length} pasos</strong><small>Explicación editorial en revisión</small></div>
++      <div class="arch-guide-steps" role="group" aria-label="Seleccionar paso desde el texto">${pasos.map((p,i) =>
++        `<button type="button" data-arch-guide-step="${safe(p.id)}" aria-pressed="${p.id === activo.id}">${i+1}</button>`).join('')}</div>
++      <strong class="arch-guide-label">${safe(activo.titulo)}</strong>
++      <p>${safe(activo.comentario)}</p>
++      <div class="arch-guide-actions">
++        ${pasaje ? `<button type="button" data-arch-guide-support="${safe(activo.sub_id)}">Ubicar pasaje en grafo</button>` : ''}
++        ${seleccion.unidadId && puente?.contextos.unidades.some(u => u.id === seleccion.unidadId)
++          ? `<button type="button" data-arch-guide-unit="${safe(seleccion.unidadId)}">Ver contexto estructural</button>` : ''}
++        <button type="button" data-arch-read="${safe(activo.sub_id)}">Leer griego y castellano</button>
++      </div>
++      <p class="arch-guide-note">El paso remite a un pasaje seleccionado editorialmente. Su secuencia no equivale a una deducción demostrada.</p>
++    </section>`;
++  }
++  if (ficha.id === 'proemio' && capas?.modulos?.length) {
++    const actual = capas.porId.get(seleccion.moduloId) || capas.modulos[0];
++    return `<section class="arch-guide" aria-label="Lectura guiada del Proemio">
++      <div class="arch-guide-head"><strong>Texto y módulos del Proemio</strong><small>Articulación propuesta</small></div>
++      <div class="arch-guide-steps" role="group" aria-label="Seleccionar módulo">${capas.modulos.map((m,i) =>
++        `<button type="button" data-arch-guide-module="${safe(m.id)}" aria-pressed="${m.id===actual.id}">${i+1}</button>`).join('')}</div>
++      <strong class="arch-guide-label">${safe(actual.titulo)}</strong><p>${safe(actual.funcion)}</p>
++      <p class="arch-guide-note">Los módulos sintetizan subunidades documentadas. Sus aristas siguen siendo hipótesis editoriales.</p>
++    </section>`;
++  }
++  return '';
++}
+diff --git a/public/js/views/labArchitectureView.js b/public/js/views/labArchitectureView.js
+index fecb735..2136e1a 100644
+--- a/public/js/views/labArchitectureView.js
++++ b/public/js/views/labArchitectureView.js
+@@ -11,2 +11,4 @@ import { ZOOM_SENSITIVITY_TRIPLE, opcionesModalFichasHtml } from '../lab/archite
+ import { localizarSubunidadEnBiblioteca, representarLecturaContextual } from '../lab/graphPassageReader.js';
++import { guiaExplicativaHtml } from '../lab/architectureTextGuide.js';
++import { LAYOUT_STORAGE_KEY, layoutParaGuardar, leerLayout, cargarLayoutLocal, guardarLayoutLocal, limpiarGrupo } from '../lab/architectureLayout.js';
+ 
+@@ -250,2 +252,10 @@ export async function createLabArchitectureView(App) {
+         <button type="button" data-arch-fit>Ajustar grafo</button>
++        <button type="button" data-arch-layout-save title="Guardar posiciones de este grafo en este navegador">Guardar disposición</button>
++        <details class="arch-layout-tools"><summary>Diseño</summary>
++          <button type="button" data-arch-layout-reset>Restaurar disposición inicial</button>
++          <button type="button" data-arch-layout-export>Exportar JSON</button>
++          <button type="button" data-arch-layout-import-open>Importar JSON</button>
++          <input type="file" accept=".json,application/json" data-arch-layout-import hidden>
++        </details>
++        <span class="arch-layout-status" data-arch-layout-status role="status" aria-live="polite"></span>
+         <details class="arch-legend-details"><summary>Convenciones del grafo</summary><span class="arch-legend" data-arch-legend>Los vínculos desde la ficha son decisiones editoriales revisables, no aristas extraídas automáticamente del tagueo.</span></details>
+@@ -280,3 +290,13 @@ export async function createLabArchitectureView(App) {
+   const abort = new AbortController();
+-  const positions = new Map();
++  // N1-U.10: preferencias visuales, guardadas solo en este navegador.
++  let layoutStorage = null;
++  try { layoutStorage = window.localStorage; } catch { /* Navegador con almacenamiento restringido */ }
++  const positions = cargarLayoutLocal(layoutStorage);
++  function avisoLayout(message) { const target = $('[data-arch-layout-status]'); if (target) target.textContent = message; }
++  function snapshotLayout() {
++    if (!cy || !ultimoGrafo) return;
++    for (const n of cy.nodes()) {
++      if (n.data('tipo') !== 'modulo_contenedor') positions.set(ultimoGrafo + n.id(), { ...n.position() });
++    }
++  }
+   const selected = () => obtenerContexto(model, state);
+@@ -344,2 +364,15 @@ export async function createLabArchitectureView(App) {
+     $('[data-arch-back="momento"]').hidden = !!ficha || !ctx.momento;
++    // El texto editorial es la puerta de entrada: seleccionar un pasaje activa su nodo,
++    // y seleccionar un nodo actualiza este comentario (sin agregar aristas automáticas).
++    if (ficha) {
++      const bridge = puentes?.porFicha.get(ficha.id);
++      const seleccionadoApoyo = perspectiva === 'apoyos' && puenteSeleccionado?.startsWith('sub:')
++        ? bridge?.apoyos.find(a => 'sub:' + a.sub_id === puenteSeleccionado)?.paso_id : null;
++      const pasoGuia = seleccionadoApoyo || fichaPasoId;
++      const subGuia = ficha.pasos?.find(p => p.id === pasoGuia)?.sub_id || ficha.pasos?.[0]?.sub_id;
++      const unidadGuia = subGuia ? model.subs.get(subGuia)?.unidad : null;
++      inspector.insertAdjacentHTML('afterbegin', guiaExplicativaHtml(ficha, capas, {
++        pasoId: pasoGuia, moduloId, puente: bridge, unidadId: unidadGuia,
++      }));
++    }
+     graph.setAttribute('aria-label', redVisible ? 'Red de siete fichas filosóficas y relaciones editoriales propuestas' : puenteVisible ? `Ficha ${ficha.titulo}: ${perspectiva === 'orientacion' ? 'contexto editorial' : 'pasajes de apoyo'}` : faq ? `Trayecto editorial de la FAQ: ${faq.titulo}` : 'Grafo de arquitectura del Libro I');
+@@ -418,2 +451,48 @@ export async function createLabArchitectureView(App) {
+   el.addEventListener('click', event => {
++    const guidedStep = event.target.closest('[data-arch-guide-step]');
++    if (guidedStep && fichas?.porId.get(fichaActiva)?.pasos?.some(p => p.id === guidedStep.dataset.archGuideStep)) {
++      perspectiva = 'diagrama'; fichaPasoId = guidedStep.dataset.archGuideStep; fichaEnlaceId = null;
++      puenteSeleccionado = null; dibujar(); return;
++    }
++    const guidedModule = event.target.closest('[data-arch-guide-module]');
++    if (guidedModule && fichaActiva === 'proemio' && capas?.porId.has(guidedModule.dataset.archGuideModule)) {
++      perspectiva = 'diagrama'; modo = 'modulos'; moduloId = guidedModule.dataset.archGuideModule;
++      enlaceId = null; dibujar(); return;
++    }
++    const guidedSupport = event.target.closest('[data-arch-guide-support]');
++    if (guidedSupport && puentes?.porFicha.get(fichaActiva)?.apoyos.some(a => a.sub_id === guidedSupport.dataset.archGuideSupport)) {
++      perspectiva = 'apoyos'; puenteSeleccionado = 'sub:' + guidedSupport.dataset.archGuideSupport; dibujar(); return;
++    }
++    const guidedUnit = event.target.closest('[data-arch-guide-unit]');
++    if (guidedUnit && puentes?.porFicha.get(fichaActiva)?.contextos.unidades.some(u => u.id === guidedUnit.dataset.archGuideUnit)) {
++      perspectiva = 'orientacion'; puenteSeleccionado = 'unidad:' + guidedUnit.dataset.archGuideUnit; dibujar(); return;
++    }
++    if (event.target.closest('[data-arch-layout-save]')) {
++      try { snapshotLayout(); const n = guardarLayoutLocal(layoutStorage, positions); avisoLayout(`Disposición guardada · ${n} nodos en este navegador`); }
++      catch (err) { avisoLayout(`No se pudo guardar: ${String(err.message || err)}`); }
++      return;
++    }
++    if (event.target.closest('[data-arch-layout-reset]')) {
++      if (ultimoGrafo) {
++        limpiarGrupo(positions, ultimoGrafo);
++        try { guardarLayoutLocal(layoutStorage, positions); } catch { /* Se informa el efecto de esta sesión igualmente */ }
++        ultimoGrafo = null; dibujar(); avisoLayout('Se restauró el diseño inicial de esta vista.');
++      }
++      return;
++    }
++    if (event.target.closest('[data-arch-layout-import-open]')) {
++      $('[data-arch-layout-import]')?.click(); return;
++    }
++    if (event.target.closest('[data-arch-layout-export]')) {
++      try {
++        snapshotLayout();
++        const blob = new Blob([JSON.stringify(layoutParaGuardar(positions), null, 2)], { type: 'application/json' });
++        const url = URL.createObjectURL(blob), anchor = document.createElement('a');
++        anchor.href = url; anchor.download = 'agora-disposiciones-grafos.json';
++        document.body.append(anchor); anchor.click(); anchor.remove();
++        setTimeout(() => URL.revokeObjectURL(url), 1000);
++        avisoLayout('Archivo de posiciones exportado.');
++      } catch (err) { avisoLayout(`Error al exportar: ${String(err.message || err)}`); }
++      return;
++    }
+     if (event.target === picker) { picker.close(); return; } // Clic fuera del contenido del modal.
+@@ -542,2 +621,14 @@ export async function createLabArchitectureView(App) {
+   });
++  el.addEventListener('change', async event => {
++    if (!event.target.matches('[data-arch-layout-import]')) return;
++    const file = event.target.files?.[0]; if (!file) return;
++    try {
++      if (file.size > 250000) throw new Error('El archivo supera el máximo de 250 KB');
++      const imported = leerLayout(await file.text());
++      positions.clear(); for (const [key, p] of imported) positions.set(key, p);
++      try { guardarLayoutLocal(layoutStorage, positions); } catch { /* También funciona solo en esta sesión */ }
++      ultimoGrafo = null; dibujar(); avisoLayout(`Disposición importada: ${imported.size} posiciones.`);
++    } catch (err) { avisoLayout(`No se pudo importar: ${String(err.message || err)}`); }
++    finally { event.target.value = ''; }
++  });
+   reader.addEventListener('change', event => {
+diff --git a/public/scripts/check-lab-arquitectura-n1u10.mjs b/public/scripts/check-lab-arquitectura-n1u10.mjs
+new file mode 100644
+index 0000000..c59a079
+--- /dev/null
++++ b/public/scripts/check-lab-arquitectura-n1u10.mjs
+@@ -0,0 +1,61 @@
++// N1-U.10 · Pruebas sin DB ni navegador, sobre preferencias visuales y navegación editorial.
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { dirname, resolve } from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { layoutParaGuardar, leerLayout, cargarLayoutLocal, guardarLayoutLocal, limpiarGrupo, LAYOUT_STORAGE_KEY } from '../js/lab/architectureLayout.js';
++import { guiaExplicativaHtml } from '../js/lab/architectureTextGuide.js';
++import { elementosRedFichas } from '../js/lab/architecturePilotNetwork.js';
++const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
++const src = name => readFileSync(resolve(root, name), 'utf8');
++const view = src('js/views/labArchitectureView.js');
++const css = src('css/lab-arquitectura-n1u2.css');
++const bridge = src('js/lab/architectureBridges.js');
++const red = JSON.parse(src('lab/n1u7-fichas-red-piloto.json'));
++const positions = new Map([
++  ['red-fichas:red:ficha:faq.etica.intro', {x:828,y:110}],
++  ['ficha:faq.lab.felicidad:ficha:faq.lab.felicidad:p1', {x:200,y:320}],
++  ['puente:faq.lab.felicidad:apoyos:puente:faq.lab.felicidad:sub:1098a16-18', {x:45,y:64}],
++]);
++const saved = layoutParaGuardar(positions);
++assert.equal(saved.nodes.length, 3);
++assert.equal(leerLayout(JSON.stringify(saved)).size, 3);
++assert.deepEqual(leerLayout(saved).get('red-fichas:red:ficha:faq.etica.intro'), {x:828,y:110});
++assert.throws(() => leerLayout(JSON.stringify({...saved, schema:'evil'})), /inválido/);
++assert.throws(() => leerLayout({schema:saved.schema, nodes:[{group:'red-fichas:',id:'x',x:Infinity,y:1}]}), /inválido/);
++assert.throws(() => leerLayout({schema:saved.schema, nodes:[{group:'red-fichas:',id:'x',x:1,y:1},{group:'red-fichas:',id:'x',x:1,y:2}]}), /duplicado/);
++let storageData = null;
++const storage = { setItem(k,v) {assert.equal(k,LAYOUT_STORAGE_KEY);storageData=v;}, getItem() {return storageData;} };
++assert.equal(guardarLayoutLocal(storage,positions),3);
++assert.equal(cargarLayoutLocal(storage).size,3);
++limpiarGrupo(positions,'red-fichas:');assert.equal(positions.size,2);
++assert.equal(cargarLayoutLocal({getItem(){throw new Error('bloqueado');}}).size,0);
++const fichas = new Map([
++  ['faq.etica.intro', {titulo:'Ética'}], ['proemio',{titulo:'Proemio'}], ['faq.agathon.pros_hen',{titulo:'Bien'}],
++  ...red.fichas.map(f=>[f.id,f])
++]);
++const nodes = elementosRedFichas({revision:'x', porId:fichas}, {revision:'x',relaciones:red.red.relaciones});
++assert.equal(nodes.filter(x=>x.group==='nodes').length,7);
++assert.equal(nodes.filter(x=>x.group==='edges').length,8);
++const node = id => nodes.find(x=>x.data.key===id);
++assert(node('faq.etica.intro').position.y < node('faq.lab.felicidad').position.y);
++assert(node('faq.lab.virtudes').position.x < node('faq.lab.felicidad').position.x);
++assert(node('faq.lab.ergon').position.x > node('faq.lab.felicidad').position.x);
++assert(node('faq.lab.alma').position.y > node('faq.lab.felicidad').position.y);
++const felicidad = red.fichas.find(f=>f.id==='faq.lab.felicidad');
++const bridgeF = {contextos:felicidad.contextos, apoyos:felicidad.apoyos};
++const content = guiaExplicativaHtml(felicidad, null, {pasoId:'p3', puente:bridgeF, unidadId:'forma_fin'});
++assert(content.includes('data-arch-guide-step="p3" aria-pressed="true"'));
++assert(content.includes('data-arch-guide-support="1097a34-b6"'));
++assert(content.includes('data-arch-guide-unit="forma_fin"'));
++const hostile = { ...felicidad, pasos: felicidad.pasos.map(p=>p.id==='p3'?{...p, comentario:'<script>mal</script>'}:p) };
++assert(!guiaExplicativaHtml(hostile,null,{pasoId:'p3',puente:bridgeF}).includes('<script>'));
++for (const marker of ['data-arch-layout-save','data-arch-layout-reset','data-arch-layout-export','data-arch-layout-import',
++  'data-arch-guide-step','data-arch-guide-support','data-arch-guide-unit','data-arch-guide-module']) assert(view.includes(marker),marker);
++assert(view.includes('snapshotLayout()') && view.includes('cargarLayoutLocal(layoutStorage)'));
++assert(view.includes('guiaExplicativaHtml(ficha, capas'));
++assert(view.includes("perspectiva = 'apoyos'"));
++assert(bridge.includes('data-arch-guide-step'));
++assert(css.includes('.arch-guide') && css.includes('.arch-layout-tools'));
++assert(!view.includes('UPDATE faqs') && !view.includes('INSERT INTO'));
++console.log('N1-U.10 OK · siete posiciones iniciales, almacenamiento local, export/import, guía texto↔grafo, puentes curatoriales y HTML seguro.');

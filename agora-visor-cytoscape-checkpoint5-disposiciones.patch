@@ -1,0 +1,360 @@
+diff --git a/docs/LAB_VISOR_CHECKPOINT5_DISPOSICIONES.md b/docs/LAB_VISOR_CHECKPOINT5_DISPOSICIONES.md
+new file mode 100644
+index 0000000..1096a9c
+--- /dev/null
++++ b/docs/LAB_VISOR_CHECKPOINT5_DISPOSICIONES.md
+@@ -0,0 +1,31 @@
++# Checkpoint 5 — Relaciones entre focos y disposiciones persistentes
++
++Incremento del visor de grafos posterior a **Checkpoint 4: identidad compartida**.
++
++## Contrato
++
++- Se resaltan las relaciones **existentes** que conectan directamente dos nodos foco: ambas orientaciones, sin inferencias.
++- La etiqueta de esas aristas se muestra si el dato contiene `relacion` o `label` (fallback `tipo`).
++- Casilla «Mostrar nombres de todas las aristas» para el resto y botón por arista en el inspector. Los cambios de visibilidad son locales al visor.
++- El botón **Persistir ordenamiento** guarda coordenadas de nodos actualmente representados, los nodos previamente guardados, la selección de etiquetas y la casilla en `localStorage`; no guarda hasta que el usuario lo pide.
++- La clave incorpora un conjunto canónico de focos (sin importar su orden) y una huella calculada de IDs/tipos/extremos/relaciones del grafo. No se recupera un layout si cambia esa estructura.
++- Al reabrir la vista focal o restaurar un conjunto guardado se recuperan coordenadas y preferencias. Expansiones posteriores recuperan posiciones de nodos guardados incluso cuando no estaban en la vista inicial.
++- El almacenamiento se limita a 30 conjuntos de focos por navegador y puede fallar sin interrumpir la exploración. No se sincroniza entre equipos ni usuarios.
++- No se modifica el modelo editorial, la API, MariaDB ni el Orientador.
++
++## Aplicación y comprobación
++
++```bash
++
++git apply --check agora-visor-cytoscape-checkpoint5-disposiciones.patch
++git apply agora-visor-cytoscape-checkpoint5-disposiciones.patch
++node public/scripts/check-visor-disposiciones.mjs
++node public/scripts/check-visor-expansion.mjs
++node public/scripts/check-identidad-visor.mjs
++```
++
++Abrir `/#/lab/visor-grafos`. Con focos `phusis`, `arete`, `eudaimonia`, comprobar que la relación funcional `arete → eudaimonia` aparece destacada con su nombre. Reubicar varios nodos manualmente, pulsar **Persistir ordenamiento**, cambiar el foco, volver a ese conjunto y verificar que las posiciones se recuperan. Expandir un vecino, moverlo y guardar; contraer y volver a expandir; la posición guardada debe volver. Verificar que una arista no focal admite nombre por selección individual.
++
++## Límites
++
++No se agrupan aún las FAQ ni se crean vínculos entre unidades y conceptos, tampoco se abre la lectura textual. Son incrementos posteriores. La posición final del layout inicial y el aspecto de etiquetas deben verificarse en el navegador con el corpus real.
+diff --git a/public/js/lab/cytoscapeRenderer.js b/public/js/lab/cytoscapeRenderer.js
+index dee810e..11f205d 100644
+--- a/public/js/lab/cytoscapeRenderer.js
++++ b/public/js/lab/cytoscapeRenderer.js
+@@ -4,6 +4,7 @@ import { cargarCytoscape } from './cytoscapeLoader.js';
+ 
+ export async function crearVisorGrafo(contenedor, elementos, {
+   agrupado = false, alSeleccionar = () => {}, alOcultar = () => {}, alDobleClick = null,
++  posicionesIniciales = {},
+ } = {}) {
+   const cytoscape = await cargarCytoscape();
+   const cy = cytoscape({
+@@ -38,12 +39,31 @@ export async function crearVisorGrafo(contenedor, elementos, {
+         'target-arrow-shape': 'triangle', 'target-arrow-color': '#99a8b5',
+         'arrow-scale': 0.7, 'opacity': 0.75,
+       } },
++      { selector: 'edge[conexionFocos = 1]', style: {
++        'width': 3.2, 'line-color': '#376f93', 'target-arrow-color': '#376f93', 'opacity': 1,
++        'z-index': 20,
++      } },
++      { selector: 'edge[nombreAristaVisible != ""]', style: {
++        'label': 'data(nombreAristaVisible)', 'font-size': 11, 'color': '#253b4c',
++        'text-background-color': '#ffffff', 'text-background-opacity': 0.88,
++        'text-background-padding': 3, 'text-rotation': 'autorotate',
++      } },
+       { selector: ':selected', style: {
+         'border-color': '#b36d20', 'border-width': 3, 'line-color': '#b36d20',
+         'target-arrow-color': '#b36d20', 'opacity': 1,
+       } },
+     ],
+   });
++  const posicionValida = p => p && Number.isFinite(p.x) && Number.isFinite(p.y);
++  function aplicarPosiciones(posiciones = {}) {
++    cy.batch(() => {
++      for (const [id, position] of Object.entries(posiciones)) {
++        const n = cy.getElementById(id);
++        if (n.isNode() && posicionValida(position)) n.position(position);
++      }
++    });
++  }
++  aplicarPosiciones(posicionesIniciales);
+   let previous = { id: null, at: 0 };
+   cy.on('tap', 'node', evt => {
+     const item = evt.target;
+@@ -72,7 +92,7 @@ export async function crearVisorGrafo(contenedor, elementos, {
+     },
+     // Actualización incremental: los nodos existentes conservan sus posiciones.
+     // Se agregan solo los nuevos vecinos alrededor de un nodo ya representado.
+-    actualizarElementos(nuevos) {
++    actualizarElementos(nuevos, { posiciones = {} } = {}) {
+       const nodes = nuevos.filter(x => x.group === 'nodes');
+       const edges = nuevos.filter(x => x.group === 'edges');
+       const wantedN = new Set(nodes.map(x => x.data.id));
+@@ -98,7 +118,8 @@ export async function crearVisorGrafo(contenedor, elementos, {
+           slots.set(anchorId || '_', count + 1);
+           const angle = -Math.PI / 2 + (count % 10) * Math.PI * 2 / 10;
+           const radius = 135 + Math.floor(count / 10) * 100;
+-          cy.add({ ...n, position: { x: pos.x + radius * Math.cos(angle), y: pos.y + radius * Math.sin(angle) } });
++          cy.add({ ...n, position: posicionValida(posiciones[n.data.id]) ? posiciones[n.data.id]
++            : { x: pos.x + radius * Math.cos(angle), y: pos.y + radius * Math.sin(angle) } });
+         }
+         for (const e of edges) {
+           const actual = cy.getElementById(e.data.id);
+@@ -108,6 +129,10 @@ export async function crearVisorGrafo(contenedor, elementos, {
+       });
+       return { nodos: cy.nodes().length, aristas: cy.edges().length };
+     },
++    posiciones() {
++      return Object.fromEntries(cy.nodes().map(n => [n.id(), { x: n.position('x'), y: n.position('y') }]));
++    },
++    aplicarPosiciones,
+     ocultarSeleccion() { const s = cy.$(':selected'); s.hide(); alOcultar(null); },
+     restaurar() { cy.elements().show(); },
+     ajustar() { cy.fit(cy.elements().visible(), 35); },
+diff --git a/public/js/lab/graphLayoutPersistence.js b/public/js/lab/graphLayoutPersistence.js
+new file mode 100644
+index 0000000..fa6ee91
+--- /dev/null
++++ b/public/js/lab/graphLayoutPersistence.js
+@@ -0,0 +1,63 @@
++// Preferencias de visualización por conjunto de focos; jamás modifica el corpus.
++export const GRAPH_LAYOUT_STORAGE_KEY = 'agora.lab.visorgrafos.layouts.v1';
++const MAX_ENTRIES = 30;
++
++export function huellaGrafo(elementos = []) {
++  // El ID, los extremos y las relaciones participan en la huella: una arista modificada la invalida.
++  const lines = elementos.map(e => e.group === 'edges'
++    ? `e|${e.data.id}|${e.data.source}|${e.data.target}|${e.data.tipo || ''}|${e.data.relacion || ''}`
++    : `n|${e.data.id}|${e.data.tipo || ''}`).sort();
++  let h = 2166136261;
++  for (const ch of lines.join('\n')) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
++  return `${lines.length}:${(h >>> 0).toString(16)}`;
++}
++
++export function claveDisposicion(focos = [], huella = '') {
++  return JSON.stringify([String(huella), [...new Set(focos.map(String))].sort()]);
++}
++
++export function normalizarDisposicion(value) {
++  if (!value || typeof value !== 'object') return null;
++  const posiciones = {};
++  for (const [id, p] of Object.entries(value.posiciones || {})) {
++    if (id.length > 300 || !p || !Number.isFinite(p.x) || !Number.isFinite(p.y) || Math.abs(p.x) > 1e7 || Math.abs(p.y) > 1e7) continue;
++    posiciones[id] = { x: p.x, y: p.y };
++  }
++  const etiquetas = Array.isArray(value.etiquetas) ? [...new Set(value.etiquetas.filter(x => typeof x === 'string' && x.length < 300))] : [];
++  return { posiciones, todasEtiquetas: value.todasEtiquetas === true, etiquetas };
++}
++
++export function leerDisposicion(storage, key) {
++  try {
++    const root = JSON.parse(storage?.getItem(GRAPH_LAYOUT_STORAGE_KEY) || '{}');
++    return normalizarDisposicion(root?.[key]?.datos);
++  } catch { return null; }
++}
++
++export function guardarDisposicion(storage, key, value) {
++  const datos = normalizarDisposicion(value);
++  if (!datos) return false;
++  try {
++    const root = JSON.parse(storage?.getItem(GRAPH_LAYOUT_STORAGE_KEY) || '{}');
++    const safe = root && typeof root === 'object' && !Array.isArray(root) ? root : {};
++    delete safe[key];
++    safe[key] = { datos, guardado: Date.now() };
++    while (Object.keys(safe).length > MAX_ENTRIES) delete safe[Object.keys(safe)[0]];
++    storage?.setItem(GRAPH_LAYOUT_STORAGE_KEY, JSON.stringify(safe));
++    return Boolean(storage);
++  } catch { return false; }
++}
++
++export function decorarAristasFocales(elementos, focos, { todasEtiquetas = false, etiquetas = [] } = {}) {
++  const focus = new Set(focos);
++  const nombradas = new Set(etiquetas);
++  return elementos.map(e => {
++    if (e.group !== 'edges') return e;
++    const d = e.data;
++    const entreFocos = focus.has(d.source) && focus.has(d.target);
++    const nombre = d.relacion || d.label || d.tipo || '';
++    const mostrar = Boolean(nombre) && (entreFocos || todasEtiquetas || nombradas.has(d.id));
++    return { ...e, data: { ...d, conexionFocos: entreFocos ? 1 : 0,
++      nombreAristaVisible: mostrar ? String(nombre) : '' } };
++  });
++}
+diff --git a/public/js/views/labGraphPilotView.js b/public/js/views/labGraphPilotView.js
+index e1ebc64..41c9cb0 100644
+--- a/public/js/views/labGraphPilotView.js
++++ b/public/js/views/labGraphPilotView.js
+@@ -5,6 +5,7 @@ import { indexarGrafo, crearEstadoFocal, cambiarFocos, alternarExpansion, obtene
+ import { crearVisorGrafo } from '../lab/cytoscapeRenderer.js';
+ import { filtrarGrafoDidactico, ordenarBusquedaFocal } from '../lab/graphDisplayPolicy.js';
+ import { integrarIdentidadesVisuales } from '../lab/graphConceptIdentity.js';
++import { huellaGrafo, claveDisposicion, leerDisposicion, guardarDisposicion, decorarAristasFocales } from '../lab/graphLayoutPersistence.js';
+ 
+ // Checkpoint 2: Cytoscape permanece como visor experimental; el corpus es de sólo lectura.
+ // Focos estables + expansión local reversible + inspector lateral. Sin Relate/MariaDB.
+@@ -14,6 +15,8 @@ export function createLabGraphPilotView(App) {
+   const projection = buildSemanticProjection(App?.S || {});
+   const identidad = integrarIdentidadesVisuales(proyeccionAElementos(projection));
+   const todos = identidad.elementos;
++  const huella = huellaGrafo(todos);
++  const almacenamiento = (() => { try { return window.localStorage; } catch { return null; } })();
+   const visualId = id => identidad.equivalencias.get(id) || id;
+   let mostrarParrafos = false;
+   let filtrado = filtrarGrafoDidactico(todos, ['concepto_estatico:phusis', 'concepto_estatico:arete', 'concepto_estatico:eudaimonia']);
+@@ -32,6 +35,11 @@ export function createLabGraphPilotView(App) {
+     estado.expandidos = new Set([...previo].filter(id => indice.nodos.has(id)));
+   }
+   reconstruirIndice(predeterminados);
++  let preferencias = { posiciones: {}, todasEtiquetas: false, etiquetas: [] };
++  const claveActual = () => claveDisposicion(estado.focos, huella);
++  const leerPreferencias = () => { preferencias = leerDisposicion(almacenamiento, claveActual()) ||
++    { posiciones: {}, todasEtiquetas: false, etiquetas: [] }; };
++  leerPreferencias();
+   let modo = 'focal';
+   let tipo = 'todos';
+   let viewer = null;
+@@ -58,6 +66,12 @@ export function createLabGraphPilotView(App) {
+         <p class="hint">Focos permanentes (máximo 5). Se muestran sus aristas entrantes y salientes, pero NO las conexiones secundarias entre vecinos hasta que las expandas.</p>
+         <div id="gv-foci" class="lab-graph-foci"></div>
+         <label class="lab-graph-option"><input id="gv-parrafos" type="checkbox" /> Mostrar párrafos (ocultos inicialmente; incorporación voluntaria)</label>
++        <label class="lab-graph-option"><input id="gv-edge-labels" type="checkbox" /> Mostrar nombres de todas las aristas</label>
++        <p class="hint">Las relaciones directas entre focos se destacan y muestran su nombre siempre que esté registrado.</p>
++        <div class="lab-toolbar">
++          <button type="button" id="gv-save-layout" class="lab-btn">Persistir ordenamiento</button>
++          <button type="button" id="gv-reset-layout" class="lab-btn lab-btn--ghost">Recuperar ordenamiento guardado</button>
++        </div>
+         <p class="hint" id="gv-filter-status">Las subunidades se mantienen en el corpus, pero no se dibujan.</p>
+         <div class="lab-toolbar">
+           <button type="button" id="gv-collapse-all" class="lab-btn lab-btn--ghost">Contraer todas las expansiones</button>
+@@ -100,6 +114,13 @@ export function createLabGraphPilotView(App) {
+     out.innerHTML = `<h3>${esc(item.label || item.tipo || item.clase)}</h3>
+       <p class="lab-graph-id"><strong>ID:</strong> ${esc(item.id || '—')}<br>${esc(item.clase)}</p>
+       <dl class="lab-graph-properties">${attrs.map(([k,v]) => `<dt>${esc(k)}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>`;
++    if (item.clase === 'arista' && modo === 'focal' && !item.conexionFocos) {
++      const acciones = document.createElement('div');
++      acciones.className = 'lab-graph-inspector-actions';
++      const habilitada = preferencias.etiquetas.includes(item.id);
++      acciones.innerHTML = `<button type="button" class="lab-btn lab-btn--ghost" data-gv-edge-label="${esc(item.id)}">${habilitada ? 'Ocultar' : 'Mostrar'} nombre de esta arista</button>`;
++      out.append(acciones);
++    }
+     if (item.clase === 'nodo' && !item.resumen && indice.nodos.has(item.id)) {
+       const actions = document.createElement('div');
+       actions.className = 'lab-graph-inspector-actions';
+@@ -116,7 +137,7 @@ export function createLabGraphPilotView(App) {
+   }
+   function actualizarFocal() {
+     const sub = obtenerSubgrafoFocal(estado);
+-    viewer?.actualizarElementos(sub.elementos);
++    viewer?.actualizarElementos(decorarAristasFocales(sub.elementos, estado.focos, preferencias), { posiciones: preferencias.posiciones });
+     renderFocos();
+     const funcionales = sub.elementos.filter(e => e.group === 'nodes' && e.data.facetaFuncional).length;
+     $('#gv-filter-status').textContent = `${funcionales} nodos con faceta funcional visibles · ${filtrado.excluidos.parrafos} párrafos ocultos · subunidades excluidas de la vista.`;
+@@ -146,7 +167,7 @@ export function createLabGraphPilotView(App) {
+     $('#gv-canvas').replaceChildren();
+     const focal = modo === 'focal';
+     const agrupado = modo === 'grupos';
+-    const elementos = focal ? obtenerSubgrafoFocal(estado).elementos : agrupado
++    const elementos = focal ? decorarAristasFocales(obtenerSubgrafoFocal(estado).elementos, estado.focos, preferencias) : agrupado
+       ? resumenClasesAElementos({ nodes: projection.nodes.filter(n => filtrado.elementos.some(e => e.group === 'nodes' && e.data.id === n.uid)), edges: projection.edges.filter(e => filtrado.elementos.some(x => x.group === 'edges' && x.data.id === e.uid)) })
+       : filtrado.elementos.filter(e => tipo === 'todos' || (e.group === 'nodes' ? e.data.tipo === tipo : true))
+           .filter(e => e.group === 'nodes' || tipo === 'todos' ||
+@@ -168,6 +189,7 @@ export function createLabGraphPilotView(App) {
+     try {
+       const instance = await crearVisorGrafo($('#gv-canvas'), elementos, {
+         agrupado, alSeleccionar: inspeccionar, alDobleClick: dobleClick,
++        posicionesIniciales: focal ? preferencias.posiciones : {},
+         alOcultar: () => status('Elemento ocultado en esta vista.'),
+       });
+       if (closed || ticket !== generation) { instance.destruir(); return; }
+@@ -180,9 +202,12 @@ export function createLabGraphPilotView(App) {
+   }
+   function seleccionarFocos(focos) {
+     reconstruirIndice(focos);
++    leerPreferencias();
++    $('#gv-edge-labels').checked = preferencias.todasEtiquetas;
+     modo = 'focal'; tipo = 'todos'; $('#gv-kind').value = 'todos';
+     void dibujar();
+   }
++  $('#gv-edge-labels').checked = preferencias.todasEtiquetas;
+   $('#gv-focal-mode').addEventListener('click', () => { modo = 'focal'; void dibujar(); });
+   $('#gv-group-mode').addEventListener('click', () => { modo = 'grupos'; void dibujar(); });
+   $('#gv-all-mode').addEventListener('click', () => { modo = 'todo'; void dibujar(); });
+@@ -197,6 +222,34 @@ export function createLabGraphPilotView(App) {
+     reconstruirIndice(estado.focos);
+     void dibujar();
+   });
++  $('#gv-edge-labels').addEventListener('change', e => {
++    preferencias.todasEtiquetas = e.target.checked;
++    if (modo === 'focal') actualizarFocal();
++  });
++  $('#gv-save-layout').addEventListener('click', () => {
++    if (modo !== 'focal' || !viewer) { status('Abrí la vista de focos para guardar su disposición.'); return; }
++    preferencias.posiciones = { ...preferencias.posiciones, ...viewer.posiciones() };
++    const ok = guardarDisposicion(almacenamiento, claveActual(), preferencias);
++    status(ok ? 'Ordenamiento y etiquetas guardados en este navegador para este conjunto de focos.'
++      : 'No se pudo acceder al almacenamiento local. El ordenamiento no fue guardado.');
++  });
++  $('#gv-reset-layout').addEventListener('click', () => {
++    leerPreferencias();
++    $('#gv-edge-labels').checked = preferencias.todasEtiquetas;
++    void dibujar();
++    status('Se recuperó el último ordenamiento guardado, si existe.');
++  });
++  $('#gv-inspector').addEventListener('click', e => {
++    const boton = e.target.closest('[data-gv-edge-label]');
++    if (!boton) return;
++    const id = boton.dataset.gvEdgeLabel;
++    const etiquetas = new Set(preferencias.etiquetas);
++    if (etiquetas.has(id)) etiquetas.delete(id); else etiquetas.add(id);
++    preferencias.etiquetas = [...etiquetas];
++    actualizarFocal();
++    const arista = viewer?.cy.getElementById(id);
++    if (arista?.nonempty()) inspeccionar({ clase: 'arista', ...arista.data() });
++  });
+   $('#gv-collapse-all').addEventListener('click', () => { estado = restaurarBaseFocal(estado); actualizarFocal(); });
+   $('#gv-default-foci').addEventListener('click', () => seleccionarFocos(predeterminados));
+   $('#gv-foci').addEventListener('click', e => {
+diff --git a/public/scripts/check-visor-disposiciones.mjs b/public/scripts/check-visor-disposiciones.mjs
+new file mode 100644
+index 0000000..153bd6a
+--- /dev/null
++++ b/public/scripts/check-visor-disposiciones.mjs
+@@ -0,0 +1,40 @@
++import assert from 'node:assert/strict';
++import { huellaGrafo, claveDisposicion, decorarAristasFocales, guardarDisposicion,
++  leerDisposicion, GRAPH_LAYOUT_STORAGE_KEY } from '../js/lab/graphLayoutPersistence.js';
++import { indexarGrafo, crearEstadoFocal, obtenerSubgrafoFocal, alternarExpansion } from '../js/lab/graphFocusExpansion.js';
++
++const node = id => ({ group: 'nodes', data: { id, tipo: 'concepto_estatico', label: id } });
++const edge = (id, a, b, relacion) => ({ group: 'edges', data: { id, source: a, target: b, tipo: 'arista_funcional', relacion } });
++const all = [node('phusis'), node('arete'), node('eudaimonia'), node('dunamis'), node('hexis'),
++  edge('rel1','arete','eudaimonia','condicion'), edge('rel2','phusis','dunamis','potencia'),
++  edge('rel3','dunamis','hexis','transicion')];
++const key = claveDisposicion(['eudaimonia','arete','phusis'], huellaGrafo(all));
++assert.equal(key,claveDisposicion(['phusis','arete','eudaimonia'],huellaGrafo(all)));
++assert.notEqual(key,claveDisposicion(['arete','phusis'],huellaGrafo(all)));
++assert.notEqual(huellaGrafo(all),huellaGrafo([...all.slice(0,-1),edge('rel3','dunamis','hexis','otra')]));
++const state = crearEstadoFocal(indexarGrafo(all),['phusis','arete','eudaimonia']);
++const base = decorarAristasFocales(obtenerSubgrafoFocal(state).elementos, state.focos);
++assert.equal(base.find(x=>x.data.id==='rel1').data.conexionFocos,1);
++assert.equal(base.find(x=>x.data.id==='rel1').data.nombreAristaVisible,'condicion');
++assert.equal(base.find(x=>x.data.id==='rel2').data.conexionFocos,0);
++assert.equal(base.find(x=>x.data.id==='rel2').data.nombreAristaVisible,'');
++assert.ok(!base.some(x=>x.data.id==='rel3'));
++const expanded = obtenerSubgrafoFocal(alternarExpansion(state,'dunamis')).elementos;
++assert.ok(expanded.some(x=>x.data.id==='rel3'));
++assert.equal(decorarAristasFocales(expanded,state.focos,{etiquetas:['rel3']})
++  .find(x=>x.data.id==='rel3').data.nombreAristaVisible,'transicion');
++assert.equal(decorarAristasFocales(base,state.focos,{todasEtiquetas:true})
++  .find(x=>x.data.id==='rel2').data.nombreAristaVisible,'potencia');
++assert.equal(all.find(x=>x.data.id==='rel1').data.conexionFocos,undefined, 'sin mutación editorial');
++const storage = new Map();
++const mock = { getItem: k => storage.get(k) || null, setItem: (k,v) => storage.set(k,v) };
++assert.equal(leerDisposicion(mock,key),null);
++assert.equal(guardarDisposicion(mock,key,{posiciones:{arete:{x:11,y:-5},bad:{x:Infinity,y:4}},etiquetas:['rel2'],todasEtiquetas:false}),true);
++assert.deepEqual(leerDisposicion(mock,key).posiciones,{arete:{x:11,y:-5}});
++assert.deepEqual(leerDisposicion(mock,key).etiquetas,['rel2']);
++assert.ok(storage.has(GRAPH_LAYOUT_STORAGE_KEY));
++assert.equal(leerDisposicion({getItem:()=>'{mal'},key),null);
++assert.equal(guardarDisposicion({getItem:()=>null,setItem:()=>{throw Error('quota')}},key,{}),false);
++for(let i=0;i<35;i++) guardarDisposicion(mock,`foco${i}`,{posiciones:{}});
++assert.ok(Object.keys(JSON.parse(storage.get(GRAPH_LAYOUT_STORAGE_KEY))).length<=30);
++console.log('OK: aristas foco-foco, nombres opcionales, huellas, persistencia, corrupción y cuota.');

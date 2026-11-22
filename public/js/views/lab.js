@@ -13,6 +13,21 @@ import { openTrayectoEditor } from './labTrayectoEditor.js';
 
 // Catálogo de experimentos para la maqueta grid
 export const EXPERIMENTS = Object.freeze({
+  arquitectura: {
+    id: 'arquitectura', tab: 7, title: 'Arquitectura argumentativa del Libro I',
+    desc: 'Explorá macrounidades, unidades, momentos y subunidades con datos reales y propuestas editoriales diferenciadas.',
+    tag: 'Experimento N1-U.2', icon: '🧩', featured: false
+  },
+  visor_grafos: {
+    id: 'visor-grafos', tab: 6, title: 'Visor universal de grafos',
+    desc: 'Checkpoint: probá la navegación interactiva sobre la proyección semántica de Ágora.',
+    tag: 'Laboratorio experimental', icon: '🕸️', featured: false
+  },
+  semantica: {
+    id: 'semantica', tab: 5, title: 'Explorador semántico',
+    desc: 'Inspeccioná árboles, relaciones, tags y FAQ; exportá una proyección Cypher para Relate.',
+    tag: 'Experimento 5', icon: '🔎', featured: false
+  },
   orientador: {
     id: 'orientador', tab: 4, title: 'Orientador de consultas',
     desc: 'Precisá una inquietud en diálogo y examiná la génesis de cada decisión. V1 no genera trayectos.',

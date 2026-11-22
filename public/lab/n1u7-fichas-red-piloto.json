@@ -1,0 +1,610 @@
+{
+  "schema": "agora.lab.n1u7.fichas-red.v1",
+  "estado": "borrador_pedagogico_pendiente_curaduria",
+  "fuente": {
+    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
+    "dump_editorial": "2026-11-07",
+    "fichas_previas": "agora.lab.n1u5.fichas.v1",
+    "puentes_previos": "agora.lab.n1u6.puentes.v1",
+    "criterio": "Cuatro fichas-FAQ de síntesis nuevas; no crean/modifican FAQs ni trayectos de MariaDB. Todas las referencias de subunidad son identidades canónicas verificadas por la revisión."
+  },
+  "fichas": [
+    {
+      "id": "faq.lab.felicidad",
+      "tipo": "faq",
+      "titulo": "¿Qué es la felicidad?",
+      "fuente_editorial": {
+        "faq_id": "faq.lab.felicidad",
+        "origen": "propuesta_lab",
+        "estado": "borrador_no_publicado",
+        "trayecto_id": null,
+        "pasos_propuestos": 6,
+        "faqs_canonicas_relacionadas": [
+          "faq.eudaimonia.definicion",
+          "faq.eudaimonia.completa"
+        ]
+      },
+      "introduccion": [
+        "El nombre eudaimonía suele traducirse como felicidad o vida lograda. En el Libro I Aristóteles parte del acuerdo general sobre el nombre, pero enseguida advierte que las opiniones divergen acerca de aquello en lo que consiste. La pregunta no se resuelve por una impresión momentánea de bienestar.",
+        "El examen pregunta qué fin es elegido por sí mismo, qué significa que sea completo y autosuficiente y qué actividad propia realiza bien el ser humano. La formulación ligada a la virtud debe considerarse en el horizonte de una vida entera; posteriormente Aristóteles examina las circunstancias y los bienes exteriores."
+      ],
+      "lectura_grafo": [
+        "Los seis nodos son momentos pedagógicos propuestos, no pasos de un trayecto publicado. Su selección reúne pasajes de distintas unidades del Libro I.",
+        "Las cinco flechas indican orden explicativo diseñado para esta ficha. Cada transición requiere justificación; no afirma que las conclusiones se deduzcan de los pasajes anteriores.",
+        "Podés abrir cada pasaje en el lector bilingüe y regresar a su contexto editorial."
+      ],
+      "referencias": [
+        "EN I.4, 1095a17–26",
+        "EN I.7, 1097a34–1098a18",
+        "EN I.10, 1100a3–5"
+      ],
+      "nota": "Ficha introductoria y FAQ de síntesis todavía no registrada como FAQ publicada en MariaDB. Conservar la formulación «virtud completa en una vida entera».",
+      "pasos": [
+        {
+          "id": "p1",
+          "titulo": "El nombre de la felicidad",
+          "sub_id": "1095a17-20",
+          "comentario": "Existe acuerdo en llamar felicidad al bien humano más alto; se trata todavía de un acuerdo nominal."
+        },
+        {
+          "id": "p2",
+          "titulo": "Las opiniones divergen",
+          "sub_id": "1095a20-26",
+          "comentario": "El mismo nombre no determina una respuesta unívoca: riqueza, placer u honores son candidatos discutidos en la investigación."
+        },
+        {
+          "id": "p3",
+          "titulo": "Un fin elegido por sí mismo",
+          "sub_id": "1097a34-b6",
+          "comentario": "La felicidad aparece como aquello que se quiere por sí mismo y no en vista de algo distinto."
+        },
+        {
+          "id": "p4",
+          "titulo": "Completitud y autosuficiencia",
+          "sub_id": "1097b20-21",
+          "comentario": "La caracterización del fin más alto se resume mediante las nociones de completitud y autosuficiencia."
+        },
+        {
+          "id": "p5",
+          "titulo": "Una actividad conforme a la virtud",
+          "sub_id": "1098a16-18",
+          "comentario": "El argumento del érgon permite formular el bien humano en términos de actividad del alma según la virtud, no como mera posesión pasiva."
+        },
+        {
+          "id": "p6",
+          "titulo": "El horizonte de una vida entera",
+          "sub_id": "1100a3-5",
+          "comentario": "La determinación de la felicidad incorpora la exigencia de virtud completa en una vida entera; el tiempo importa para juzgar la vida lograda."
+        }
+      ],
+      "transiciones": [
+        "Del consenso sobre la palabra pasamos a las diferencias acerca de aquello que designa.",
+        "Las disputas exigen precisar qué rasgo caracteriza al fin superior.",
+        "La elección por sí misma se complementa con el criterio de autosuficiencia.",
+        "La caracterización formal requiere determinar qué actividad constituye el bien humano.",
+        "La formulación por la actividad virtuosa necesita el horizonte temporal de una vida entera."
+      ],
+      "contextos": {
+        "macros": [
+          {
+            "id": "macro:I-V",
+            "rol": "Pregunta inicial",
+            "explicacion": "Acuerdo sobre el nombre y desacuerdo acerca de su contenido."
+          },
+          {
+            "id": "macro:VI-VII",
+            "rol": "Determinación",
+            "explicacion": "Criterios formales de fin y formulación desde la función humana."
+          },
+          {
+            "id": "macro:VIII-XII",
+            "rol": "Examen de la vida",
+            "explicacion": "La felicidad se reconsidera frente al tiempo y las circunstancias."
+          }
+        ],
+        "unidades": [
+          {
+            "id": "felicidad_opiniones",
+            "rol": "Acuerdo y discusión",
+            "explicacion": "Se identifica el nombre eudaimonía y se presenta la pluralidad de opiniones."
+          },
+          {
+            "id": "forma_fin",
+            "rol": "Criterios formales",
+            "explicacion": "Carácter completo y autosuficiente del fin buscado."
+          },
+          {
+            "id": "ergon",
+            "rol": "Actividad y virtud",
+            "explicacion": "La función humana aporta la determinación de la actividad excelente."
+          },
+          {
+            "id": "adquisicion",
+            "rol": "Tiempo de la vida",
+            "explicacion": "La condición de la vida entera se introduce en el examen de cómo se adquiere la felicidad."
+          }
+        ]
+      },
+      "apoyos": [
+        {
+          "sub_id": "1095a17-20",
+          "paso_id": "p1",
+          "rol": "Acuerdo nominal",
+          "explicacion": "Existe acuerdo en llamar felicidad al bien humano más alto; se trata todavía de un acuerdo nominal."
+        },
+        {
+          "sub_id": "1095a20-26",
+          "paso_id": "p2",
+          "rol": "Divergencia",
+          "explicacion": "El mismo nombre no determina una respuesta unívoca: riqueza, placer u honores son candidatos discutidos en la investigación."
+        },
+        {
+          "sub_id": "1097a34-b6",
+          "paso_id": "p3",
+          "rol": "Fin por sí mismo",
+          "explicacion": "La felicidad aparece como aquello que se quiere por sí mismo y no en vista de algo distinto."
+        },
+        {
+          "sub_id": "1097b20-21",
+          "paso_id": "p4",
+          "rol": "Autosuficiencia",
+          "explicacion": "La caracterización del fin más alto se resume mediante las nociones de completitud y autosuficiencia."
+        },
+        {
+          "sub_id": "1098a16-18",
+          "paso_id": "p5",
+          "rol": "Actividad excelente",
+          "explicacion": "El argumento del érgon permite formular el bien humano en términos de actividad del alma según la virtud, no como mera posesión pasiva."
+        },
+        {
+          "sub_id": "1100a3-5",
+          "paso_id": "p6",
+          "rol": "Vida entera",
+          "explicacion": "La determinación de la felicidad incorpora la exigencia de virtud completa en una vida entera; el tiempo importa para juzgar la vida lograda."
+        }
+      ]
+    },
+    {
+      "id": "faq.lab.ergon",
+      "tipo": "faq",
+      "titulo": "¿En qué consiste el argumento de la función propia (érgon)?",
+      "fuente_editorial": {
+        "faq_id": "faq.lab.ergon",
+        "origen": "propuesta_lab",
+        "estado": "borrador_no_publicado",
+        "trayecto_id": null,
+        "pasos_propuestos": 6,
+        "faqs_canonicas_relacionadas": [
+          "faq.ergon.humano"
+        ]
+      },
+      "introduccion": [
+        "En EN I.7 Aristóteles considera que calificar la felicidad como el bien más alto es todavía insuficiente: hay que determinar en qué consiste. Para ello introduce una investigación sobre la función propia (érgon) del ser humano, ayudándose con comparaciones con oficios y órganos.",
+        "El argumento distingue actividades compartidas con plantas y animales de una forma de vida vinculada con la razón. La analogía entre un ejecutante y un buen ejecutante permite introducir la excelencia de la actividad. Es una reconstrucción filosófica que debe examinarse paso a paso, no un simple listado de capacidades."
+      ],
+      "lectura_grafo": [
+        "Los seis nodos siguen la pregunta, las analogías y el resultado del argumento en EN I.7.",
+        "Las conexiones son transiciones explicativas propuestas y no prueban automáticamente la validez de cada premisa.",
+        "No se introducen todavía subgrafos de premisas ni objeciones para cada paso."
+      ],
+      "referencias": [
+        "EN I.7, 1097b22–1098a20"
+      ],
+      "nota": "Trayecto propuesto de seis pasos, todavía no publicado; relación posible con FAQ canónica existente sobre érgon humano.",
+      "pasos": [
+        {
+          "id": "p1",
+          "titulo": "Del bien al contenido de la felicidad",
+          "sub_id": "1097b22-25",
+          "comentario": "Aristóteles reconoce que la caracterización de la felicidad como bien supremo exige una determinación más precisa."
+        },
+        {
+          "id": "p2",
+          "titulo": "La comparación con oficios",
+          "sub_id": "1097b25-28",
+          "comentario": "En las artes y ocupaciones parece posible reconocer un bien relativo a la función que se realiza."
+        },
+        {
+          "id": "p3",
+          "titulo": "Lo común a otros vivientes",
+          "sub_id": "1097b33-1098a3",
+          "comentario": "Nutrición y sensación no bastan para aislar lo propio del ser humano porque también corresponden a otros vivientes."
+        },
+        {
+          "id": "p4",
+          "titulo": "La vida de quien tiene razón",
+          "sub_id": "1098a3-5",
+          "comentario": "El argumento introduce una forma de vida vinculada al lógos; habrá que distinguir sus distintas modalidades."
+        },
+        {
+          "id": "p5",
+          "titulo": "Realizar bien una función",
+          "sub_id": "1098a8-12",
+          "comentario": "El ejemplo del citarista muestra que realizar una actividad y realizarla excelentemente no son lo mismo."
+        },
+        {
+          "id": "p6",
+          "titulo": "La determinación del bien humano",
+          "sub_id": "1098a16-18",
+          "comentario": "La conclusión provisional articula actividad del alma, razón y virtud en la definición del bien humano."
+        }
+      ],
+      "transiciones": [
+        "La exigencia de precisión motiva el examen de una función propia.",
+        "La analogía productiva abre la investigación, pero no establece por sí sola la función humana.",
+        "Al descartar lo compartido con otros vivientes, se busca una actividad característica.",
+        "Identificar la vida racional permite preguntar por su ejercicio bueno o excelente.",
+        "La excelencia funcional conduce a la formulación del bien humano."
+      ],
+      "contextos": {
+        "macros": [
+          {
+            "id": "macro:VI-VII",
+            "rol": "Determinación del bien humano",
+            "explicacion": "El argumento de la función se sitúa en la articulación del fin completo y el bien humano."
+          }
+        ],
+        "unidades": [
+          {
+            "id": "ergon",
+            "rol": "Núcleo argumentativo",
+            "explicacion": "Los seis pasos se anclan exclusivamente en el argumento de EN I.7."
+          }
+        ]
+      },
+      "apoyos": [
+        {
+          "sub_id": "1097b22-25",
+          "paso_id": "p1",
+          "rol": "Pregunta central",
+          "explicacion": "Aristóteles reconoce que la caracterización de la felicidad como bien supremo exige una determinación más precisa."
+        },
+        {
+          "sub_id": "1097b25-28",
+          "paso_id": "p2",
+          "rol": "Analogía con oficios",
+          "explicacion": "En las artes y ocupaciones parece posible reconocer un bien relativo a la función que se realiza."
+        },
+        {
+          "sub_id": "1097b33-1098a3",
+          "paso_id": "p3",
+          "rol": "Distinción de lo compartido",
+          "explicacion": "Nutrición y sensación no bastan para aislar lo propio del ser humano porque también corresponden a otros vivientes."
+        },
+        {
+          "sub_id": "1098a3-5",
+          "paso_id": "p4",
+          "rol": "Actividad racional",
+          "explicacion": "El argumento introduce una forma de vida vinculada al lógos; habrá que distinguir sus distintas modalidades."
+        },
+        {
+          "sub_id": "1098a8-12",
+          "paso_id": "p5",
+          "rol": "Criterio de excelencia",
+          "explicacion": "El ejemplo del citarista muestra que realizar una actividad y realizarla excelentemente no son lo mismo."
+        },
+        {
+          "sub_id": "1098a16-18",
+          "paso_id": "p6",
+          "rol": "Conclusión provisional",
+          "explicacion": "La conclusión provisional articula actividad del alma, razón y virtud en la definición del bien humano."
+        }
+      ]
+    },
+    {
+      "id": "faq.lab.alma",
+      "tipo": "faq",
+      "titulo": "¿Cuáles son las partes del alma?",
+      "fuente_editorial": {
+        "faq_id": "faq.lab.alma",
+        "origen": "propuesta_lab",
+        "estado": "borrador_no_publicado",
+        "trayecto_id": null,
+        "pasos_propuestos": 6,
+        "faqs_canonicas_relacionadas": [
+          "faq.psuche.partes"
+        ]
+      },
+      "introduccion": [
+        "La investigación del bien humano conduce al estudio de la virtud y, con ella, al examen del alma. En EN I.13 Aristóteles propone distinciones suficientes para el propósito práctico de la Ética; no pretende desarrollar allí una psicología exhaustiva.",
+        "Se diferencia lo que posee razón de lo que carece de ella, pero la parte desiderativa puede escuchar y obedecer razones. Esta participación permite comprender por qué el carácter se forma y por qué no toda excelencia del alma es de la misma clase."
+      ],
+      "lectura_grafo": [
+        "Los nodos muestran distinciones funcionales del alma relevantes para comprender la virtud, no un esquema anatómico de partes separadas.",
+        "Las flechas siguen la secuencia de aclaración: propósito del examen, distinciones y formas de participación en la razón.",
+        "La cuestión de si las partes están separadas realmente o solo en la definición queda abierta en este recorrido introductorio."
+      ],
+      "referencias": [
+        "EN I.13, 1102a5–1103a3"
+      ],
+      "nota": "Síntesis pedagógica provisional, sin confundir la distinción explicativa con una tesis acerca de separación física de partes.",
+      "pasos": [
+        {
+          "id": "p1",
+          "titulo": "Por qué estudiar el alma",
+          "sub_id": "1102a5-7",
+          "comentario": "El paso a la virtud requiere examinar el alma en la medida necesaria para la investigación ética."
+        },
+        {
+          "id": "p2",
+          "titulo": "Lo racional y lo irracional",
+          "sub_id": "1102a26-28",
+          "comentario": "Se introduce una distinción inicial entre lo que tiene razón y aquello que carece de ella."
+        },
+        {
+          "id": "p3",
+          "titulo": "La función nutritiva",
+          "sub_id": "1102a32-1102b2",
+          "comentario": "La nutrición y el crecimiento pertenecen a una dimensión común de la vida, que no define la virtud humana."
+        },
+        {
+          "id": "p4",
+          "titulo": "Los deseos pueden entrar en conflicto",
+          "sub_id": "1102b14-18",
+          "comentario": "La continencia y la incontinencia muestran tensiones entre deseos y juicio racional."
+        },
+        {
+          "id": "p5",
+          "titulo": "Dos aspectos de lo irracional",
+          "sub_id": "1102b28-31",
+          "comentario": "No todo lo irracional es igual: una dimensión no participa de la razón y otra puede escucharla."
+        },
+        {
+          "id": "p6",
+          "titulo": "Dos modos de participar en la razón",
+          "sub_id": "1103a1-3",
+          "comentario": "La razón puede poseerse propiamente o participar de ella por obediencia y escucha; esto prepara la clasificación de virtudes."
+        }
+      ],
+      "transiciones": [
+        "El objetivo práctico del examen determina el alcance de la distinción.",
+        "La categoría de lo irracional necesita dividirse según sus funciones.",
+        "La atención al deseo revela un componente no racional relevante para la vida moral.",
+        "La presencia de conflictos ayuda a distinguir las maneras de participación en la razón.",
+        "La distinción funcional permite formular dos modalidades de relación con el lógos."
+      ],
+      "contextos": {
+        "macros": [
+          {
+            "id": "macro:XIII",
+            "rol": "Análisis del alma",
+            "explicacion": "EN I.13 propone distinciones funcionales del alma para estudiar la virtud."
+          }
+        ],
+        "unidades": [
+          {
+            "id": "alma_virtudes",
+            "rol": "Unidad textual central",
+            "explicacion": "Los seis pasajes se hallan en el capítulo XIII."
+          }
+        ]
+      },
+      "apoyos": [
+        {
+          "sub_id": "1102a5-7",
+          "paso_id": "p1",
+          "rol": "Pregunta por el alma",
+          "explicacion": "El paso a la virtud requiere examinar el alma en la medida necesaria para la investigación ética."
+        },
+        {
+          "sub_id": "1102a26-28",
+          "paso_id": "p2",
+          "rol": "Distinción de facultades",
+          "explicacion": "Se introduce una distinción inicial entre lo que tiene razón y aquello que carece de ella."
+        },
+        {
+          "sub_id": "1102a32-1102b2",
+          "paso_id": "p3",
+          "rol": "Nutrición",
+          "explicacion": "La nutrición y el crecimiento pertenecen a una dimensión común de la vida, que no define la virtud humana."
+        },
+        {
+          "sub_id": "1102b14-18",
+          "paso_id": "p4",
+          "rol": "Conflicto psíquico",
+          "explicacion": "La continencia y la incontinencia muestran tensiones entre deseos y juicio racional."
+        },
+        {
+          "sub_id": "1102b28-31",
+          "paso_id": "p5",
+          "rol": "Dimensiones irracionales",
+          "explicacion": "No todo lo irracional es igual: una dimensión no participa de la razón y otra puede escucharla."
+        },
+        {
+          "sub_id": "1103a1-3",
+          "paso_id": "p6",
+          "rol": "Participación en lógos",
+          "explicacion": "La razón puede poseerse propiamente o participar de ella por obediencia y escucha; esto prepara la clasificación de virtudes."
+        }
+      ]
+    },
+    {
+      "id": "faq.lab.virtudes",
+      "tipo": "faq",
+      "titulo": "¿Qué tipos de virtudes hay?",
+      "fuente_editorial": {
+        "faq_id": "faq.lab.virtudes",
+        "origen": "propuesta_lab",
+        "estado": "borrador_no_publicado",
+        "trayecto_id": null,
+        "pasos_propuestos": 6,
+        "faqs_canonicas_relacionadas": []
+      },
+      "introduccion": [
+        "Al final del Libro I, Aristóteles distingue virtudes éticas y dianoéticas tomando como orientación los diferentes modos en que el alma se relaciona con la razón. La distinción prepara la investigación posterior de las virtudes en la Ética nicomáquea.",
+        "Las virtudes dianoéticas corresponden al ejercicio de la razón; las éticas se relacionan con el carácter y con la capacidad de los deseos de escucharla. Conviene no reducir esta división a una lista cerrada ni presentar las discusiones posteriores como si ya estuvieran desarrolladas en I.13."
+      ],
+      "lectura_grafo": [
+        "Los seis nodos reconstruyen las condiciones que permiten distinguir los dos tipos de virtud al cierre del Libro I.",
+        "El vínculo entre alma y virtud es explicativo; no afirmamos que cada paso constituya una inferencia formal autosuficiente.",
+        "Los ejemplos detallados y subgrafos de cada virtud quedan para otra fase."
+      ],
+      "referencias": [
+        "EN I.13, 1102a13–1103a10",
+        "EN II.1, 1103a14–b25 (desarrollo posterior; no cubierto aquí)"
+      ],
+      "nota": "Ficha-FAQ de síntesis propuesta; enlaza el final del Libro I con el examen ulterior de la virtud, sin atribuir a I.13 el desarrollo posterior.",
+      "pasos": [
+        {
+          "id": "p1",
+          "titulo": "La virtud humana concierne al alma",
+          "sub_id": "1102a13-18",
+          "comentario": "El objetivo no es cualquier excelencia corporal, sino aquella que corresponde a la actividad humana del alma."
+        },
+        {
+          "id": "p2",
+          "titulo": "Una dimensión desiderativa",
+          "sub_id": "1102b13-14",
+          "comentario": "Se identifica una dimensión irracional distinta de la nutrición, relevante para la conducta."
+        },
+        {
+          "id": "p3",
+          "titulo": "Escuchar la razón",
+          "sub_id": "1102b33-1103a1",
+          "comentario": "La persuasión y la exhortación muestran que cierta dimensión del alma puede ser conducida por el lógos."
+        },
+        {
+          "id": "p4",
+          "titulo": "Dos modos de tener lógos",
+          "sub_id": "1103a1-3",
+          "comentario": "Se distingue la posesión de razón en sentido propio y la participación por escucha y obediencia."
+        },
+        {
+          "id": "p5",
+          "titulo": "Virtudes dianoéticas y éticas",
+          "sub_id": "1103a3-7",
+          "comentario": "La distinción de los modos del alma prepara las dos grandes clases de virtudes."
+        },
+        {
+          "id": "p6",
+          "titulo": "Carácter, modos de ser y elogio",
+          "sub_id": "1103a7-10",
+          "comentario": "El cierre introduce ejemplos y el lenguaje del carácter, sin desplegar todavía una teoría completa de cada virtud."
+        }
+      ],
+      "transiciones": [
+        "La delimitación de virtud humana conduce del cuerpo al alma.",
+        "La vida moral exige atender a los deseos y disposiciones que no son exclusivamente racionales.",
+        "La capacidad de escuchar razones permite distinguir distintas formas de relación con el lógos.",
+        "La distinción de esos modos fundamenta la clasificación general de virtudes.",
+        "La clasificación abre la exposición posterior de las virtudes y sus formas de adquisición."
+      ],
+      "contextos": {
+        "macros": [
+          {
+            "id": "macro:XIII",
+            "rol": "División de las virtudes",
+            "explicacion": "La unidad final del Libro I prepara la clasificación de las excelencias humanas."
+          }
+        ],
+        "unidades": [
+          {
+            "id": "alma_virtudes",
+            "rol": "Fundamento de la clasificación",
+            "explicacion": "El final del capítulo XIII distingue los modos del alma y las clases de virtud."
+          }
+        ]
+      },
+      "apoyos": [
+        {
+          "sub_id": "1102a13-18",
+          "paso_id": "p1",
+          "rol": "Virtud del alma",
+          "explicacion": "El objetivo no es cualquier excelencia corporal, sino aquella que corresponde a la actividad humana del alma."
+        },
+        {
+          "sub_id": "1102b13-14",
+          "paso_id": "p2",
+          "rol": "Dimensión desiderativa",
+          "explicacion": "Se identifica una dimensión irracional distinta de la nutrición, relevante para la conducta."
+        },
+        {
+          "sub_id": "1102b33-1103a1",
+          "paso_id": "p3",
+          "rol": "Formación mediante razón",
+          "explicacion": "La persuasión y la exhortación muestran que cierta dimensión del alma puede ser conducida por el lógos."
+        },
+        {
+          "sub_id": "1103a1-3",
+          "paso_id": "p4",
+          "rol": "Doble modalidad",
+          "explicacion": "Se distingue la posesión de razón en sentido propio y la participación por escucha y obediencia."
+        },
+        {
+          "sub_id": "1103a3-7",
+          "paso_id": "p5",
+          "rol": "Clasificación general",
+          "explicacion": "La distinción de los modos del alma prepara las dos grandes clases de virtudes."
+        },
+        {
+          "sub_id": "1103a7-10",
+          "paso_id": "p6",
+          "rol": "Proyección al carácter",
+          "explicacion": "El cierre introduce ejemplos y el lenguaje del carácter, sin desplegar todavía una teoría completa de cada virtud."
+        }
+      ]
+    }
+  ],
+  "red": {
+    "estado": "relaciones_editoriales_propuestas",
+    "nota": "Vínculos seleccionados manualmente entre fichas. No inferirlos de coincidencias de etiquetas, referencias o pertenencia a unidades.",
+    "relaciones": [
+      {
+        "id": "red:r01",
+        "desde": "faq.etica.intro",
+        "hacia": "proemio",
+        "nombre": "sitúa la investigación",
+        "explicacion": "La ficha introductoria encuentra en el Proemio la relación inicial entre actividades, fines y política."
+      },
+      {
+        "id": "red:r02",
+        "desde": "proemio",
+        "hacia": "faq.lab.felicidad",
+        "nombre": "plantea el fin humano",
+        "explicacion": "La pregunta por el fin de la acción conduce a investigar el bien humano y su denominación como felicidad."
+      },
+      {
+        "id": "red:r03",
+        "desde": "faq.etica.intro",
+        "hacia": "faq.agathon.pros_hen",
+        "nombre": "abre el problema del bien",
+        "explicacion": "La orientación inicial permite plantear por qué el bien se dice de diversas maneras."
+      },
+      {
+        "id": "red:r04",
+        "desde": "faq.agathon.pros_hen",
+        "hacia": "faq.lab.felicidad",
+        "nombre": "distingue planos del bien",
+        "explicacion": "La crítica de un bien universal sirve para precisar la diferencia entre hablar del bien en general y buscar el bien humano realizable; no se infiere una solución semántica."
+      },
+      {
+        "id": "red:r05",
+        "desde": "faq.lab.felicidad",
+        "hacia": "faq.lab.ergon",
+        "nombre": "pide una determinación",
+        "explicacion": "La caracterización formal de la felicidad deja pendiente qué actividad constituye la vida humana lograda."
+      },
+      {
+        "id": "red:r06",
+        "desde": "faq.lab.ergon",
+        "hacia": "faq.lab.alma",
+        "nombre": "motiva examinar el alma",
+        "explicacion": "La formulación del bien humano en términos de actividad del alma motiva investigar sus capacidades relevantes para la virtud."
+      },
+      {
+        "id": "red:r07",
+        "desde": "faq.lab.alma",
+        "hacia": "faq.lab.virtudes",
+        "nombre": "fundamenta la clasificación",
+        "explicacion": "La distinción entre modos de participación en la razón prepara la clasificación de virtudes."
+      },
+      {
+        "id": "red:r08",
+        "desde": "faq.lab.virtudes",
+        "hacia": "faq.lab.felicidad",
+        "nombre": "precisa la excelencia",
+        "explicacion": "La clasificación de las virtudes ayuda a profundizar qué significa actividad según virtud en la caracterización de la felicidad."
+      }
+    ]
+  }
+}

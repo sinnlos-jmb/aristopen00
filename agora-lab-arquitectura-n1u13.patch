@@ -1,0 +1,233 @@
+diff --git a/docs/LAB_N1U13_INTEGRACION_PUBLICA.md b/docs/LAB_N1U13_INTEGRACION_PUBLICA.md
+new file mode 100644
+index 0000000..321bdb7
+--- /dev/null
++++ b/docs/LAB_N1U13_INTEGRACION_PUBLICA.md
+@@ -0,0 +1,41 @@
++# Ágora · N1-U.13 · Puerta de entrada pública a las fichas
++
++## Objetivo
++
++Promover la experiencia de fichas explicativas del Libro I a la navegación principal de Ágora **sin duplicar** la lógica editorial y sin modificar las tablas de MariaDB. El Lab continúa como entorno de prueba.
++
++## Rutas
++
++- `/#/fichas`: red de siete fichas.
++- `/#/fichas/proemio`, `/etica`, `/bien`, `/felicidad`, `/ergon`, `/alma`, `/virtudes`: acceso compartible a una ficha.
++- `/#/lab/arquitectura`: conserva el experimento con todos sus controles.
++
++La ruta cambia en el navegador mediante `history.replaceState` al seleccionar una ficha o volver a la red; no se inicia de nuevo Cytoscape. Al abrir directamente una ruta, se selecciona la ficha mediante su ID editorial real, sin búsquedas por título.
++
++## Qué se integra
++
++1. Enlace «Fichas» en sidebar y breadcrumb.
++2. Acceso destacado desde la portada, manteniendo el Lab en su propia sección.
++3. Reutilización del grafo, inspector, fichas y subfichas, trayectos FAQ, respaldo estructural, preferencias y lector bilingüe ya existentes.
++4. Un texto compacto para explicar ficha, subficha y FAQ, con enlace al Lab.
++
++## Estado editorial y límites
++
++- No se cambian preguntas, pasajes, relaciones ni traducciones.
++- Las cuatro FAQ piloto siguen siendo **borradores**; no se publican trayectos ni se migran a MariaDB.
++- La revisión del corpus y de los JSON propuestos se valida en el motor ya existente; si no coincide, la vista muestra el error editorial.
++- Este incremento integra la **presentación**, no convierte los JSON experimentales en un nuevo repositorio editorial persistente. La migración controlada de las fichas a una fuente editorial estable queda para una fase distinta.
++- El formato doble diacrónico/sincrónico permanece **pendiente** hasta después del primer piloto del Libro II.
++
++## Prueba manual
++
++1. Comprobar `/#/fichas` en el sidebar y acceder desde portada.
++2. Seleccionar «¿Qué es la felicidad?»; debería actualizarse la ruta a `/#/fichas/felicidad` sin perder el zoom.
++3. Copiar y abrir `/#/fichas/ergon` en otra pestaña; debe seleccionar el argumento del érgon.
++4. Navegar entre fichas, respaldos estructurales, pasajes bilingües, controles tipográficos y guardar posiciones.
++5. Abrir `/#/lab/arquitectura` para verificar que la experiencia experimental original sigue igual.
++6. Si hay cambios en la revisión MariaDB, comprobar que la advertencia de incompatibilidad es visible.
++
++## Validación
++
++`node public/scripts/check-lab-arquitectura-n1u13.mjs` verifica la consistencia estática de rutas, catálogo, navegación y motor compartido. No sustituye una prueba de navegador con MariaDB activa.
+diff --git a/public/index.html b/public/index.html
+index cbf4057..c6997fa 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -54,4 +54,8 @@
+         <span class="nav-item__label">Lectura</span>
+       </a>
++      <a href="#/fichas" class="nav-item" data-nav="fichas">
++        <span class="nav-item__icon" aria-hidden="true">🗂</span>
++        <span class="nav-item__label">Fichas</span>
++      </a>
+       <a href="#/grafos" class="nav-item" data-nav="grafos">
+         <span class="nav-item__icon" aria-hidden="true">🕸</span>
+diff --git a/public/js/lab/architecturePublicRoutes.js b/public/js/lab/architecturePublicRoutes.js
+new file mode 100644
+index 0000000..b5cf431
+--- /dev/null
++++ b/public/js/lab/architecturePublicRoutes.js
+@@ -0,0 +1,10 @@
++// N1-U.13: alias de rutas hacia identidades editoriales, NO identificadores de FAQ nuevos.
++export const FICHAS_PUBLICAS = Object.freeze({
++  proemio: 'proemio',
++  etica: 'faq.etica.intro',
++  bien: 'faq.agathon.pros_hen',
++  felicidad: 'faq.lab.felicidad',
++  ergon: 'faq.lab.ergon',
++  alma: 'faq.lab.alma',
++  virtudes: 'faq.lab.virtudes',
++});
+diff --git a/public/js/main.js b/public/js/main.js
+index 4bb7977..40fcfb6 100644
+--- a/public/js/main.js
++++ b/public/js/main.js
+@@ -12,4 +12,5 @@ import { validateManual } from './lab/audit.js';
+ import { loadLibrary } from './reader/text.js';
+ import { createReadingView } from './views/reading.js';
++import { FICHAS_PUBLICAS } from './lab/architecturePublicRoutes.js';
+ import { createGraphCatalogView, createGraphView, GRAPHS } from './views/graphs.js';
+ import { createLabView, createLabCatalogView, EXPERIMENTS } from './views/lab.js';
+@@ -58,4 +59,8 @@ const router = createRouter({
+     '/lab':       () => createLabCatalogView(),
+     '/reading':   () => createReadingView(App),
++    // N1-U.13 · Acceso público a las fichas: comparte el motor editorial del Lab.
++    '/fichas':    async () => (await import('./views/fichas.js')).createFichasView(App),
++    ...Object.fromEntries(Object.entries(FICHAS_PUBLICAS).map(([slug, fichaId]) => [`/fichas/${slug}`,
++      async () => (await import('./views/fichas.js')).createFichasView(App, { fichaId })])),
+     '/grafos':    () => createGraphCatalogView(),
+     ...Object.fromEntries(Object.keys(GRAPHS).map(id => [`/grafos/${id}`, () => createGraphView(id)])),
+diff --git a/public/js/shell.js b/public/js/shell.js
+index bd4ccff..92b3aad 100644
+--- a/public/js/shell.js
++++ b/public/js/shell.js
+@@ -10,5 +10,5 @@ const SCROLL_THRESHOLD = 30;
+ const NAV_LABELS = {
+   home: 'Portada', chat: 'Diálogo', reading: 'Lectura',
+-  grafos: 'Grafos', lab: 'Laboratorio',
++  fichas: 'Fichas', grafos: 'Grafos', lab: 'Laboratorio',
+ };
+ 
+diff --git a/public/js/views/fichas.js b/public/js/views/fichas.js
+new file mode 100644
+index 0000000..af7b88d
+--- /dev/null
++++ b/public/js/views/fichas.js
+@@ -0,0 +1,74 @@
++// N1-U.13 · Puerta de entrada pública a las fichas del Libro I.
++// El motor editorial permanece en un único lugar (Lab), sin copiar grafo,
++// recorridos, vínculos o texto. Las rutas son alias explícitos de fichas.
++import { createLabArchitectureView } from './labArchitectureView.js';
++import { FICHAS_PUBLICAS } from '../lab/architecturePublicRoutes.js';
++
++// La lista de rutas y este catálogo se contrastan en la prueba de N1-U.13.
++const slugsPorId = new Map(Object.entries(FICHAS_PUBLICAS).map(([slug, id]) => [id, slug]));
++
++export async function createFichasView(App, { fichaId = null } = {}) {
++  const vista = await createLabArchitectureView(App);
++  const el = vista.el;
++  el.classList.add('arch-publica');
++  el.setAttribute('aria-label', 'Fichas filosóficas del Libro I');
++
++  // La misma navegación y los mismos comentarios; sólo cambia el marco público.
++  const superior = el.querySelector('.arch-top');
++  if (superior) {
++    const volver = superior.querySelector('a');
++    const contexto = superior.querySelector('span');
++    if (volver) { volver.href = '#/'; volver.textContent = '← Portada'; }
++    if (contexto) contexto.textContent = 'Libro I · Fichas explicativas · Edición piloto';
++  }
++  const titulo = el.querySelector('.arch-page > h1');
++  if (titulo) titulo.textContent = 'Explorá la Ética a través de sus preguntas';
++  const intro = el.querySelector('.arch-intro');
++  if (intro) intro.textContent = 'Elegí una ficha, seguí su explicación y consultá los pasajes que la sostienen. Los recorridos en revisión se distinguen de las fuentes publicadas.';
++
++  const detalles = document.createElement('details');
++  detalles.className = 'arch-remisiones';
++  detalles.innerHTML = `<summary>Cómo se organizan las explicaciones</summary>
++    <p><strong>Ficha:</strong> explicación reutilizable de un problema filosófico.</p>
++    <p><strong>Subficha:</strong> adaptación dependiente de otra ficha, con identidad y procedencia explícitas.</p>
++    <p><strong>FAQ:</strong> pregunta que organiza fichas y subfichas en un recorrido. Las propuestas no son trayectos publicados en MariaDB.</p>
++    <p><a href="#/lab/arquitectura">Abrir el experimento en el Laboratorio</a></p>`;
++  intro?.insertAdjacentElement('afterend', detalles);
++
++  if (fichaId) {
++    // Selecciona por identidad editorial, no por el texto visible del botón.
++    const boton = [...el.querySelectorAll('[data-arch-card]')]
++      .find(n => n.dataset.archCard === fichaId);
++    if (boton) boton.click();
++    else {
++      const estado = el.querySelector('.arch-status');
++      if (estado && !estado.classList.contains('arch-status--error')) {
++        estado.textContent = `La ficha solicitada no está disponible en esta revisión editorial: ${fichaId}.`;
++      }
++    }
++  }
++
++  // Las rutas compartibles siguen la selección sin reiniciar Cytoscape ni disparar
++  // una nueva navegación; las posiciones, tipografías y preferencias se preservan.
++  let destruida = false;
++  const actualizarRuta = () => {
++    if (destruida || !window.location.hash.startsWith('#/fichas')) return;
++    const enRed = el.querySelector('[data-arch-network]')?.getAttribute('aria-pressed') === 'true';
++    const activa = [...el.querySelectorAll('[data-arch-card]')]
++      .find(n => n.getAttribute('aria-pressed') === 'true')?.dataset.archCard;
++    const slug = enRed ? null : slugsPorId.get(activa);
++    if (!enRed && !slug) return;
++    const nuevaRuta = `#/fichas${slug ? '/' + slug : ''}`;
++    if (window.location.hash !== nuevaRuta) {
++      window.history.replaceState(window.history.state, '', nuevaRuta);
++    }
++  };
++  const observer = new MutationObserver(actualizarRuta);
++  observer.observe(el, { subtree: true, attributes: true, attributeFilter: ['aria-pressed'] });
++  actualizarRuta();
++
++  return {
++    el,
++    destroy() { destruida = true; observer.disconnect(); vista.destroy?.(); },
++  };
++}
+diff --git a/public/js/views/landing.js b/public/js/views/landing.js
+index 288fbc3..664a5ef 100644
+--- a/public/js/views/landing.js
++++ b/public/js/views/landing.js
+@@ -25,5 +25,5 @@ export function createLandingView(App) {
+         <div class="hero__actions">
+           <a href="#/chat" class="btn btn--primary btn--lg">Entrar al diálogo</a>
+-          <a href="#/lab" class="btn btn--secondary btn--lg">Ir al laboratorio</a>
++          <a href="#/fichas" class="btn btn--secondary btn--lg">Explorar fichas</a>
+           <a href="#/reading" class="btn btn--ghost btn--lg">Leer la Ética</a>
+         </div>
+diff --git a/public/scripts/check-lab-arquitectura-n1u13.mjs b/public/scripts/check-lab-arquitectura-n1u13.mjs
+new file mode 100644
+index 0000000..5580c7b
+--- /dev/null
++++ b/public/scripts/check-lab-arquitectura-n1u13.mjs
+@@ -0,0 +1,30 @@
++// N1-U.13: comprueba el acceso público, el catálogo y la ausencia de duplicación.
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++import { resolve, dirname } from 'node:path';
++import { FICHAS_PUBLICAS } from '../js/lab/architecturePublicRoutes.js';
++const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
++const read = (path) => readFileSync(resolve(root, path), 'utf8');
++const main = read('js/main.js');
++const nav = read('index.html');
++const shell = read('js/shell.js');
++const landing = read('js/views/landing.js');
++const wrapper = read('js/views/fichas.js');
++const editorial = JSON.parse(read('lab/n1u11-catalogo-explicativo.json'));
++const ids = new Set(editorial.fichas.map(f=>f.id));
++assert.equal(ids.size,7);
++assert.equal(Object.keys(FICHAS_PUBLICAS).length,7);
++for (const [slug, id] of Object.entries(FICHAS_PUBLICAS)) {
++  assert(ids.has(id), `Ruta ${slug}: ficha inexistente ${id}`);
++  assert(slug.length > 0);
++}
++assert(main.includes("'/fichas':"));
++assert(main.includes("Object.entries(FICHAS_PUBLICAS)"));
++assert(nav.includes('data-nav="fichas"'));
++assert(shell.includes("fichas: 'Fichas'"));
++assert(landing.includes('href="#/fichas"'));
++assert(wrapper.includes('createLabArchitectureView(App)'));
++assert(wrapper.includes('new MutationObserver(actualizarRuta)'));
++assert(!wrapper.includes('fetch(')); // La vista pública nunca duplica carga de fuentes.
++console.log('N1-U.13 OK: 7 rutas a fichas, entrada pública, catálogo original y motor compartido.');

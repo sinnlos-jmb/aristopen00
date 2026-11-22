@@ -1,0 +1,318 @@
+diff --git a/public/js/views/labGraphPilotView.js b/public/js/views/labGraphPilotView.js
+--- a/public/js/views/labGraphPilotView.js
++++ b/public/js/views/labGraphPilotView.js
+@@ -10,6 +10,7 @@
+ import { huellaGrafo, claveDisposicion, leerDisposicion, guardarDisposicion, decorarAristasFocales, normalizarTituloArista, MAX_TITULO_ARISTA } from '../lab/graphLayoutPersistence.js';
+ import { crearNotificadorGrafo } from '../lab/graphUiFeedback.js';
+ import { buscarVinculosTextuales, estadoTextualInicial } from '../lab/graphTextNavigation.js';
+ import { claveContextoTextual, normalizarEstadoContexto, construirGrafoContextual, crearGrupoTexto, ordenTextualDe } from '../lab/graphTextContext.js';
++import { crearLectorTextual9B } from '../lab/graphPassageReader.js';
+ 
+ // Checkpoint 2: Cytoscape permanece como visor experimental; el corpus es de sólo lectura.
+@@ -223,6 +224,11 @@
+   let generacionTexto = 0;
+   let origenDialogo = null;
+   const ordenTexto = ordenTextualDe(App.S);
++  crearLectorTextual9B({
++    dialogo: dialogoTexto,
++    inspector: $('#gv-text-inspector'),
++    obtenerBiblioteca: () => App.getLibrary(),
++  });
+   function actualizarCantidadGrupo() {
+     const n = exploradorTexto?.estado.seleccionGrupo?.length || 0;
+     $('#gv-text-group-count').textContent = `${n} seleccionados`;
+@@ -357,7 +363,8 @@
+         <p><strong>Bekker:</strong> ${esc(sub?.bekker || item.referencia || 'No consignada')}</p>
+         <p class="hint">${vinculada ? 'Vínculo registrado con esta consulta.' : 'Subunidad mostrada como contexto de la unidad; no constituye evidencia directa.'}</p>
+         ${vinculada ? `<ul>${sub.motivos.map(m => `<li>${esc(m.via.replaceAll('_',' '))}${m.referencia ? ` · ${esc(m.referencia)}` : ''}</li>`).join('')}</ul>` : ''}
+         <button class="lab-btn lab-btn--ghost" type="button" data-tm-select="${esc(item.id)}">${exploradorTexto.estado.seleccionGrupo.includes(item.id) ? 'Quitar de agrupación' : 'Elegir para agrupar'}</button>
+-        <p class="hint">La lectura griega/castellana y su resaltado se incorporarán en 9B.</p>`;
++        <button class="lab-btn" type="button" data-tm-read-sub="${esc(item.subunidadId)}">Leer pasaje griego / castellano</button>
++        <p class="hint">El lector usa las anclas textuales verificadas; no atribuye automáticamente pasajes a un tag de unidad.</p>`;
+     }
+   }
+diff --git a/public/js/lab/graphPassageReader.js b/public/js/lab/graphPassageReader.js
+new file mode 100644
+--- /dev/null
++++ b/public/js/lab/graphPassageReader.js
+@@ -0,0 +1,150 @@
++// Checkpoint 9B: lectura dentro del explorador contextual.
++// Usa exclusivamente los pasajes localizados por el lector de Ágora, sin reinterpretar tags
++// ni buscar el tramo más cercano si una subunidad carece de anclas válidas.
++import { renderChapter, chapterNavigation } from '../reader/render.js';
++
++export function localizarSubunidadEnBiblioteca(library, subId) {
++  if (!library || typeof subId !== 'string' || !subId) return { ok: false, motivo: 'Subunidad no identificada.' };
++  const passage = library.passages?.[subId];
++  const issue = (library.issues || []).filter(x => x.id === subId).map(x => x.message);
++  if (!passage) return { ok: false,
++    motivo: issue.join(' ') || 'No se localizaron las anclas de esta subunidad en el texto fuente. No se seleccionó un pasaje aproximado.' };
++  const book = (library.books || []).find(b => b.id === passage.book);
++  const chapter = book?.chapters?.find(c => c.number === passage.chapter);
++  if (!book || !chapter) return { ok: false, motivo: 'La referencia existe, pero no se encontró el libro o capítulo correspondiente.' };
++  const es = Array.isArray(passage.es) && passage.es.length > 0;
++  const gr = Array.isArray(passage.gr) && passage.gr.length > 0;
++  if (!es && !gr) return { ok: false, motivo: 'El pasaje no tiene anclas localizadas en ninguna de las dos lenguas.' };
++  return { ok: true, passage, book, chapter, avisos: issue,
++    idiomas: { es, gr } };
++}
++
++export function representarLecturaContextual(model, chapterNumber = model?.passage?.chapter) {
++  if (!model?.ok) throw new Error('No hay un pasaje validado para leer.');
++  const chapter = model.book.chapters.find(c => c.number === chapterNumber);
++  if (!chapter) throw new Error('Capítulo no disponible.');
++  const actual = model.passage.chapter === chapterNumber;
++  const passage = actual ? model.passage : null;
++  const nav = chapterNavigation(model.book, chapterNumber);
++  const title = `Libro ${model.book.id} · Capítulo ${chapterNumber}`;
++  const avisoIdiomas = actual && (!model.idiomas.es || !model.idiomas.gr)
++    ? `No se pudo localizar con exactitud el tramo en ${model.idiomas.es ? 'griego' : 'castellano'}; esa lengua se muestra sin resaltado.` : '';
++  return {
++    title,
++    navigationHtml: nav,
++    passageHtml: renderChapter(chapter, passage),
++    message: [avisoIdiomas, ...model.avisos].filter(Boolean).join(' '),
++    highlighted: actual,
++    reference: actual ? model.passage.bekker : null,
++  };
++}
++
++// Adaptador UI autónomo para minimizar cambios en labGraphPilotView.js.
++// No persiste nada: los estados, agrupadores y posiciones pertenecen al modal existente.
++export function crearLectorTextual9B({ dialogo, inspector, obtenerBiblioteca }) {
++  if (!dialogo || !inspector || typeof obtenerBiblioteca !== 'function') throw new Error('Lector contextual sin dependencias.');
++  if (!document.querySelector('link[data-agora-reader-9b]')) {
++    const css = document.createElement('link');
++    css.rel = 'stylesheet'; css.href = '/css/lab-graph-reader-9b.css';
++    css.dataset.agoraReader9b = '1'; document.head.append(css);
++  }
++  const inner = dialogo.querySelector('.lab-graph-text-dialog-inner');
++  if (!inner) throw new Error('Falta el contenedor del explorador textual.');
++  const section = document.createElement('section');
++  section.id = 'gv-text-reader-9b';
++  section.className = 'lab-graph-text-reader-9b';
++  section.hidden = true;
++  section.innerHTML = `
++    <div class="lab-graph-text-reader-head-9b">
++      <button type="button" class="lab-btn lab-btn--ghost" data-9b-back>← Volver al grafo textual</button>
++      <div><h3 id="gv-text-reader-title-9b">Lectura</h3><p class="hint" id="gv-text-reader-ref-9b"></p></div>
++    </div>
++    <div id="gv-text-reader-navigation-9b" class="lab-graph-text-reader-navigation-9b"></div>
++    <div id="gv-text-reader-body-9b" class="lab-graph-text-reader-body-9b" tabindex="0"></div>
++    <p id="gv-text-reader-message-9b" class="hint" role="status" aria-live="polite"></p>`;
++  inner.append(section);
++  const $ = selector => section.querySelector(selector);
++  let model = null, chapterNumber = null, requestId = 0, lastFocus = null;
++
++  function actualizar() {
++    if (!model?.ok) return;
++    const view = representarLecturaContextual(model, chapterNumber);
++    $('#gv-text-reader-title-9b').textContent = view.title;
++    $('#gv-text-reader-ref-9b').textContent = view.reference
++      ? `Subunidad: ${model.passage.title || model.passage.id} · Bekker ${Array.isArray(view.reference) ? view.reference.join('–') : view.reference}`
++      : 'Capítulo de contexto · sin resaltado fuera del pasaje seleccionado';
++    $('#gv-text-reader-navigation-9b').innerHTML = view.navigationHtml;
++    $('#gv-text-reader-body-9b').innerHTML = view.passageHtml;
++    $('#gv-text-reader-message-9b').textContent = view.message;
++    const body = $('#gv-text-reader-body-9b');
++    body.scrollTop = 0;
++    if (view.highlighted) {
++      // Permite localizar el fragmento dentro del capítulo sin perder el contexto.
++      const selected = body.querySelector('.reader-paragraph--selected');
++      if (selected) requestAnimationFrame(() => { if (!section.hidden) body.scrollTop = Math.max(0, selected.offsetTop - body.offsetTop - 24); });
++    }
++  }
++
++  function mostrar() {
++    section.hidden = false;
++    dialogo.classList.add('lab-graph-text-dialog--reading-9b');
++    $('[data-9b-back]').focus({ preventScroll: true });
++  }
++  function volver() {
++    ++requestId; model = null; chapterNumber = null;
++    dialogo.classList.remove('lab-graph-text-dialog--reading-9b');
++    section.hidden = true;
++    $('#gv-text-reader-body-9b').replaceChildren();
++    // Reactiva el tamaño del canvas Cytoscape sin recalcular su layout ni su zoom.
++    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
++    if (lastFocus?.isConnected && dialogo.open) lastFocus.focus({ preventScroll: true });
++    lastFocus = null;
++  }
++  async function abrir(subId) {
++    if (!dialogo.open) return;
++    const ticket = ++requestId;
++    lastFocus = document.activeElement;
++    model = null; chapterNumber = null;
++    mostrar();
++    $('#gv-text-reader-title-9b').textContent = 'Preparando lectura…';
++    $('#gv-text-reader-ref-9b').textContent = '';
++    $('#gv-text-reader-navigation-9b').replaceChildren();
++    $('#gv-text-reader-body-9b').replaceChildren();
++    $('#gv-text-reader-message-9b').textContent = 'Buscando las anclas en el texto original.';
++    try {
++      const library = await obtenerBiblioteca();
++      if (ticket !== requestId || !dialogo.open) return;
++      model = localizarSubunidadEnBiblioteca(library, subId);
++      if (!model.ok) {
++        $('#gv-text-reader-title-9b').textContent = 'Pasaje no localizado';
++        $('#gv-text-reader-message-9b').textContent = model.motivo;
++        return;
++      }
++      chapterNumber = model.passage.chapter;
++      actualizar();
++    } catch (error) {
++      if (ticket !== requestId || !dialogo.open) return;
++      $('#gv-text-reader-title-9b').textContent = 'No se pudo cargar el texto';
++      $('#gv-text-reader-message-9b').textContent = String(error?.message || error);
++    }
++  }
++  inspector.addEventListener('click', event => {
++    const button = event.target.closest('[data-tm-read-sub]');
++    if (button && dialogo.open) { event.preventDefault(); void abrir(button.dataset.tmReadSub); }
++  });
++  section.addEventListener('click', event => {
++    if (event.target.closest('[data-9b-back]')) { volver(); return; }
++    const button = event.target.closest('[data-reader-direction]');
++    if (!button || !model?.ok) return;
++    const idx = model.book.chapters.findIndex(c => c.number === chapterNumber);
++    const next = model.book.chapters[idx + Number(button.dataset.readerDirection)];
++    if (next) { chapterNumber = next.number; actualizar(); }
++  });
++  section.addEventListener('change', event => {
++    if (!event.target.matches('[data-reader-chapter]') || !model?.ok) return;
++    const next = model.book.chapters.find(c => c.number === Number(event.target.value));
++    if (next) { chapterNumber = next.number; actualizar(); }
++  });
++  dialogo.addEventListener('close', volver);
++  return { abrir, volver };
++}
+diff --git a/public/css/lab-graph-reader-9b.css b/public/css/lab-graph-reader-9b.css
+new file mode 100644
+--- /dev/null
++++ b/public/css/lab-graph-reader-9b.css
+@@ -0,0 +1,27 @@
++/* 9B: lector contextual dentro del mismo diálogo; no altera el canvas ni sus estados. */
++.lab-graph-text-reader-9b[hidden] { display: none !important; }
++.lab-graph-text-dialog--reading-9b .lab-graph-text-toolbar,
++.lab-graph-text-dialog--reading-9b .lab-graph-text-content,
++.lab-graph-text-dialog--reading-9b .lab-graph-text-group-bar,
++.lab-graph-text-dialog--reading-9b #gv-text-status,
++.lab-graph-text-dialog--reading-9b .lab-graph-text-dialog-inner > p.hint { display: none !important; }
++.lab-graph-text-reader-9b { display: flex; flex: 1; flex-direction: column; min-height: 0; gap: 10px; }
++.lab-graph-text-reader-head-9b { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
++.lab-graph-text-reader-head-9b h3 { margin: 0 0 2px; }
++.lab-graph-text-reader-head-9b p { margin: 0; }
++.lab-graph-text-reader-navigation-9b { flex: 0 0 auto; }
++.lab-graph-text-reader-navigation-9b .reader-navigation { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
++.lab-graph-text-reader-body-9b { flex: 1; min-height: 0; overflow-y: auto; border: 1px solid #c1ccd3; border-radius: 10px; padding: 12px; background: var(--bg-elevated, #fff); }
++.lab-graph-text-reader-body-9b .reader-columns { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
++.lab-graph-text-reader-body-9b .reader-columns-head { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; font-weight: 600; margin-bottom: 10px; }
++.lab-graph-text-reader-body-9b .reader-paragraph { border-bottom: 1px solid #dde2e5; padding: 12px 0; }
++.lab-graph-text-reader-body-9b .reader-paragraph__number { font-size: .8rem; color: #667783; margin-bottom: 4px; }
++.lab-graph-text-reader-body-9b .reader-text { white-space: pre-wrap; line-height: 1.65; }
++.lab-graph-text-reader-body-9b mark.reader-highlight { background: #fff2ad; color: inherit; border-radius: 2px; padding: 1px 0; }
++.lab-graph-text-reader-body-9b .reader-paragraph--selected { border-left: 3px solid #d3b459; padding-left: 8px; }
++#gv-text-reader-message-9b { margin: 0; }
++@media (max-width: 700px) {
++  .lab-graph-text-reader-body-9b .reader-columns { grid-template-columns: 1fr; }
++  .lab-graph-text-reader-body-9b .reader-columns-head { display: none; }
++  .lab-graph-text-reader-body-9b .reader-text[lang="el"] { border-top: 1px dashed #b9c8d0; padding-top: 8px; }
++}
+diff --git a/public/scripts/check-visor-lectura-9b.mjs b/public/scripts/check-visor-lectura-9b.mjs
+new file mode 100644
+--- /dev/null
++++ b/public/scripts/check-visor-lectura-9b.mjs
+@@ -0,0 +1,50 @@
++import assert from 'node:assert/strict';
++import { localizarSubunidadEnBiblioteca, representarLecturaContextual } from '../js/lab/graphPassageReader.js';
++import { buildLibrary, parseBook } from '../js/reader/text.js';
++
++const fixture = `1
++──
++{"parrafo_nro":1}
++La virtud nos importa.
++ἡ ἀρετὴ σπουδαία.
++{"parrafo_nro":2}
++El bien se dice de varias maneras.
++τὸ ἀγαθὸν πολλαχῶς λέγεται.
++2
++──
++{"parrafo_nro":3}
++La naturaleza cuenta.
++ἡ φύσις ἀρχή.`;
++const S = { repo: { libroTagueado: () => 'I' }, SUB: {
++  arete: { id: 'arete', titulo: 'Virtud', bekker: ['1094a1','1094a3'],
++    es_ancla: { inicio: 'La virtud', fin: 'nos importa.' }, gr_ancla: { inicio: 'ἡ ἀρετὴ', fin: 'σπουδαία.' } },
++  incompleta: { id: 'incompleta', titulo: 'Solo castellano', bekker: ['1094a1','1094a3'],
++    es_ancla: { inicio: 'La virtud', fin: 'nos importa.' }, gr_ancla: { inicio: 'no existe', fin: 'tampoco' } },
++  rota: { id: 'rota', titulo: 'Sin localización', bekker: ['1094a1','1094a3'],
++    es_ancla: { inicio: 'desconocido', fin: 'inexistente' }, gr_ancla: { inicio: 'not here', fin: 'impossible' } },
++} };
++const library = buildLibrary([parseBook(fixture)], S);
++const found = localizarSubunidadEnBiblioteca(library, 'arete');
++assert.equal(found.ok, true);
++assert.equal(found.idiomas.es, true);
++assert.equal(found.idiomas.gr, true);
++const display = representarLecturaContextual(found);
++assert.equal(display.highlighted, true);
++assert.match(display.passageHtml, /reader-highlight/);
++assert.match(display.passageHtml, /La virtud/);
++assert.match(display.passageHtml, /τὸ ἀγαθὸν/); // contexto del capítulo, sin perder su texto
++assert.ok(display.passageHtml.includes('reader-paragraph--selected'));
++const next = representarLecturaContextual(found, 2);
++assert.equal(next.highlighted, false);
++assert.ok(!next.passageHtml.includes('reader-paragraph--selected'));
++assert.match(next.passageHtml, /La naturaleza/);
++const partial = localizarSubunidadEnBiblioteca(library, 'incompleta');
++assert.equal(partial.ok, true);
++assert.equal(partial.idiomas.es, true);
++assert.equal(partial.idiomas.gr, false);
++assert.match(representarLecturaContextual(partial).message, /griego/);
++const missing = localizarSubunidadEnBiblioteca(library, 'rota');
++assert.equal(missing.ok, false);
++assert.match(missing.motivo, /anclas/i);
++assert.equal(localizarSubunidadEnBiblioteca(library, 'sin-id').ok, false);
++console.log('OK: 9B localización exacta, griego/castellano, contexto completo, navegación y anclas ausentes.');
+diff --git a/docs/LAB_VISOR_CHECKPOINT9B_LECTOR.md b/docs/LAB_VISOR_CHECKPOINT9B_LECTOR.md
+new file mode 100644
+--- /dev/null
++++ b/docs/LAB_VISOR_CHECKPOINT9B_LECTOR.md
+@@ -0,0 +1,38 @@
++# Ágora · Checkpoint 9B — Lector contextual del Libro I
++
++Aplicar después de 9A.2. Incremento sin migración de MariaDB ni cambios en el formato de los grafos guardados.
++
++## Funcionamiento
++
++1. Abrir el visor (`/#/lab/visor-grafos`), seleccionar un concepto o arista y **Mostrar unidades relacionadas**.
++2. Expandir una unidad, seleccionar una subunidad y pulsar **Leer pasaje griego / castellano** en el inspector.
++3. Dentro del **mismo modal** se ve el capítulo completo, con los tramos de la subunidad resaltados cuando `App.getLibrary().passages[subId]` contiene anclas válidas. No se abre un segundo diálogo.
++4. Navegar entre capítulos del mismo libro usando los botones y el selector. Los capítulos ajenos al pasaje se muestran completos pero **sin resaltado**.
++5. **Volver al grafo textual** devuelve al explorador original manteniendo posiciones, agrupadores, selección de focos y expansiones. El acto de leer no guarda ni cambia la disposición.
++6. Cerrar el modal con × o Escape sigue funcionando; el lector se reinicia al cerrar.
++
++## Fuente de verdad y límites
++
++Se reutiliza `public/js/reader/text.js` (`buildLibrary`, `findAnchor`) y `public/js/reader/render.js` (`renderChapter`, `chapterNavigation`). No se utiliza el tag de párrafo ni un solapamiento Bekker aproximado como sustituto de anclas no localizadas.
++
++- Sin anclas válidas en ambas lenguas: se informa que la subunidad no pudo localizarse; no se inventa un pasaje.
++- Una sola lengua localizada: se destaca solo esa lengua y se informa que la otra no tiene resaltado exacto.
++- La fuente de lectura disponible en esta fase es la biblioteca de Ágora del **Libro I**. No intenta navegar libros ni comentaristas todavía no incorporados.
++- Las referencias textuales conservan su procedencia; la lectura no acredita nuevas relaciones filosóficas.
++- Los botones y la estructura del Lab de pasajes quedan para checkpoints posteriores.
++
++## Pruebas
++
++```bash
++node public/scripts/check-visor-lectura-9b.mjs
++node public/scripts/check-visor-texto-9a2.mjs
++node public/scripts/check-visor-contexto-9a1.mjs
++node public/scripts/check-visor-disposiciones.mjs
++npm --prefix public run test:views
++```
++
++Prueba manual con MariaDB real: desde *areté*, abrir dos subunidades, desplazarse a otro capítulo y regresar; comprobar que los resaltados cambian solo en el capítulo original y que las posiciones del explorador sobreviven al regreso. Repetir con una subunidad sin ancla exacta y observar un aviso, no una selección inventada.
++
++## Siguiente decisión editorial
++
++Después de 9B y antes de cerrar FAQ/trayectos, efectuar un **inventario y auditoría de nombres** de conceptos, unidades, subunidades y relaciones: identificar duplicaciones, títulos compuestos que podrían ser relaciones, consistencia de verbos para aristas y distinción entre nombre editorial e alias visual. No renombrar identificadores ni reescribir etiquetas de Libro I sin una tabla de correspondencias y aprobación editorial. Aplicar la misma política al comenzar Libro II.

@@ -1,0 +1,410 @@
+diff --git a/docs/LAB_N1U12_LECTURA_Y_NAVEGACION.md b/docs/LAB_N1U12_LECTURA_Y_NAVEGACION.md
+new file mode 100644
+index 0000000..a4a1ff8
+--- /dev/null
++++ b/docs/LAB_N1U12_LECTURA_Y_NAVEGACION.md
+@@ -0,0 +1,51 @@
++# Ágora · N1-U.12 · Legibilidad, preferencias y navegación documental
++
++**Alcance:** solo experimento `/#/lab/arquitectura`. Sin migraciones SQL, sin escritura de FAQ, fichas o trayectos, sin inferencia de nuevas aristas. Requiere N1-U.11 y el CSS complementario N1-U.10 instalado.
++
++## Accesibilidad tipográfica
++
++- **Grafo Cytoscape:** fuente monoespaciada con alternativas compatibles con griego politónico; tamaño inicial de 17 px ajustable de 12 a 26 px mediante `Grafo A−/A+`. El control cambia las etiquetas de nodos y aristas sin alterar coordenadas, zoom ni contenido.
++- **Lector bilingüe:** fuente monoespaciada para griego y castellano; tamaño inicial de 18 px ajustable de 14 a 30 px mediante `Texto bilingüe A−/A+`; se conserva el formato de dos columnas y el resaltado del pasaje.
++- **Etiquetas de aristas:** botón `Ocultar nombres / Mostrar nombres`. Se ocultan todas las etiquetas, nunca las flechas ni la semántica de la relación; el inspector mantiene títulos y justificaciones.
++- Las preferencias se guardan exclusivamente en `localStorage` bajo `agora.lab.arquitectura.lectura.v1`; datos inválidos se descartan de manera segura y nunca bloquean el Lab. Son independientes de `agora.lab.arquitectura.posiciones.v1` (N1-U.10).
++- No se añaden archivos de fuentes descargables ni dependencias externas.
++
++## Expansión y contracción piloto
++
++En `1 · Respaldo estructural` de una ficha:
++
++- **Un clic** selecciona el nodo y actualiza el inspector derecho sin navegar a otra vista.
++- **Doble clic** (dos pulsaciones rápidas sobre el mismo nodo, 360 ms) expande/contrae sus descendientes. El nodo padre queda a la vista con `[+]` cuando está contraído.
++- También se puede utilizar el botón `Expandir rama / Contraer rama`, disponible tras seleccionar un nodo con descendientes. Sirve como alternativa accesible al gesto.
++- Solo se atraviesan `contexto_ficha` y `pertenencia_estructural`, conexiones documentales explícitas. La red de siete fichas y las aristas argumentativas no se modifican ni se contraen de forma automática.
++- El estado de expansión es **temporal por ficha**, no se guarda en MariaDB ni se incluye en la exportación de posiciones. Las posiciones ya guardadas de nodos ocultos no se eliminan.
++- Para las otras vistas se mantienen los gestos anteriores mientras se prueba la usabilidad de este modelo.
++
++## Instalación en CMD o PowerShell
++
++Desde la raíz del repositorio, con N1-U.11 instalado:
++
++CMD:
++
++```cmd
++ git apply --check "%USERPROFILE%\Downloads\agora-lab-arquitectura-n1u12.patch"
++ git apply "%USERPROFILE%\Downloads\agora-lab-arquitectura-n1u12.patch"
++ node public/scripts/check-lab-arquitectura-n1u12.mjs
++```
++
++PowerShell:
++
++```powershell
++ git apply --check "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u12.patch"
++ git apply "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u12.patch"
++ node public/scripts/check-lab-arquitectura-n1u12.mjs
++```
++
++**Nunca aplicar si `git apply --check` informa errores.** Por falta de fuentes completas de N1-U.9, el parche se verificó sobre la reconstrucción disponible N1-U.2→N1-U.8→N1-U.10 (sin CSS)→N1-U.11, no contra tu instalación exacta; revisar el contexto si surgiera una diferencia.
++
++## Validación y siguientes pasos
++
++- Prueba Node N1-U.12: proyección de los siete grafos, selección solo de pasajes explícitos, árbol sin aristas colgantes, preferencia local, límites y reversibilidad, CSS.
++- Pruebas previas: N1-U.2 a N1-U.8, N1-U.10 con su CSS de instalación y N1-U.11 en la reconstrucción local.
++- **Pendiente:** verificación visual de las fuentes griegas disponibles en Windows, gestos de Cytoscape, respuesta de zoom y navegación en tu servidor MariaDB.
++- Próximo: extender/ajustar gesto a otros grafos si el piloto funciona, unificar contexto y ficha en interfaz principal y auditar accesibilidad móvil y de teclado.
+diff --git a/public/css/lab-arquitectura-n1u12.css b/public/css/lab-arquitectura-n1u12.css
+new file mode 100644
+index 0000000..410522c
+--- /dev/null
++++ b/public/css/lab-arquitectura-n1u12.css
+@@ -0,0 +1,21 @@
++/* N1-U.12: solo legibilidad. No altera la base de datos ni el diseño anterior. */
++.lab-architecture .arch-display-tools,
++.lab-architecture .arch-reader-font-tools { display:inline-flex; align-items:center; gap:4px; flex-wrap:wrap; }
++.lab-architecture .arch-display-tools { border:1px solid var(--border,#bdcbd0); border-radius:7px; padding:3px 6px; }
++.lab-architecture .arch-display-tools button,
++.lab-architecture .arch-reader-font-tools button { min-width:32px; min-height:30px; border:1px solid var(--border,#9daeb7); border-radius:5px; background:var(--bg-elevated,#fff); color:inherit; padding:4px 7px; cursor:pointer; font:inherit; }
++.lab-architecture .arch-display-tools label,
++.lab-architecture .arch-reader-font-tools label { font-size:.78rem; white-space:nowrap; }
++.lab-architecture .arch-display-tools output,
++.lab-architecture .arch-reader-font-tools output { display:inline-block; min-width:38px; text-align:center; font-size:.8rem; font-variant-numeric:tabular-nums; }
++.lab-architecture .arch-display-tools button[aria-pressed="false"] { opacity:.65; }
++.lab-architecture .arch-gestos { font-size:.73rem; color:var(--text-muted,#526875); padding-left:3px; }
++.lab-architecture .arch-reader .reader-text {
++  font-family:"DejaVu Sans Mono","Noto Sans Mono","FreeMono",Consolas,"Liberation Mono",monospace;
++  font-size:var(--arch-reader-font,18px); line-height:1.78; overflow-wrap:anywhere;
++}
++.lab-architecture .arch-reader .reader-text[lang="el"],
++.lab-architecture .arch-reader .reader-text[lang="grc"] { font-variant-ligatures:none; }
++.lab-architecture .arch-reader .reader-paragraph__number { font-family:monospace; }
++.lab-architecture .arch-reader-head { justify-content:space-between; }
++@media (max-width:720px) { .lab-architecture .arch-display-tools { flex-basis:100%; } }
+diff --git a/public/js/lab/architectureDisplay.js b/public/js/lab/architectureDisplay.js
+new file mode 100644
+index 0000000..8966ca1
+--- /dev/null
++++ b/public/js/lab/architectureDisplay.js
+@@ -0,0 +1,62 @@
++// N1-U.12 · Preferencias VISUALES locales y colapso documental. No modifica el corpus.
++export const DISPLAY_STORAGE_KEY = 'agora.lab.arquitectura.lectura.v1';
++export const MONO_FONT = '"DejaVu Sans Mono", "Noto Sans Mono", "FreeMono", Consolas, "Liberation Mono", monospace';
++export const DEFAULT_DISPLAY = Object.freeze({ readerFont: 18, graphFont: 17, showEdgeNames: true });
++const inRange = (x,lo,hi) => Number.isInteger(x) && x >= lo && x <= hi;
++export function normalizarDisplay(input) {
++  return {
++    readerFont: inRange(input?.readerFont,14,30) ? input.readerFont : DEFAULT_DISPLAY.readerFont,
++    graphFont: inRange(input?.graphFont,12,26) ? input.graphFont : DEFAULT_DISPLAY.graphFont,
++    showEdgeNames: typeof input?.showEdgeNames === 'boolean' ? input.showEdgeNames : true,
++  };
++}
++export function cargarDisplay(storage) {
++  try { return normalizarDisplay(JSON.parse(storage?.getItem(DISPLAY_STORAGE_KEY) || '{}')); }
++  catch { return { ...DEFAULT_DISPLAY }; }
++}
++export function guardarDisplay(storage, prefs) {
++  const normal = normalizarDisplay(prefs);
++  if (storage?.setItem) storage.setItem(DISPLAY_STORAGE_KEY, JSON.stringify(normal));
++  return normal;
++}
++export function variarFuente(prefs, campo, delta) {
++  if (!['readerFont','graphFont'].includes(campo)) throw new Error('Fuente desconocida');
++  const lo = campo === 'readerFont' ? 14 : 12;
++  const hi = campo === 'readerFont' ? 30 : 26;
++  return { ...normalizarDisplay(prefs), [campo]: Math.max(lo,Math.min(hi,normalizarDisplay(prefs)[campo]+delta)) };
++}
++
++// Proyecta un árbol de respaldo editorial: la ficha → macrounidades → unidades → pasajes.
++// SOLO sigue las dos clases de enlaces estructurales explícitos; nunca infiere aristas.
++const TREE_EDGE_TYPES = new Set(['contexto_ficha','pertenencia_estructural']);
++export function hijosEstructurales(elementos) {
++  const nodes = new Set(elementos.filter(e=>e.group==='nodes').map(e=>e.data.id));
++  const children = new Map();
++  for (const e of elementos) {
++    if (e.group !== 'edges' || !TREE_EDGE_TYPES.has(e.data.tipo)) continue;
++    if (!nodes.has(e.data.source) || !nodes.has(e.data.target)) continue;
++    if (!children.has(e.data.source)) children.set(e.data.source,[]);
++    children.get(e.data.source).push(e.data.target);
++  }
++  return children;
++}
++export function proyectarRamasEstructurales(elementos, colapsados = new Set()) {
++  const children = hijosEstructurales(elementos);
++  const roots = elementos.filter(e=>e.group==='nodes' && e.data.tipo==='ficha_central').map(e=>e.data.id);
++  if (roots.length !== 1) throw new Error('El respaldo debe tener una sola ficha central');
++  const visibles = new Set(), pendientes = [...roots];
++  while (pendientes.length) {
++    const id = pendientes.shift();
++    if (visibles.has(id)) continue;
++    visibles.add(id);
++    if (!colapsados.has(id)) pendientes.push(...(children.get(id)||[]));
++  }
++  return elementos.filter(e => e.group === 'nodes' ? visibles.has(e.data.id)
++    : visibles.has(e.data.source) && visibles.has(e.data.target)).map(e=>{
++    if (e.group !== 'nodes') return e;
++    const hasChildren = (children.get(e.data.id)||[]).length > 0;
++    const isCollapsed = hasChildren && colapsados.has(e.data.id);
++    return { ...e, data: { ...e.data, tieneHijos:hasChildren?1:0, colapsado:isCollapsed?1:0,
++      label: e.data.label + (isCollapsed ? '  [+]' : '') } };
++  });
++}
+diff --git a/public/js/views/labArchitectureView.js b/public/js/views/labArchitectureView.js
+index ff28101..96cfac5 100644
+--- a/public/js/views/labArchitectureView.js
++++ b/public/js/views/labArchitectureView.js
+@@ -13,6 +13,7 @@ import { localizarSubunidadEnBiblioteca, representarLecturaContextual } from '..
+ import { guiaExplicativaHtml } from '../lab/architectureTextGuide.js';
+ import { construirCatalogoExplicativo, composicionFaqHtml } from '../lab/architectureEditorialNetwork.js';
+ import { elementosContextoEstructural, inspectorContextoEstructuralHtml } from '../lab/architectureStructuralContext.js';
++import { DEFAULT_DISPLAY, MONO_FONT, cargarDisplay, guardarDisplay, variarFuente, proyectarRamasEstructurales, hijosEstructurales } from '../lab/architectureDisplay.js';
+ import { LAYOUT_STORAGE_KEY, layoutParaGuardar, leerLayout, cargarLayoutLocal, guardarLayoutLocal, limpiarGrupo } from '../lab/architectureLayout.js';
+ 
+ const safe = x => esc(String(x ?? ''));
+@@ -161,7 +162,7 @@ function inspectorModulosHtml(model, capas, moduloId, enlaceId) {
+     <p class="arch-muted">Cambiar de capa no crea nuevas afirmaciones filosóficas: despliega o contrae el mismo conjunto de relaciones, todavía pendiente de validación textual.</p>`;
+ }
+ 
+-function graphStyle() {
++function graphStyle(display = DEFAULT_DISPLAY) {
+   return [
+     { selector: 'node', style: {
+       'label': 'data(label)', 'text-wrap': 'wrap', 'text-max-width': '204px', 'text-valign': 'center',
+@@ -207,6 +208,10 @@ function graphStyle() {
+     { selector: 'edge[tipo = "argumentativa_resumida"]', style: { 'width': 4, 'line-style': 'dashed', 'line-color': '#417e78', 'target-arrow-color': '#417e78', 'font-size': 14, 'text-rotation': 'none' } },
+     { selector: 'edge[tipo = "argumentativa_resumida"][seleccionado = 1]', style: { 'width': 7, 'line-color': '#20544e', 'target-arrow-color': '#20544e' } },
+     { selector: 'edge[tipo = "argumentativa_propuesta"][seleccionado = 1]', style: { 'width': 6, 'line-color': '#a24d20', 'target-arrow-color': '#a24d20' } },
++    // Preferencia del usuario: última regla sobreescribe todas las fuentes de las subclases.
++    { selector:'node', style:{ 'font-family':MONO_FONT, 'font-size':display.graphFont, 'text-max-width':'250px', 'text-wrap':'wrap' } },
++    { selector:'edge', style:{ 'font-family':MONO_FONT, 'font-size':Math.max(11,display.graphFont-3), 'label':display.showEdgeNames ? 'data(label)' : '' } },
++    { selector:'node[colapsado = 1]', style:{ 'border-style':'dashed', 'border-width':4, 'border-color':'#2c6e6a' } },
+   ];
+ }
+ 
+@@ -217,8 +222,11 @@ export async function createLabArchitectureView(App) {
+   const css = document.createElement('link');
+   css.rel = 'stylesheet'; css.href = '/css/lab-arquitectura-n1u2.css'; css.dataset.agoraLabArquitectura = '1';
+   document.head.append(css);
++  const displayCss = document.createElement('link');
++  displayCss.rel = 'stylesheet'; displayCss.href = '/css/lab-arquitectura-n1u12.css'; displayCss.dataset.agoraLabArquitectura = '1';
++  document.head.append(displayCss);
+   el.innerHTML = `<div class="arch-page">
+-    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.9 · Fichas conectadas · Solo consulta</span></nav>
++    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.12 · Fichas, grafos y lectura · Solo consulta</span></nav>
+     <h1>Fichas explicativas del Libro I</h1>
+     <p class="arch-intro">Comenzá por una red de preguntas filosóficas y explorá los pasajes que fundamentan cada explicación. La virtud completa en una vida entera.</p>
+     <p class="arch-status" role="status" aria-live="polite">Cargando la revisión editorial…</p>
+@@ -255,6 +263,14 @@ export async function createLabArchitectureView(App) {
+           <button type="button" data-arch-mode="relaciones" aria-pressed="false">Vista analítica · relaciones</button>
+         </div>
+         <button type="button" data-arch-fit>Ajustar grafo</button>
++        <span class="arch-display-tools" role="group" aria-label="Tamaño de textos del grafo">
++          <label>Grafo</label><button type="button" data-arch-graph-font="-2" aria-label="Reducir letra del grafo">A−</button>
++          <output data-arch-graph-font-value aria-live="polite">17 px</output>
++          <button type="button" data-arch-graph-font="2" aria-label="Aumentar letra del grafo">A+</button>
++          <button type="button" data-arch-edge-labels aria-pressed="true" title="Mostrar u ocultar los nombres de las aristas">Aristas: nombres</button>
++        </span>
++        <button type="button" data-arch-toggle-branch hidden title="Alternativa al doble clic para teclado y accesibilidad">Contraer rama</button>
++        <span class="arch-gestos" data-arch-gestos hidden>1 clic: inspeccionar · 2 clics: expandir/contraer</span>
+         <button type="button" data-arch-layout-save title="Guardar posiciones de este grafo en este navegador">Guardar disposición</button>
+         <details class="arch-layout-tools"><summary>Diseño</summary>
+           <button type="button" data-arch-layout-reset>Restaurar disposición inicial</button>
+@@ -275,7 +291,12 @@ export async function createLabArchitectureView(App) {
+       <details class="arch-footer"><summary>Fuentes y estado editorial</summary><p>N1-U.7 reúne siete fichas y propone una primera red curatorial navegable. Las cuatro nuevas FAQ y sus seis pasos son borradores, no trayectos publicados. Cada ficha separa contexto, diagrama y apoyo textual. El archivo estructural sigue disponible como herramienta documental; los puentes explicativos y las aristas argumentativas hipotéticas no sustituyen ni modifican MariaDB.</p></details>
+     </div>
+     <section class="arch-reader" hidden>
+-      <div class="arch-reader-head"><button type="button" data-arch-reader-back>← Volver al grafo</button><div><h2 data-arch-reader-title>Lectura</h2><p class="arch-muted" data-arch-reader-ref></p></div></div>
++      <div class="arch-reader-head"><button type="button" data-arch-reader-back>← Volver al grafo</button><div><h2 data-arch-reader-title>Lectura</h2><p class="arch-muted" data-arch-reader-ref></p></div>
++        <span class="arch-reader-font-tools" role="group" aria-label="Tamaño del texto bilingüe"><label>Texto bilingüe</label>
++          <button type="button" data-arch-reader-font="-2" aria-label="Reducir texto bilingüe">A−</button>
++          <output data-arch-reader-font-value aria-live="polite">18 px</output>
++          <button type="button" data-arch-reader-font="2" aria-label="Aumentar texto bilingüe">A+</button>
++        </span></div>
+       <div data-arch-reader-nav></div><div class="arch-reader-body" tabindex="0" data-arch-reader-body></div>
+       <p class="arch-muted" role="status" data-arch-reader-message></p>
+     </section>
+@@ -299,6 +320,36 @@ export async function createLabArchitectureView(App) {
+   let layoutStorage = null;
+   try { layoutStorage = window.localStorage; } catch { /* Navegador con almacenamiento restringido */ }
+   const positions = cargarLayoutLocal(layoutStorage);
++  let display = cargarDisplay(layoutStorage);
++  const collapsedByGraph = new Map();
++  let selectedBranch = null, lastNodeTap = {id:null, at:0};
++  function aplicarDisplay() {
++    el.style.setProperty('--arch-reader-font', `${display.readerFont}px`);
++    $('[data-arch-reader-font-value]').textContent = `${display.readerFont} px`;
++    $('[data-arch-graph-font-value]').textContent = `${display.graphFont} px`;
++    $('[data-arch-edge-labels]').setAttribute('aria-pressed', String(display.showEdgeNames));
++    $('[data-arch-edge-labels]').textContent = display.showEdgeNames ? 'Ocultar nombres' : 'Mostrar nombres';
++    if (cy) cy.style(graphStyle(display)); // Conserva nodos, posiciones y viewport.
++  }
++  function guardarDisplaySeguro() {
++    try { display = guardarDisplay(layoutStorage, display); } catch { /* Preferencia de sesión */ }
++    aplicarDisplay();
++  }
++  function contextoRamas() {
++    if (redVisible || !fichaActiva || perspectiva !== 'orientacion' || !modeloRamas()) return null;
++    const key = `puente:${fichaActiva}:orientacion:`;
++    if (!collapsedByGraph.has(key)) collapsedByGraph.set(key, new Set());
++    return {key, collapsed:collapsedByGraph.get(key)};
++  }
++  function modeloRamas() { return model && fichas && puentes?.porFicha.has(fichaActiva); }
++  function alternarRama(nodeId) {
++    const info = contextoRamas(); if (!info || !nodeId) return;
++    const full = elementosContextoEstructural(model, fichas, puentes, fichaActiva);
++    if (!(hijosEstructurales(full).get(nodeId)||[]).length) return;
++    if (info.collapsed.has(nodeId)) info.collapsed.delete(nodeId); else info.collapsed.add(nodeId);
++    selectedBranch = nodeId; dibujar();
++  }
++  aplicarDisplay();
+   function avisoLayout(message) { const target = $('[data-arch-layout-status]'); if (target) target.textContent = message; }
+   function snapshotLayout() {
+     if (!cy || !ultimoGrafo) return;
+@@ -422,13 +473,22 @@ export async function createLabArchitectureView(App) {
+         : sintetico ? elementosCapaBasica(capas, { moduloId, enlaceId })
+         : argumentativo ? elementosCapaDetallada(model, capas, { relacionId, subId: relacionSubId, moduloId })
+         : elementosArquitectura(model, state);
++      // Contraer solo descendientes de la ficha en el respaldo documental: NO toca la red filosófica.
++      const ramaInfo = puenteVisible && perspectiva === 'orientacion' ? contextoRamas() : null;
++      const completos = elements;
++      const visibles = ramaInfo ? proyectarRamasEstructurales(completos, ramaInfo.collapsed) : completos;
++      const toggleBranch = $('[data-arch-toggle-branch]');
++      const canBranch = ramaInfo && selectedBranch && (hijosEstructurales(completos).get(selectedBranch)||[]).length > 0;
++      toggleBranch.hidden = !canBranch;
++      if (canBranch) toggleBranch.textContent = ramaInfo.collapsed.has(selectedBranch) ? 'Expandir rama' : 'Contraer rama';
++      $('[data-arch-gestos]').hidden = !ramaInfo;
+       // Posiciones independientes para cada ficha y resolución.
+       const posGroup = redVisible ? 'red-fichas:' : puenteVisible ? `puente:${ficha.id}:${perspectiva}:` : faq ? `ficha:${faq.id}:` : sintetico ? 'modulos:' : argumentativo ? 'relaciones:' : 'estructura:';
+-      for (const e of elements) if (e.group === 'nodes' && e.data.tipo !== 'modulo_contenedor' && positions.has(posGroup + e.data.id)) e.position = positions.get(posGroup + e.data.id);
++      for (const e of visibles) if (e.group === 'nodes' && e.data.tipo !== 'modulo_contenedor' && positions.has(posGroup + e.data.id)) e.position = positions.get(posGroup + e.data.id);
+       // Mantener el encuadre al inspeccionar nodos y aristas del MISMO grafo.
+       // En cambios de ficha/perspectiva sí se ajusta el nuevo conjunto de nodos.
+       const vistaAnterior = ultimoGrafo === posGroup ? { zoom: cy.zoom(), pan: { ...cy.pan() } } : null;
+-      cy.batch(() => { cy.elements().remove(); cy.add(elements); });
++      cy.batch(() => { cy.elements().remove(); cy.add(visibles); });
+       cy.resize();
+       if (vistaAnterior) { cy.zoom(vistaAnterior.zoom); cy.pan(vistaAnterior.pan); }
+       else cy.fit(cy.elements(), 38);
+@@ -488,6 +548,12 @@ export async function createLabArchitectureView(App) {
+     }
+   }
+   el.addEventListener('click', event => {
++    const graphFont = event.target.closest('[data-arch-graph-font]');
++    if (graphFont) { display = variarFuente(display,'graphFont',Number(graphFont.dataset.archGraphFont)); guardarDisplaySeguro(); return; }
++    const readerFont = event.target.closest('[data-arch-reader-font]');
++    if (readerFont) { display = variarFuente(display,'readerFont',Number(readerFont.dataset.archReaderFont)); guardarDisplaySeguro(); return; }
++    if (event.target.closest('[data-arch-edge-labels]')) { display = {...display, showEdgeNames:!display.showEdgeNames}; guardarDisplaySeguro(); return; }
++    if (event.target.closest('[data-arch-toggle-branch]')) { alternarRama(selectedBranch); return; }
+     const guidedStep = event.target.closest('[data-arch-guide-step]');
+     if (guidedStep && fichas?.porId.get(fichaActiva)?.pasos?.some(p => p.id === guidedStep.dataset.archGuideStep)) {
+       perspectiva = 'diagrama'; fichaPasoId = guidedStep.dataset.archGuideStep; fichaEnlaceId = null;
+@@ -585,7 +651,13 @@ export async function createLabArchitectureView(App) {
+         ...grupo.contextos.macros.map(m => `macro:${m.id}`), ...grupo.contextos.unidades.map(u => `unidad:${u.id}`),
+         ...grupo.apoyos.map(s => `sub:${s.sub_id}`)
+       ] : grupo.apoyos.map(s => `sub:${s.sub_id}`);
+-      if (validos.includes(id)) { puenteSeleccionado = id; dibujar(); }
++      if (validos.includes(id)) {
++        puenteSeleccionado = id;
++        // Selección alternativa con teclado: los botones del inspector habilitan también
++        // el control de expandir/contraer sin necesidad de un doble clic sobre el lienzo.
++        if (perspectiva === 'orientacion') selectedBranch = `puente:${fichaActiva}:${id}`;
++        dibujar();
++      }
+       return;
+     }
+     const goUnit = event.target.closest('[data-arch-go-unit]');
+@@ -719,11 +791,20 @@ export async function createLabArchitectureView(App) {
+     try {
+       const cytoscape = await cargarCytoscape();
+       if (destroyed) return { el, destroy() {} };
+-      cy = cytoscape({ container: graph, elements: [], style: graphStyle(), layout: { name: 'preset' },
++      cy = cytoscape({ container: graph, elements: [], style: graphStyle(display), layout: { name: 'preset' },
+         minZoom: 0.22, maxZoom: 2.5, wheelSensitivity: ZOOM_SENSITIVITY_ACTUAL, boxSelectionEnabled: false });
+       cy.on('tap', 'node', event => {
+         const n = event.target;
+         if (redVisible && n.data('tipo') === 'ficha_red') { redFichaSeleccionada = n.data('key'); redEnlaceSeleccionado = null; dibujar(); return; }
++        if (fichaActiva && perspectiva === 'orientacion' && puentes?.porFicha.has(fichaActiva)) {
++          // Primer tap inspecciona. Segundo tap sobre el MISMO nodo en 360 ms contrae/expande.
++          const id = n.id(), now = Date.now(), same = lastNodeTap.id === id && now - lastNodeTap.at <= 360;
++          lastNodeTap = same ? {id:null,at:0} : {id,at:now};
++          selectedBranch = id;
++          if (same && n.data('tieneHijos') === 1) { alternarRama(id); return; }
++          puenteSeleccionado = n.data('tipo') === 'ficha_central' ? null : n.data('key');
++          dibujar(); return;
++        }
+         if (fichaActiva && perspectiva !== 'diagrama' && puentes?.porFicha.has(fichaActiva)) {
+           const key = n.data('key');
+           if (['macro_referida', 'unidad_referida', 'subunidad_referida'].includes(n.data('tipo'))) {
+@@ -792,5 +873,5 @@ export async function createLabArchitectureView(App) {
+       status.classList.add('arch-status--error');
+     }
+   }
+-  return { el, destroy() { destroyed = true; if (picker.open) picker.close(); abort.abort(); ++readerTicket; cy?.destroy(); css.remove(); } };
++  return { el, destroy() { destroyed = true; if (picker.open) picker.close(); abort.abort(); ++readerTicket; cy?.destroy(); css.remove(); displayCss.remove(); } };
+ }
+diff --git a/public/scripts/check-lab-arquitectura-n1u12.mjs b/public/scripts/check-lab-arquitectura-n1u12.mjs
+new file mode 100644
+index 0000000..c3488e7
+--- /dev/null
++++ b/public/scripts/check-lab-arquitectura-n1u12.mjs
+@@ -0,0 +1,59 @@
++// N1-U.12 · Preferencias legibles y expansión documental sin escribir MariaDB.
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import { construirModeloArquitectura } from '../js/lab/architectureModel.js';
++import { construirRelacionesProemio } from '../js/lab/architectureRelations.js';
++import { construirCapasProemio } from '../js/lab/architectureLayers.js';
++import { construirFichasArquitectura } from '../js/lab/architectureCards.js';
++import { construirPuentesExplicativos } from '../js/lab/architectureBridges.js';
++import { construirAmpliacionFichas } from '../js/lab/architecturePilotNetwork.js';
++import { cargarDisplay, guardarDisplay, normalizarDisplay, variarFuente, proyectarRamasEstructurales, hijosEstructurales, DEFAULT_DISPLAY } from '../js/lab/architectureDisplay.js';
++import { elementosContextoEstructural } from '../js/lab/architectureStructuralContext.js';
++const read = p => JSON.parse(fs.readFileSync(new URL(p,import.meta.url),'utf8'));
++const snap = read('./fixtures/n1u2-unidades.json');
++const original = JSON.stringify(snap);
++const model = construirModeloArquitectura(snap,read('../lab/n1u1-propuestas-libro-i.json'));
++const rels = construirRelacionesProemio(model,read('../lab/n1u3-relaciones-proemio.json'));
++const capas = construirCapasProemio(model,rels,read('../lab/n1u4-modulos-proemio.json'));
++const base = construirFichasArquitectura(model,capas,read('../lab/n1u5-fichas-explicativas.json'));
++const bridges = construirPuentesExplicativos(model,base,read('../lab/n1u6-puentes-explicativos.json'));
++const {fichas,puentes} = construirAmpliacionFichas(model,base,bridges,read('../lab/n1u7-fichas-red-piloto.json'));
++for (const ficha of fichas.fichas) {
++  const els = elementosContextoEstructural(model,fichas,puentes,ficha.id);
++  const copy = JSON.stringify(els), ids = new Set(els.filter(e=>e.group==='nodes').map(e=>e.data.id));
++  const collapsed = new Set([`puente:ficha:${ficha.id}`]);
++  const onlyRoot = proyectarRamasEstructurales(els,collapsed);
++  assert.equal(onlyRoot.filter(e=>e.group==='nodes').length,1);
++  assert.equal(onlyRoot.filter(e=>e.group==='edges').length,0);
++  assert.equal(onlyRoot[0].data.colapsado,1);
++  assert(onlyRoot[0].data.label.endsWith('[+]'));
++  assert.deepEqual(proyectarRamasEstructurales(els,new Set()).map(e=>e.data.id),els.map(e=>e.data.id));
++  const firstMacro = els.find(e=>e.group==='nodes'&&e.data.tipo==='macro_referida');
++  assert(firstMacro);
++  const pruned = proyectarRamasEstructurales(els,new Set([firstMacro.data.id]));
++  assert(pruned.filter(e=>e.group==='nodes').length < els.filter(e=>e.group==='nodes').length);
++  assert(pruned.some(e=>e.data.id===firstMacro.data.id),'la rama contraída conserva su raíz');
++  for(const e of pruned.filter(e=>e.group==='edges')) assert(pruned.some(n=>n.group==='nodes'&&n.data.id===e.data.source)&&pruned.some(n=>n.group==='nodes'&&n.data.id===e.data.target));
++  const children=hijosEstructurales(els); assert(children.has(`puente:ficha:${ficha.id}`));
++  assert.equal(ids.size,els.filter(e=>e.group==='nodes').length);
++  assert.equal(JSON.stringify(els),copy,'la proyección no modifica los datos editoriales');
++}
++assert.deepEqual(normalizarDisplay({readerFont:999,graphFont:-1,showEdgeNames:'false'}),DEFAULT_DISPLAY);
++assert.equal(variarFuente(DEFAULT_DISPLAY,'readerFont',200).readerFont,30);
++assert.equal(variarFuente(DEFAULT_DISPLAY,'readerFont',-200).readerFont,14);
++assert.equal(variarFuente(DEFAULT_DISPLAY,'graphFont',200).graphFont,26);
++assert.equal(variarFuente(DEFAULT_DISPLAY,'graphFont',-200).graphFont,12);
++const store={data:new Map(),getItem(k){return this.data.get(k)||null;},setItem(k,v){this.data.set(k,v);}};
++assert.deepEqual(cargarDisplay(store),DEFAULT_DISPLAY);
++const next={readerFont:22,graphFont:20,showEdgeNames:false};
++assert.deepEqual(guardarDisplay(store,next),next);
++assert.deepEqual(cargarDisplay(store),next);
++store.data.set('agora.lab.arquitectura.lectura.v1','{invalido');
++assert.deepEqual(cargarDisplay(store),DEFAULT_DISPLAY);
++const view=fs.readFileSync(new URL('../js/views/labArchitectureView.js',import.meta.url),'utf8');
++const css=fs.readFileSync(new URL('../css/lab-arquitectura-n1u12.css',import.meta.url),'utf8');
++for (const x of ['data-arch-graph-font','data-arch-reader-font','data-arch-edge-labels','data-arch-toggle-branch','proyectarRamasEstructurales','cy.on(\'tap\', \'node\'','graphStyle(display)']) assert(view.includes(x),x);
++assert(view.includes('if (same && n.data(\'tieneHijos\') === 1)'));
++assert(css.includes('.arch-reader .reader-text') && css.includes('monospace'));
++assert.equal(JSON.stringify(snap),original,'la exportación de MariaDB permanece intacta');
++console.log('N1-U.12 OK · 7 respaldos selectivos · contracción reversible · preferencias locales de griego/castellano y Cytoscape · sin cambios canónicos.');

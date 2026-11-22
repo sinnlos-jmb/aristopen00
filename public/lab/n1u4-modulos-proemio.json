@@ -1,0 +1,40 @@
+{
+  "schema": "agora.lab.n1u4.modulos.v1",
+  "fuente": {
+    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
+    "unidad_id": "proemio",
+    "basado_en": ["N1-U.2: momentos propuestos", "N1-U.3: relaciones argumentativas propuestas"]
+  },
+  "estado": "propuesta_no_validada",
+  "criterio": "Cada módulo agrupa subunidades por función argumentativa; las aristas entre módulos se proyectan exclusivamente desde las relaciones explícitas de N1-U.3. No se crean relaciones filosóficas nuevas.",
+  "modulos": [
+    {
+      "id": "A",
+      "momento_id": "n1u:proemio:I",
+      "titulo": "Pluralidad de fines",
+      "funcion": "Establece el punto de partida: las acciones se orientan a bienes; sus fines admiten distinciones y son diversos.",
+      "sub_ids": ["1094a1-3", "1094a3-6", "1094a6-9"]
+    },
+    {
+      "id": "B",
+      "momento_id": "n1u:proemio:II",
+      "titulo": "Jerarquía de fines",
+      "funcion": "Ordena la pluralidad: ciertas actividades rectoras subordinan los fines de otras actividades.",
+      "sub_ids": ["1094a9-16", "1094a16-18"]
+    },
+    {
+      "id": "C",
+      "momento_id": "n1u:proemio:III",
+      "titulo": "Problema del fin último",
+      "funcion": "Plantea condicionalmente un fin querido por sí mismo y motiva la importancia práctica de conocerlo, sin dar por demostrada su existencia.",
+      "sub_ids": ["1094a18-22", "1094a22-24"]
+    },
+    {
+      "id": "D",
+      "momento_id": "n1u:proemio:IV",
+      "titulo": "Determinación política del bien",
+      "funcion": "Sitúa la investigación del bien humano en la política, distingue su carácter rector y amplía la escala hacia la ciudad.",
+      "sub_ids": ["1094a24-26", "1094a26-b3", "1094b4-7", "1094b7-10", "1094b10-11"]
+    }
+  ]
+}

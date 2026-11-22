@@ -1,0 +1,420 @@
+diff --git a/docs/ORIENTADOR_V2_DIALOGO_INCREMENTO2.md b/docs/ORIENTADOR_V2_DIALOGO_INCREMENTO2.md
+new file mode 100644
+index 0000000..1d96f9f
+--- /dev/null
++++ b/docs/ORIENTADOR_V2_DIALOGO_INCREMENTO2.md
+@@ -0,0 +1,38 @@
++# Ágora · Orientador V2 — Incremento 2: continuidad de la pregunta
++
++## Motivo
++
++El incremento 1 mostraba correctamente tres conceptos y una hipótesis de comparación, pero el paso siguiente preguntaba «¿Qué tema querés explorar?» y agregaba otras opciones ajenas a la pregunta. Eso obligaba a reconstruir una consulta ya formulada.
++
++## Nuevo contrato de diálogo
++
++1. El texto inicial permanece **íntegro** (`textoInicial`) y se mantiene la interpretación contextual (`interpretacion`), provisional.
++2. Cuando hay varios conceptos reconocidos, se pregunta **por cuál empezar**, ofreciendo *solo* los conceptos de la pregunta. Elegir uno fija `consulta.tema` como punto de partida, **sin eliminar los restantes**.
++3. Luego se pregunta qué operación realizar sobre ese punto de partida: definición, cualidades, comparación, relación, fundamento, génesis, etc. Si se reconoció una operación inicial, se destaca como **hipótesis**, no se impone.
++4. Si se elige `relacionar` o `distinguir`, y el punto de partida pertenece a la pregunta original, `consulta.conceptosRelacionados` se completa con **todos los demás conceptos ya mencionados**. No se vuelve a pedir un `destino` redundante. Las relaciones son **solicitadas**, no aristas verificadas.
++5. Si falta un concepto de destino (pregunta original uniconceptual, o punto de partida ajeno a ella), se mantiene la pregunta `destino`, sugerencias documentales dirigidas y entrada libre.
++6. «Otro concepto…» abre un campo para indicar **un concepto diferente**, sin pedir que el estudiante vuelva a escribir la pregunta inicial.
++7. El detalle léxico V1 y la lectura técnica V2 se muestran en un panel desplegable, mientras el diálogo expone primero una devolución comprensible de lo que entendió.
++
++## Persistencia
++
++`src/services/user-queries.contract.js` acepta y valida la lista opcional `consulta.conceptosRelacionados`. El repositorio de persistencia V2 ya serializa el objeto `consulta`, por lo que este incremento no requiere una migración adicional de MariaDB. `destino` sigue disponible para la relación de un solo destinatario; si hay varios conceptos, no se compactan artificialmente en un único ID.
++
++## Regresiones esperadas
++
++Las pruebas antiguas del orientador que exigían volver a preguntar `destino` para un concepto **ya mencionado** se actualizaron deliberadamente: se verifica su conservación automática. Las pruebas de aristas dirigidas se mantienen para el caso en que el estudiante solicita relacionar un único concepto y aún falta un segundo. No hay cálculo de trayectos ni inferencia editorial.
++
++## Comprobación
++
++Desde la raíz:
++
++```bash
++cd public
++npm run test:orientador
++cd ..
++node --test src/test/user-queries.test.mjs src/test/user-queries-v2.test.mjs
++cd e2e
++npx playwright test tests/orientador-sentidos-v2.spec.mjs
++```
++
++También revisar manualmente `/#/lab/orientador` con «¿Cuáles son las diferencias entre disposición, virtud y felicidad?»; después de elegir `hexis` y `distinguir`, el siguiente paso debe ser `nivel` (no `destino`).
+diff --git a/e2e/tests/orientador-sentidos-v2.spec.mjs b/e2e/tests/orientador-sentidos-v2.spec.mjs
+index 4b63852..762e75b 100644
+--- a/e2e/tests/orientador-sentidos-v2.spec.mjs
++++ b/e2e/tests/orientador-sentidos-v2.spec.mjs
+@@ -1,26 +1,43 @@
+ import { test, expect } from '@playwright/test';
+ 
+-test('V2 preserva una comparación entre tres conceptos y permite precisar el sentido', async ({ page }) => {
++test('V2: una pregunta por tres conceptos mantiene su continuidad', async ({ page }) => {
+   await page.goto('/#/lab/orientador', { waitUntil: 'domcontentloaded' });
+   await page.locator('#orientador-texto').fill('¿Cuáles son las diferencias entre disposición, virtud y felicidad?');
+   await page.getByRole('button', { name: 'Comenzar orientación' }).click();
+-  await expect(page.locator('#orientador-lectura-v2')).toContainText('comparacion_multiple');
+-  await expect(page.locator('#orientador-lectura-v2')).toContainText('hexis, arete, eudaimonia');
+-  await expect(page.locator('#orientador-lectura-v2')).toContainText('no acreditadas');
++  await expect(page.locator('#orientador-reconocimiento')).toContainText('Parece que querés distinguirlos');
++  const opciones = page.locator('#orientador-opciones [data-opcion]');
++  await expect(opciones).toHaveCount(3);
++  await expect(opciones.nth(0)).toHaveAttribute('data-opcion', 'hexis');
++  await expect(opciones.nth(1)).toHaveAttribute('data-opcion', 'arete');
++  await expect(opciones.nth(2)).toHaveAttribute('data-opcion', 'eudaimonia');
++  await expect(page.locator('#orientador-otra')).toContainText('Otro concepto');
+   await page.locator('[data-opcion="hexis"]').click();
++  await expect(page.locator('#lab-orientador')).toContainText('Empezando por');
++  await expect(page.locator('#orientador-opciones [data-opcion="distinguir"]')).toContainText(/virtud|excelencia|areté/i);
++  await expect(page.locator('#orientador-opciones [data-opcion="distinguir"]')).toContainText(/felicidad/i);
++  await page.locator('[data-opcion="distinguir"]').click();
++  await expect(page.locator('#orientador-continuidad')).toContainText(/arete|areté|virtud|excelencia/i);
++  await expect(page.locator('#orientador-continuidad')).toContainText(/felicidad/i);
++  await expect(page.locator('#lab-orientador')).toContainText('¿Desde qué punto partimos?');
+   await page.locator('#orientador-sentido-texto').fill('Disposición adquirida en el hábito');
+-  await page.getByRole('button', { name: 'Conservar precisión del sentido' }).click();
+-  await expect(page.locator('#lab-orientador')).toContainText('Disposición adquirida en el hábito');
++  await page.getByRole('button', { name: 'Conservar precisión' }).click();
+   await expect(page.locator('#orientador-json')).toContainText('precision_sentido');
+-  await expect(page.locator('[data-opcion="distinguir"]')).toBeVisible();
++});
++
++test('V2: «Otro concepto» no solicita repetir la pregunta inicial', async ({ page }) => {
++  await page.goto('/#/lab/orientador', { waitUntil: 'domcontentloaded' });
++  await page.locator('#orientador-texto').fill('¿Cuáles son las diferencias entre disposición, virtud y felicidad?');
++  await page.getByRole('button', { name: 'Comenzar orientación' }).click();
++  await page.locator('#orientador-otra').click();
++  await expect(page.locator('#orientador-libre')).toContainText('otro concepto');
++  await expect(page.locator('#orientador-libre')).not.toContainText('inquietud inicial');
+ });
+ 
+ test('V2 no confunde el comparativo «mejor» con un tema autónomo', async ({ page }) => {
+   await page.goto('/#/lab/orientador', { waitUntil: 'domcontentloaded' });
+   await page.locator('#orientador-texto').fill('¿Cuál es la mejor de las virtudes?');
+   await page.getByRole('button', { name: 'Comenzar orientación' }).click();
+-  await expect(page.locator('#orientador-lectura-v2')).toContainText('evaluar');
+-  await expect(page.locator('#orientador-lectura-v2')).toContainText('arete');
+-  await expect(page.locator('#orientador-lectura-v2')).toContainText('criterio');
++  await expect(page.locator('#orientador-reconocimiento')).toContainText('evaluar su importancia');
++  await expect(page.locator('#orientador-diagnostico')).toContainText('evaluar');
+   await expect(page.locator('[data-opcion="evaluar"]')).toBeVisible();
+ });
+diff --git a/public/js/lab/orientador.js b/public/js/lab/orientador.js
+index 60d4789..5c1a2ee 100644
+--- a/public/js/lab/orientador.js
++++ b/public/js/lab/orientador.js
+@@ -33,6 +33,12 @@ const PREGUNTAS = Object.freeze({
+ });
+ 
+ const hasValue = value => value !== null && value !== undefined;
++const idsIniciales = sesion => sesion.interpretacion?.conceptos || sesion.analisis.conceptosDetectados;
++const nombreConcepto = (S, id) => S?.N?.[id]?.label || S?.FN?.[id]?.label ||
++  PREGUNTAS.tema.opciones.find(([v]) => v === id)?.[1] || id;
++const otrosIniciales = sesion => idsIniciales(sesion).includes(sesion.consulta.tema)
++  ? idsIniciales(sesion).filter(id => id !== sesion.consulta.tema) : [];
++const esRelacion = intencion => ['relacionar', 'distinguir'].includes(intencion);
+ const clone = value => JSON.parse(JSON.stringify(value));
+ 
+ function bitacora(sesion, tipo, datos) {
+@@ -162,7 +168,7 @@ export function iniciarOrientacion(texto) {
+     aclaracionSentido: null,
+     consulta: {
+       tema: conceptos.length === 1 ? conceptos[0] : null,
+-      intencion: null, destino: null, nivel: null, extension: null, origen: null,
++      intencion: null, destino: null, conceptosRelacionados: [], nivel: null, extension: null, origen: null,
+     },
+     candidatos: [], // Se conectará al grafo y a las FAQ en V2.
+     evaluacion: 'no_disponible_v1',
+@@ -184,7 +190,7 @@ export function siguientePregunta(sesion, S = null) {
+   let clave = null;
+   if (!hasValue(c.tema)) clave = 'tema';
+   else if (!hasValue(c.intencion)) clave = 'intencion';
+-  else if (['relacionar', 'distinguir'].includes(c.intencion) && !hasValue(c.destino)) clave = 'destino';
++  else if (esRelacion(c.intencion) && !hasValue(c.destino) && !c.conceptosRelacionados?.length) clave = 'destino';
+   else if (!hasValue(c.nivel)) clave = 'nivel';
+   else if (!hasValue(c.extension)) clave = 'extension';
+   else if (!hasValue(c.origen)) clave = 'origen';
+@@ -194,22 +200,38 @@ export function siguientePregunta(sesion, S = null) {
+     .filter(([v]) => clave !== 'destino' || v !== c.tema)
+     .map(([valor, etiqueta]) => ({ valor, etiqueta, fuente: 'opcion_general' }));
+   if (clave === 'intencion') {
+-    const prioritaria = originales.find(o => o.valor === sesion.interpretacion?.operacion);
+-    if (prioritaria) return { clave, texto: spec.texto, opciones: [
+-      { ...prioritaria, fuente: 'hipotesis_inicial' },
+-      ...originales.filter(o => o.valor !== prioritaria.valor),
++    const otros = otrosIniciales(sesion);
++    const nombre = nombreConcepto(S, c.tema);
++    const texto = otros.length
++      ? `Empezando por ${nombre}, ¿qué querés indagar?`
++      : spec.texto;
++    const sugerida = sesion.interpretacion?.operacion;
++    const opciones = originales.map(o => {
++      if (otros.length && esRelacion(o.valor)) return {
++        ...o, etiqueta: o.valor === 'distinguir'
++          ? `Compararlo con ${otros.map(id => nombreConcepto(S, id)).join(' y ')}`
++          : `Relacionarlo con ${otros.map(id => nombreConcepto(S, id)).join(' y ')}`,
++      };
++      return o;
++    });
++    const prioritaria = opciones.find(o => o.valor === sugerida);
++    return { clave, texto, opciones: [
++      ...(prioritaria ? [{ ...prioritaria, fuente: 'hipotesis_inicial' }] : []),
++      ...opciones.filter(o => o.valor !== prioritaria?.valor),
+     ] };
+   }
+   if (clave === 'tema') {
+-    const reconocidos = (sesion.interpretacion?.conceptos || sesion.analisis.conceptosDetectados).map(id => ({
+-      valor: id, etiqueta: S?.N?.[id]?.label || S?.FN?.[id]?.label || originales.find(o => o.valor === id)?.etiqueta || id,
+-      fuente: 'pregunta_inicial',
++    const reconocidos = idsIniciales(sesion).map(id => ({
++      valor: id, etiqueta: nombreConcepto(S, id), fuente: 'pregunta_inicial',
+     }));
+-    const unicos = new Map();
+-    for (const opcion of [...reconocidos, ...originales]) {
+-      if (!unicos.has(opcion.valor)) unicos.set(opcion.valor, opcion);
+-    }
+-    return { clave, texto: spec.texto, opciones: [...unicos.values()] };
++    // Si la pregunta ya nombró conceptos, no añadir opciones ajenas como si
++    // formaran parte de la pregunta. «Otro concepto…» sigue disponible en la UI.
++    if (reconocidos.length) return {
++      clave, texto: '¿Por cuál de los conceptos mencionados querés empezar?',
++      opciones: reconocidos,
++      aclaracion: 'Elegir un punto de partida no elimina los demás conceptos de tu pregunta.',
++    };
++    return { clave, texto: spec.texto, opciones: originales };
+   }
+   if (clave === 'destino') {
+     const reconocidos = (sesion.interpretacion?.conceptos || sesion.analisis.conceptosDetectados)
+@@ -236,13 +258,21 @@ export function responderOrientacion(sesion, valor, S = null) {
+   const opcion = pregunta.opciones.find(o => o.valor === valor);
+   if (!opcion) throw new Error('Opción no válida para la pregunta actual.');
+   const previo = clone(sesion.consulta);
+-  const nueva = { ...sesion, consulta: { ...sesion.consulta, [pregunta.clave]: valor } };
++  const consulta = { ...sesion.consulta, [pregunta.clave]: valor };
++  if (pregunta.clave === 'intencion') {
++    consulta.conceptosRelacionados = esRelacion(valor) ? otrosIniciales(sesion) : [];
++    consulta.destino = null;
++  }
++  const nueva = { ...sesion, consulta };
+   nueva.bitacora = bitacora(nueva, 'respuesta', {
+     pregunta: pregunta.clave,
+     formulacion: pregunta.texto,
+     opcion: { ...opcion },
+     anterior: previo[pregunta.clave],
+-    efecto: `Se registra ${pregunta.clave}; la priorización de trayectos queda pendiente de V2/V3.`,
++    efecto: consulta.conceptosRelacionados?.length && pregunta.clave === 'intencion'
++      ? 'Se retoman los demás conceptos de la pregunta inicial sin suponer aristas entre ellos.'
++      : `Se registra ${pregunta.clave}; la priorización de trayectos queda pendiente de V2/V3.`,
++    ...(pregunta.clave === 'intencion' ? { conceptosRelacionados: [...consulta.conceptosRelacionados] } : {}),
+   });
+   return nueva;
+ }
+diff --git a/public/js/views/labOrientadorView.js b/public/js/views/labOrientadorView.js
+index 4f7a8f0..cb4de5c 100644
+--- a/public/js/views/labOrientadorView.js
++++ b/public/js/views/labOrientadorView.js
+@@ -4,7 +4,8 @@ import { downloadJSON, copyJSON } from '../lab/session.js';
+ 
+ const EJEMPLO = '¿Cuáles son las diferencias entre disposición, virtud y felicidad?';
+ const etiquetas = {
+-  tema: 'Tema', intencion: 'Propósito', destino: 'Relación buscada',
++  tema: 'Concepto de partida', intencion: 'Propósito', destino: 'Relación buscada',
++  conceptosRelacionados: 'Otros conceptos de la pregunta',
+   nivel: 'Punto de partida del estudiante', extension: 'Extensión', origen: 'Origen preferido',
+ };
+ 
+@@ -35,34 +36,39 @@ export function createLabOrientadorView(App = null) {
+         </form>` : `
+         <p><strong>Inquietud inicial:</strong> ${esc(sesion.textoInicial)}</p>
+         <section class="lab-panel" id="orientador-reconocimiento">
+-          <h3>Reconocimiento inicial · hipótesis del motor</h3>
+-          <p>${sesion.analisis.activadores?.length
+-            ? sesion.analisis.activadores.map(c => `<span class="lab-chip">${esc(c.palabra)} <small>→ ${esc(c.id)}</small></span>`).join(' ')
+-            : '<span class="hint">No se reconocieron conceptos con el léxico actual.</span>'}</p>
+-          <p class="hint">${sesion.analisis.conceptosDetectados.length > 1 ? 'Se reconocieron varios conceptos: elegí cuál será el tema principal. Los restantes conservarán prioridad al preguntar por relaciones.' : 'El reconocimiento es léxico, no una interpretación filosófica confirmada.'}</p>
+-          <p class="hint">Intención detectada por V1: ${esc(sesion.analisis.intencionDetectada || 'No determinada.')}</p>
+-          ${sesion.interpretacion ? `<div id="orientador-lectura-v2">
+-            <p><strong>Lectura V2 (provisional):</strong> ${esc(sesion.interpretacion.operacion)} · ${esc(sesion.interpretacion.forma)} · ${esc(sesion.interpretacion.precision || 'precisión abierta')}</p>
+-            <p><strong>Conceptos considerados:</strong> ${esc(sesion.interpretacion.conceptos.join(', ') || 'Sin reconocimiento')}</p>
+-            ${sesion.interpretacion.relacionesSolicitadas.length ? `<p><strong>Relaciones solicitadas, no acreditadas:</strong> ${sesion.interpretacion.relacionesSolicitadas.map(r => esc(r.entre.join(' ↔ '))).join('; ')}</p>` : ''}
+-            ${sesion.interpretacion.criterioEvaluacion ? '<p class="hint">El criterio para determinar «mejor» todavía debe aclararse.</p>' : ''}
+-            <p class="hint">El reconocimiento contextual no confirma sentidos editoriales ni implica que existan aristas.</p>
+-          </div>` : ''}
++          <h3>Lo que entendí de tu pregunta</h3>
++          <p>${sesion.interpretacion?.conceptos.length
++            ? `Identifiqué: <strong>${sesion.interpretacion.conceptos.map(id => esc(S?.N?.[id]?.label || S?.FN?.[id]?.label || id)).join(', ')}</strong>. `
++            : 'Todavía no reconozco un concepto del catálogo. '}
++            ${sesion.interpretacion?.operacion === 'distinguir' ? 'Parece que querés distinguirlos.'
++              : sesion.interpretacion?.operacion === 'relacionar' ? 'Parece que querés relacionarlos.'
++              : sesion.interpretacion?.operacion === 'definir' ? 'Parece que buscás una definición.'
++              : sesion.interpretacion?.operacion === 'caracterizar' ? 'Parece que preguntás por sus cualidades.'
++              : sesion.interpretacion?.operacion === 'evaluar' ? 'Parece que querés evaluar su importancia.'
++              : sesion.interpretacion?.operacion === 'justificar' ? 'Parece que buscás una explicación o fundamento.'
++              : 'Podemos precisar qué querés examinar.'}</p>
++          <p class="hint">Es una primera lectura, no una interpretación confirmada.</p>
++          <details id="orientador-diagnostico"><summary>Ver diagnóstico técnico</summary>
++            <p>${sesion.analisis.activadores?.map(c => `<span class="lab-chip">${esc(c.palabra)} <small>→ ${esc(c.id)}</small></span>`).join(' ') || 'Sin coincidencias léxicas.'}</p>
++            <p>Detección léxica: ${esc(sesion.analisis.intencionDetectada || 'Sin determinar')} · lectura contextual: ${esc(sesion.interpretacion?.operacion || 'Sin determinar')}</p>
++            ${sesion.interpretacion?.relacionesSolicitadas.length ? `<p>Comparaciones solicitadas (todavía sin verificar): ${sesion.interpretacion.relacionesSolicitadas.map(r => esc(r.entre.join(' ↔ '))).join('; ')}</p>` : ''}
++          </details>
+         </section>
+-        ${sesion.estado === 'en_refinamiento' && sesion.consulta.tema ? `<form id="orientador-sentido" class="lab-form">
+-          <label for="orientador-sentido-texto">¿En qué sentido usás el tema elegido? (opcional)</label>
+-          <input id="orientador-sentido-texto" class="lab-input" maxlength="400" value="${esc(sesion.aclaracionSentido || '')}" placeholder="Podés escribir tu propia precisión del concepto" required />
+-          <button class="lab-btn lab-btn--ghost" type="submit">Conservar precisión del sentido</button>
++        ${sesion.consulta.conceptosRelacionados?.length ? `<p id="orientador-continuidad"><strong>Seguimos con tu pregunta:</strong> tomamos ${esc(S?.N?.[sesion.consulta.tema]?.label || S?.FN?.[sesion.consulta.tema]?.label || sesion.consulta.tema)} como punto de partida y conservamos ${sesion.consulta.conceptosRelacionados.map(id => esc(S?.N?.[id]?.label || S?.FN?.[id]?.label || id)).join(', ')}. Todavía no afirmamos relaciones entre ellos.</p>` : ''}
++        ${sesion.estado === 'en_refinamiento' && sesion.consulta.tema && sesion.consulta.intencion ? `<form id="orientador-sentido" class="lab-form">
++          <label for="orientador-sentido-texto">¿Querés precisar el sentido de este concepto? (opcional)</label>
++          <input id="orientador-sentido-texto" class="lab-input" maxlength="400" value="${esc(sesion.aclaracionSentido || '')}" placeholder="Por ejemplo, disposición como hábito adquirido" required />
++          <button class="lab-btn lab-btn--ghost" type="submit">Conservar precisión</button>
+         </form>` : ''}
+         ${sesion.aclaracionSentido ? `<p><strong>Sentido precisado por el estudiante:</strong> ${esc(sesion.aclaracionSentido)}</p>` : ''}
+         <p><strong>Estado:</strong> ${esc(sesion.estado)} · ${sesion.bitacora.length} decisiones registradas.</p>
+         ${actual ? `<div class="lab-panel" aria-live="polite">
+           <h3>${esc(actual.texto)}</h3>
+-          <p class="hint">Aclaración ${esc(actual.clave)}. Ninguna respuesta altera el grafo ni el Chat.</p>
+-          <div class="lab-help" id="orientador-opciones">${actual.opciones.map(o => `<button class="lab-help__item" type="button" data-opcion="${esc(o.valor)}">${esc(o.etiqueta)}${o.fuente === 'pregunta_inicial' ? `<small> · Mencionado en tu pregunta${o.vinculo ? ` · Arista ${esc(o.vinculo.direccion)}: ${esc(o.vinculo.de)} → ${esc(o.vinculo.a)} (${esc(o.vinculo.relacion || 'sin tipo')})` : ''}</small>` : o.fuente === 'arista_funcional' ? `<small> · Arista ${esc(o.direccion)}: ${esc(o.de)} → ${esc(o.a)} (${esc(o.relacion || 'sin tipo')})${o.ref ? ` · ref. ${esc(o.ref)}` : ''}</small>` : ''}</button>`).join('')}</div>
+-          ${['tema', 'destino'].includes(actual.clave) ? `<button type="button" class="lab-btn lab-btn--ghost" id="orientador-otra">${entradaLibre ? 'Ocultar otra opción' : 'Otra…'}</button>
++          <p class="hint">${esc(actual.aclaracion || (actual.clave === 'intencion' ? 'Podés retomar lo que preguntaste o cambiar el modo de indagación.' : 'Ninguna respuesta modifica el grafo ni el Chat.'))}</p>
++          <div class="lab-help" id="orientador-opciones">${actual.opciones.map(o => `<button class="lab-help__item" type="button" data-opcion="${esc(o.valor)}">${esc(o.etiqueta)}${o.fuente === 'hipotesis_inicial' ? '<small> · Retoma tu pregunta inicial</small>' : o.fuente === 'pregunta_inicial' ? `<small> · Mencionado en tu pregunta${o.vinculo ? ` · Arista ${esc(o.vinculo.direccion)}: ${esc(o.vinculo.de)} → ${esc(o.vinculo.a)} (${esc(o.vinculo.relacion || 'sin tipo')})` : ''}</small>` : o.fuente === 'arista_funcional' ? `<small> · Arista ${esc(o.direccion)}: ${esc(o.de)} → ${esc(o.a)} (${esc(o.relacion || 'sin tipo')})${o.ref ? ` · ref. ${esc(o.ref)}` : ''}</small>` : ''}</button>`).join('')}</div>
++          ${['tema', 'destino'].includes(actual.clave) ? `<button type="button" class="lab-btn lab-btn--ghost" id="orientador-otra">${entradaLibre ? 'Ocultar búsqueda' : 'Otro concepto…'}</button>
+           ${entradaLibre ? `<form id="orientador-libre" class="lab-form">
+-            <label for="orientador-busqueda">Buscá un concepto o escribí una expresión propia</label>
++            <label for="orientador-busqueda">${actual.clave === 'tema' ? '¿Querés comenzar por otro concepto?' : '¿Con qué otro concepto querés vincularlo?'}</label>
+             <input id="orientador-busqueda" class="lab-input" type="text" maxlength="400" autocomplete="off" value="${esc(textoLibre)}" required placeholder="Concepto o expresión libre" />
+             <div id="orientador-coincidencias" class="lab-help" aria-live="polite"></div>
+             <p class="hint">Los resultados incluyen nodos estáticos y funcionales. Las relaciones del grafo se muestran con su dirección; una coincidencia de nombre no implica que exista arista.</p>
+@@ -84,7 +90,7 @@ export function createLabOrientadorView(App = null) {
+         </section>` : ''}
+         <p class="hint" id="orientador-estado" role="status"></p>
+         <div class="lab-panel"><h3>Consulta estructurada</h3>
+-        <dl class="lab-facts">${Object.entries(sesion.consulta).map(([k,v]) => `<dt>${esc(etiquetas[k] || k)}</dt><dd>${esc(v === null ? 'No precisado' : v)}</dd>`).join('')}</dl>
++        <dl class="lab-facts">${Object.entries(sesion.consulta).map(([k,v]) => `<dt>${esc(etiquetas[k] || k)}</dt><dd>${esc(Array.isArray(v) ? (v.length ? v.join(', ') : 'Ninguno elegido') : v === null ? 'No precisado' : v)}</dd>`).join('')}</dl>
+         <p class="hint">Candidatos: ${resumen.candidatos}. Aún no se asigna ranking ni validación hermenéutica.</p></div>
+         <div class="lab-panel"><h3>Génesis de las decisiones</h3>
+           <ol id="orientador-bitacora">${sesion.bitacora.map(p => `<li><strong>${esc(p.numero)}. ${esc(p.tipo)}</strong> · ${esc(p.datos.formulacion || p.datos.texto || p.datos.motivo || '')} ${p.datos.opcion ? `→ ${esc(p.datos.opcion.etiqueta)}` : ''}</li>`).join('')}</ol>
+diff --git a/public/scripts/check-orientador-relaciones.mjs b/public/scripts/check-orientador-relaciones.mjs
+index 7ede0cb..33a4498 100644
+--- a/public/scripts/check-orientador-relaciones.mjs
++++ b/public/scripts/check-orientador-relaciones.mjs
+@@ -19,25 +19,31 @@ assert.deepEqual(tema.opciones.slice(0, 2).map(o => o.valor), ['phusis','eudaimo
+ assert.ok(tema.opciones.slice(0,2).every(o => o.fuente === 'pregunta_inicial'));
+ const a = responderOrientacion(inicio,'phusis',S);
+ const b = responderOrientacion(a,'relacionar',S);
+-const destino = siguientePregunta(b,S);
++// Los conceptos ya mencionados no se vuelven a preguntar como destinos nuevos.
++assert.deepEqual(b.consulta.conceptosRelacionados, ['eudaimonia']);
++assert.equal(b.consulta.destino, null);
++assert.equal(siguientePregunta(b, S).clave, 'nivel');
++assert.deepEqual(inicio.consulta.conceptosRelacionados, [], 'La sesión inicial no se modifica');
++// Si la pregunta inicial nombra un único concepto y el estudiante decide
++// relacionarlo, las sugerencias sí proceden del grafo con su fuente y dirección.
++const desdeUno = iniciarOrientacion('Quiero comprender la naturaleza');
++const conRelacion = responderOrientacion(desdeUno, 'relacionar', S);
++const destino = siguientePregunta(conRelacion,S);
+ assert.equal(destino.clave,'destino');
+-assert.equal(destino.opciones[0].valor,'eudaimonia');
+-assert.equal(destino.opciones[0].fuente,'pregunta_inicial');
+ const virtud = destino.opciones.find(o => o.valor === 'arete');
+ assert.equal(virtud.fuente,'arista_funcional');
+ assert.equal(virtud.direccion,'saliente');
+ assert.equal(virtud.de,'naturaleza_func');
+ assert.equal(virtud.a,'arete');
+ assert.equal(virtud.ref,'1097a');
+-assert.equal(destino.opciones.filter(o => o.valor === 'eudaimonia').length,1);
+ assert.equal(destino.opciones.some(o => o.valor === 'hexis'), false, 'No se proponen dos saltos como vecinos');
+ const rel = sugerirRelaciones(S,'phusis');
+ assert.equal(rel.find(o=>o.valor==='eudaimonia').direccion,'entrante');
+ assert.equal(rel.find(o=>o.valor==='eudaimonia').de,'eudaimonia');
+ assert.equal(rel.find(o=>o.valor==='eudaimonia').a,'naturaleza_func');
+ assert.equal(sugerirRelaciones({ FE: [] },'phusis').length,0);
+-const elegido = responderOrientacion(b,'arete',S);
++const elegido = responderOrientacion(conRelacion,'arete',S);
+ assert.equal(elegido.bitacora.at(-1).datos.opcion.fuente, 'arista_funcional');
+ assert.equal(elegido.consulta.destino,'arete');
+-assert.equal(b.consulta.destino,null);
++assert.equal(conRelacion.consulta.destino,null);
+ console.log('OK: conceptos reconocidos, sugerencias de un salto, dirección, procedencia e historial.');
+diff --git a/public/scripts/check-orientador-sentidos.mjs b/public/scripts/check-orientador-sentidos.mjs
+index ab3b536..4d73427 100644
+--- a/public/scripts/check-orientador-sentidos.mjs
++++ b/public/scripts/check-orientador-sentidos.mjs
+@@ -1,6 +1,6 @@
+ import assert from 'node:assert/strict';
+ import { interpretarInquietud, definicionesDisponibles } from '../js/lab/sentidos.js';
+-import { iniciarOrientacion, siguientePregunta, responderOrientacion, precisarSentido } from '../js/lab/orientador.js';
++import { iniciarOrientacion, siguientePregunta, responderOrientacion, responderLibre, precisarSentido } from '../js/lab/orientador.js';
+ 
+ const diferencia = interpretarInquietud('¿Cuáles son las diferencias entre disposición, virtud y felicidad?');
+ assert.deepEqual(diferencia.conceptos, ['hexis', 'arete', 'eudaimonia']);
+@@ -29,11 +29,21 @@ assert.equal(causal.relacionesSolicitadas.length, 0, 'No inventa una arista caus
+ 
+ const antes = iniciarOrientacion('¿Cuáles son las diferencias entre disposición, virtud y felicidad?');
+ const tema = siguientePregunta(antes);
+-assert.deepEqual(tema.opciones.slice(0, 3).map(o => o.valor), ['hexis','arete','eudaimonia']);
++assert.deepEqual(tema.opciones.map(o => o.valor), ['hexis','arete','eudaimonia'], 'No añadir conceptos no mencionados');
++assert.match(tema.texto, /por cuál de los conceptos mencionados/i);
++const otra = responderLibre(antes, 'Prudencia', { N: { phronesis: { label: 'Prudencia' } } }, 'phronesis');
++assert.equal(otra.consulta.tema, 'phronesis');
++assert.equal(otra.textoInicial, antes.textoInicial, 'Otro concepto no implica reescribir la pregunta');
++assert.deepEqual(otra.interpretacion.conceptos, ['hexis', 'arete', 'eudaimonia']);
+ const a = responderOrientacion(antes, 'hexis');
+ assert.equal(siguientePregunta(a).opciones[0].valor, 'distinguir');
++assert.match(siguientePregunta(a).opciones[0].etiqueta, /arete|areté|virtud|excelencia/i);
++assert.match(siguientePregunta(a).opciones[0].etiqueta, /eudaimonia|eudaimonía|felicidad/i);
+ const b = responderOrientacion(a, 'distinguir');
+-assert.equal(siguientePregunta(b).clave, 'destino');
++assert.equal(siguientePregunta(b).clave, 'nivel', 'No re-preguntar lo que ya figura en la inquietud');
++assert.deepEqual(b.consulta.conceptosRelacionados, ['arete', 'eudaimonia']);
++assert.equal(b.consulta.destino, null);
++assert.deepEqual(a.consulta.conceptosRelacionados, [], 'La selección no modifica sesiones anteriores');
+ const c = precisarSentido(b, 'Disposición entendida como hábito adquirido');
+ assert.equal(c.aclaracionSentido, 'Disposición entendida como hábito adquirido');
+ assert.equal(b.aclaracionSentido, null, 'La sesión previa sigue inmutable');
+diff --git a/src/services/user-queries.contract.js b/src/services/user-queries.contract.js
+index 3c6df41..da50767 100644
+--- a/src/services/user-queries.contract.js
++++ b/src/services/user-queries.contract.js
+@@ -31,6 +31,15 @@ export function validarQuery(payload) {
+     if (value !== null && (typeof value !== 'string' || !value.trim() || value.length > 400)) throw new Error(`Valor inválido: ${key}.`);
+     consulta[key] = value;
+   }
++  // V2: varios conceptos relacionados. Mantener 'destino' para consultas V1
++  // con un único destinatario, sin fingir que una lista es un nodo único.
++  const relacionados = payload.consulta.conceptosRelacionados;
++  if (relacionados !== undefined) {
++    if (!Array.isArray(relacionados) || relacionados.length > 15 ||
++      !relacionados.every(id => typeof id === 'string' && id.trim() && id.length <= 80))
++      throw new Error('Conceptos relacionados inválidos.');
++    consulta.conceptosRelacionados = [...new Set(relacionados)];
++  }
+   if (!Array.isArray(payload.bitacora) || payload.bitacora.length < 2 || payload.bitacora.length > 30) throw new Error('Bitácora inválida.');
+   const final = payload.bitacora.at(-1);
+   if (final?.tipo !== 'cierre' || final?.estado !== payload.estado) throw new Error('Falta el cierre de la sesión.');
+diff --git a/src/test/user-queries-v2.test.mjs b/src/test/user-queries-v2.test.mjs
+new file mode 100644
+index 0000000..d948e9a
+--- /dev/null
++++ b/src/test/user-queries-v2.test.mjs
+@@ -0,0 +1,20 @@
++import assert from 'node:assert/strict';
++import { validarQuery } from '../services/user-queries.contract.js';
++
++const payload = {
++  textoInicial: '¿Cuáles son las diferencias entre disposición, virtud y felicidad?',
++  estado: 'conforme',
++  consulta: { tema: 'hexis', intencion: 'distinguir', destino: null,
++    conceptosRelacionados: ['arete', 'eudaimonia'], nivel: 'principiante',
++    extension: 'breve', origen: 'tema' },
++  bitacora: [{ tipo: 'inicio' }, { tipo: 'respuesta' }, { tipo: 'cierre', estado: 'conforme' }],
++};
++const validado = validarQuery(payload);
++assert.deepEqual(validado.consulta.conceptosRelacionados, ['arete', 'eudaimonia']);
++assert.equal(validado.consulta.destino, null, 'No convertir varios conceptos en un falso destino único');
++assert.deepEqual(validarQuery({ ...payload, consulta: { ...payload.consulta,
++  conceptosRelacionados: ['arete', 'arete', 'eudaimonia'] } }).consulta.conceptosRelacionados,
++['arete', 'eudaimonia'], 'Eliminar duplicados al guardar');
++assert.throws(() => validarQuery({ ...payload, consulta: { ...payload.consulta,
++  conceptosRelacionados: ['arete', 4] } }), /Conceptos relacionados inválidos/);
++console.log('OK: persistencia V2 de conceptos relacionados sin inventar un nodo de destino.');

@@ -1,0 +1,47 @@
+{
+  "schema": "agora.lab.layout.v1",
+  "nodes": [
+    {
+      "group": "red-fichas:",
+      "id": "red:ficha:faq.etica.intro",
+      "x": 828,
+      "y": 110
+    },
+    {
+      "group": "red-fichas:",
+      "id": "red:ficha:proemio",
+      "x": 598,
+      "y": 394
+    },
+    {
+      "group": "red-fichas:",
+      "id": "red:ficha:faq.agathon.pros_hen",
+      "x": 1103,
+      "y": 371
+    },
+    {
+      "group": "red-fichas:",
+      "id": "red:ficha:faq.lab.felicidad",
+      "x": 828,
+      "y": 674
+    },
+    {
+      "group": "red-fichas:",
+      "id": "red:ficha:faq.lab.ergon",
+      "x": 1285,
+      "y": 949
+    },
+    {
+      "group": "red-fichas:",
+      "id": "red:ficha:faq.lab.alma",
+      "x": 821,
+      "y": 1220
+    },
+    {
+      "group": "red-fichas:",
+      "id": "red:ficha:faq.lab.virtudes",
+      "x": 378,
+      "y": 952
+    }
+  ]
+}

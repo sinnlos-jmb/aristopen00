@@ -1,0 +1,152 @@
+{
+  "schema": "agora.lab.n1u5.fichas.v1",
+  "estado": "borrador_pedagogico_pendiente_curaduria",
+  "fuente": {
+    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
+    "dump_editorial": "2026-11-07",
+    "criterio": "Las subunidades y los títulos de pasos proceden de la exportación editorial; los comentarios son borradores nuevos."
+  },
+  "fichas": [
+    {
+      "id": "proemio",
+      "tipo": "proemio",
+      "titulo": "El Proemio: acción, bienes y política",
+      "introduccion": [
+        "La Ética nicomáquea se inscribe en la reflexión práctica de Aristóteles. Como marco de orientación, conviene distinguir tres esferas: la producción (poíēsis), que tiene por resultado una obra; la acción (prâxis), cuya realización puede ser valiosa en sí misma; y la contemplación (theōría), dirigida al conocimiento. Esta distinción ilumina la investigación sin atribuir al comienzo de EN I una clasificación que allí no se expone sistemáticamente.",
+        "El Proemio parte de una observación general: artes, investigaciones, acciones y elecciones tienden a algún bien. Por eso, en este contexto, hablar de bienes exige atender a los fines (télē) de nuestras actividades. Los bienes examinados por la ética interesan en cuanto orientan la vida que podemos realizar, sin que esto elimine las actividades productivas enumeradas al inicio.",
+        "De la pluralidad de fines pasamos a su ordenación. La pregunta por un fin querido por sí mismo se introduce condicionalmente; no debemos confundir su formulación con una demostración consumada. La política aparece como investigación rectora del bien humano y amplía la escala desde cada persona hacia la ciudad."
+      ],
+      "lectura_grafo": [
+        "Cada nodo grande es un módulo interpretativo que reúne varias subunidades reales de MariaDB. Su nombre indica la función dominante de esos pasajes en el Proemio.",
+        "Las tres flechas de la capa básica proyectan relaciones expresamente propuestas en N1-U.3 (R03, R05 y R07). No equivalen a simple orden textual ni a conclusiones validadas.",
+        "La capa detallada despliega las doce subunidades y permite contrastar las diez aristas propuestas con los pasajes en griego y castellano."
+      ],
+      "referencias": [
+        "EN I.1–2, 1094a1–b11",
+        "EN VI.4–5, distinción entre producción y acción (contexto)",
+        "Metafísica E.1, clasificación de saberes (contexto)"
+      ],
+      "nota": "Los cuatro módulos y sus relaciones siguen siendo hipótesis editoriales N1-U.4; el comentario es un borrador inicial para contrastar con el texto y la bibliografía."
+    },
+    {
+      "id": "faq.etica.intro",
+      "tipo": "faq",
+      "titulo": "¿Qué es la ética? ¿Por dónde comienzo?",
+      "fuente_editorial": {
+        "faq_id": "faq.etica.intro",
+        "trayecto_id": "tr.faq.etica.intro",
+        "estado_trayecto_en_dump": "publicado",
+        "pasos_en_dump": 6
+      },
+      "introduccion": [
+        "La ética aristotélica busca comprender cómo vivir y actuar bien. Se ocupa principalmente de la acción humana (prâxis), en contraste con la producción de una obra exterior (poíēsis) y con la investigación puramente teórica (theōría). Esta tríada orienta la lectura; no significa que la vida contemplativa carezca de importancia para la felicidad.",
+        "Para comenzar no basta una definición abstracta. Hay que atender a los fines de las actividades, a la experiencia de quien escucha, al ejercicio efectivo de la excelencia y a los bienes de la comunidad política. El trayecto editorial publicado enlaza estos temas e introduce también el horizonte de las mejores actividades."
+      ],
+      "lectura_grafo": [
+        "Cada nodo reproduce la posición y el anclaje Bekker de un paso del trayecto editorial publicado para esta FAQ, según la exportación de 2026-11-07.",
+        "Las flechas indican el orden de ese trayecto. No se las presenta como inferencias filosóficas demostradas: la pertinencia de cada paso se explica por separado en su ficha.",
+        "Al seleccionar un nodo se presenta una explicación inicial y puede abrirse el pasaje bilingüe de la subunidad correspondiente."
+      ],
+      "referencias": [
+        "EN I.1–3, 1094a1–1095a13",
+        "EN I.4, 1095b2–8",
+        "EN I.8, 1098b31–1099a3",
+        "EN I.2, 1094b7–10"
+      ],
+      "nota": "Se preserva el recorrido editorial original. Los comentarios añadidos son pedagógicos y provisionales; no sustituyen los textos del trayecto publicado.",
+      "pasos": [
+        {
+          "id": "p1",
+          "sub_id": "1094a3-6",
+          "comentario": "Las diversas actividades pueden tener fines distintos: unas son actividades en sí mismas; otras culminan en obras producidas. Esta diferencia prepara el marco práctico de la investigación."
+        },
+        {
+          "id": "p2",
+          "sub_id": "1095a2-6",
+          "comentario": "La recepción adecuada de la ética requiere experiencia de las acciones humanas. Aristóteles introduce una condición pedagógica y práctica para seguir la argumentación."
+        },
+        {
+          "id": "p3",
+          "sub_id": "1098b31-1099a3",
+          "comentario": "La posesión de una disposición no equivale a su ejercicio: el contraste entre estar dispuesto y actuar ayuda a comprender por qué importa la actividad efectiva."
+        },
+        {
+          "id": "p4",
+          "sub_id": "1095b4-8",
+          "comentario": "La investigación práctica comienza desde ciertos hechos o principios familiares a quien ha sido bien educado. No todos los conocimientos parten del mismo tipo de demostración."
+        },
+        {
+          "id": "p5",
+          "sub_id": "1094b7-10",
+          "comentario": "El bien humano puede considerarse en la persona y en la ciudad; la escala política da a la pregunta ética una dimensión comunitaria."
+        },
+        {
+          "id": "p6",
+          "sub_id": "1099a29-31",
+          "comentario": "El trayecto concluye señalando la cuestión de las mejores actividades y de la felicidad. La relación específica entre vida práctica y contemplación exige continuar la lectura."
+        }
+      ],
+      "transiciones": [
+        "El recorrido pasa de los tipos de fines al sujeto capaz de aprender a actuar.",
+        "De la condición del oyente pasa al contraste entre poseer una disposición y ejercitarla.",
+        "El paso siguiente vuelve a preguntar desde qué principios y experiencias se aprende.",
+        "La consideración de la formación del agente abre el plano de la comunidad política.",
+        "Desde la vida política se orienta la atención hacia la felicidad y las mejores actividades."
+      ]
+    },
+    {
+      "id": "faq.agathon.pros_hen",
+      "tipo": "faq",
+      "titulo": "¿Cómo se dice el bien? Hacia uno y por analogía",
+      "fuente_editorial": {
+        "faq_id": "faq.agathon.pros_hen",
+        "trayecto_id": "tr.faq.agathon.pros_hen",
+        "estado_trayecto_en_dump": "publicado",
+        "pasos_en_dump": 4
+      },
+      "introduccion": [
+        "Decimos que muchas cosas son buenas, pero no necesariamente por la misma razón: una actividad, una virtud, una cantidad proporcionada o algo útil pueden ser llamados bienes de modos diferentes. Aristóteles examina esta pluralidad cuando discute la posibilidad de una Idea universal y única del bien.",
+        "Surge entonces una pregunta decisiva: si el bien no se dice unívocamente, ¿sus sentidos tienen una conexión ordenada? El texto considera la derivación desde uno (aph’ henós), la referencia hacia uno (pròs hén) y la analogía, pero deja su discusión a otra investigación. En esta ficha son posibilidades interpretativas, no una solución que la Ética haya demostrado aquí.",
+        "El trayecto original conduce desde la dificultad del bien universal hasta la felicidad. Conviene leer esa transición como un itinerario interpretativo publicado en Ágora, sin deducir de ella que Aristóteles resuelva expresamente en EN I.6 la unidad semántica del bien."
+      ],
+      "lectura_grafo": [
+        "Los cuatro nodos corresponden a los cuatro pasos publicados de esta FAQ y mantienen las subunidades de anclaje de la exportación editorial.",
+        "Las flechas reconstruyen el orden del trayecto; no establecen que la analogía sea una tesis probada ni que el pasaje final se deduzca de los anteriores.",
+        "Al seleccionar el tercer nodo se destaca la pregunta abierta entre las alternativas desde uno, hacia uno y analogía."
+      ],
+      "referencias": [
+        "EN I.6, 1096a11–1097a3",
+        "Metafísica Γ.2, referencia a uno (comparación externa)",
+        "EN I.8, 1099a29–31 (último paso del trayecto)"
+      ],
+      "nota": "El título y los cuatro pasos proceden de una FAQ y un trayecto publicados. Este texto provisional señala como abierta una cuestión que el propio pasaje deja para otra investigación.",
+      "pasos": [
+        {
+          "id": "p1",
+          "sub_id": "1096a11-13",
+          "comentario": "Aristóteles abre el examen crítico de la concepción universal del bien. La pregunta obliga a precisar qué unidad buscamos."
+        },
+        {
+          "id": "p2",
+          "sub_id": "1096a23-29",
+          "comentario": "El bien se dice en categorías diferentes. Esta diversidad dificulta tratarlo como una noción unívoca presente de modo idéntico en todas las cosas."
+        },
+        {
+          "id": "p3",
+          "sub_id": "1096b26-31",
+          "comentario": "El texto formula alternativas: desde uno, hacia uno o por analogía. Las presenta interrogativamente y aplaza su tratamiento; no corresponde marcar ninguna como demostrada."
+        },
+        {
+          "id": "p4",
+          "sub_id": "1099a29-31",
+          "comentario": "El trayecto editorial conecta la discusión sobre la unidad del bien con la pregunta por las mejores actividades y la felicidad. Es una articulación interpretativa, no una deducción explícita en este pasaje."
+        }
+      ],
+      "transiciones": [
+        "Del problema de la Idea universal se pasa a examinar la multiplicidad de sentidos del bien.",
+        "La diversidad constatada hace pertinente preguntar si esos sentidos guardan algún tipo de unidad.",
+        "El trayecto publicado lleva esa cuestión abierta hacia la consideración del bien humano; el salto requiere discusión editorial."
+      ]
+    }
+  ]
+}

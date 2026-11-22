@@ -9,7 +9,7 @@ const SCROLL_THRESHOLD = 30;
 
 const NAV_LABELS = {
   home: 'Portada', chat: 'Diálogo', reading: 'Lectura',
-  grafos: 'Grafos', lab: 'Laboratorio',
+  fichas: 'Fichas', grafos: 'Grafos', lab: 'Laboratorio',
 };
 
 const safeGet = (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } };

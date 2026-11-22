@@ -1288,3 +1288,63 @@ dialog#faq-modal, dialog.confirm-modal { box-shadow: var(--shadow-xl); }
   /* el botón de menú flotante no debe tapar el contenido del chat */
   .chat__header { padding-left: 16px; }
 }
+
+/* Laboratorio · Explorador semántico: estilos fuera del HTML generado. */
+.lab-semantic-svg-scroll { overflow-x: auto; }
+.lab-semantic-svg { width: 100%; min-width: 440px; max-height: 380px; }
+.lab-semantic-table-scroll { overflow: auto; }
+.lab-semantic-table { width: 100%; }
+
+/* Laboratorio: visor Cytoscape. El grafo se dibuja en canvas, sin SVG artesanal. */
+.lab-graph-canvas { width: 100%; min-height: 570px; border: 1px solid var(--border, #abb6c0); border-radius: 12px; background: var(--bg-elevated, #f7f9fb); touch-action: none; }
+.lab-graph-properties { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(0, 3fr); gap: 8px 12px; overflow-wrap: anywhere; }
+.lab-graph-properties dt { font-weight: 700; }
+.lab-graph-properties dd { margin: 0; }
+@media (max-width: 700px) { .lab-graph-canvas { min-height: 420px; } .lab-graph-properties { grid-template-columns: 1fr; } }
+
+/* Checkpoint 2: panel lateral del visor + focos y capas reversibles. */
+.lab-graph-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(248px, 300px); gap: 14px; align-items: start; }
+.lab-graph-main .lab-graph-canvas { min-width: 0; min-height: 590px; }
+.lab-graph-inspector { min-width: 0; max-height: 590px; overflow: auto; overflow-wrap: anywhere; }
+.lab-graph-inspector h3 { margin-top: 0; }
+.lab-graph-inspector .lab-graph-properties { display: grid; grid-template-columns: 1fr; gap: 3px; }
+.lab-graph-inspector .lab-graph-properties dt { margin-top: 8px; }
+.lab-graph-inspector .lab-graph-properties dd { overflow-wrap: anywhere; }
+.lab-graph-inspector-actions { display: grid; gap: 8px; margin-top: 20px; }
+.lab-graph-inspector-actions button { white-space: normal; }
+/* Edición de etiquetas locales en el inspector lateral del visor. */
+.lab-graph-edge-editor { display: grid; gap: 8px; min-width: 0; }
+.lab-graph-edge-editor .lab-input { display: block; box-sizing: border-box; width: 100%; min-width: 0; }
+.lab-graph-edge-editor .lab-toolbar { margin: 4px 0; }
+.lab-graph-edge-editor .lab-toolbar button { flex: 1 1 115px; }
+
+.lab-graph-id { overflow-wrap: anywhere; font-size: .88rem; }
+.lab-graph-focal-controls { margin: 12px 0 18px; }
+.lab-graph-focal-controls[hidden] { display: none; }
+.lab-graph-foci { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.lab-graph-focus-chip { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; border: 1px solid var(--border, #bac6cf); border-radius: 9px; padding: 6px 9px; }
+.lab-graph-focus-chip small { font-size: .72rem; overflow-wrap: anywhere; opacity: .75; }
+.lab-graph-focus-chip button { cursor: pointer; border: 0; background: transparent; font-size: 1.2rem; padding: 0 5px; color: inherit; }
+.lab-graph-focus-chip button:disabled { cursor: not-allowed; opacity: .3; }
+.lab-graph-search-result { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 9px; padding: 7px 0; border-bottom: 1px solid var(--border, #bbc6ce); }
+.lab-graph-search-result > span { flex: 1 1 190px; min-width: 0; }
+.lab-graph-search-result small { display: block; font-size: .75rem; opacity: .75; overflow-wrap: anywhere; }
+@media (max-width: 850px) {
+  .lab-graph-main { grid-template-columns: minmax(0, 1fr); }
+  .lab-graph-main .lab-graph-canvas { min-height: 430px; }
+  .lab-graph-inspector { max-height: 300px; }
+}
+
+/* Checkpoint 3: filtros editoriales de visibilidad del visor focal. */
+.lab-graph-option { display: inline-flex; align-items: center; gap: 9px; margin: 6px 0; cursor: pointer; }
+.lab-graph-option input { accent-color: var(--accent, #447c99); width: 17px; height: 17px; }
+
+/* Checkpoint 7: filtros del visor */
+.lab-graph-type-filters { display:flex; flex-wrap:wrap; gap:8px 16px; border:1px solid var(--border, #d4dbe0); border-radius:8px; padding:10px 14px; margin:10px 0; }
+.lab-graph-type-filters legend { font-weight:600; padding:0 6px; }
+
+/* Checkpoint 8A: recuperación selectiva sin invadir el lienzo. */
+.lab-graph-hidden-items { display: grid; gap: 5px; max-height: 170px; overflow-y: auto; margin-top: 8px; }
+.lab-graph-hidden-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lab-graph-hidden-row span { min-width: 0; overflow-wrap: anywhere; font-size: 0.88rem; }
+.lab-graph-hidden-row button { flex: 0 0 auto; }

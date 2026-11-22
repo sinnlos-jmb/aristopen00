@@ -1,0 +1,27 @@
+/* 9B: lector contextual dentro del mismo diálogo; no altera el canvas ni sus estados. */
+.lab-graph-text-reader-9b[hidden] { display: none !important; }
+.lab-graph-text-dialog--reading-9b .lab-graph-text-toolbar,
+.lab-graph-text-dialog--reading-9b .lab-graph-text-content,
+.lab-graph-text-dialog--reading-9b .lab-graph-text-group-bar,
+.lab-graph-text-dialog--reading-9b #gv-text-status,
+.lab-graph-text-dialog--reading-9b .lab-graph-text-dialog-inner > p.hint { display: none !important; }
+.lab-graph-text-reader-9b { display: flex; flex: 1; flex-direction: column; min-height: 0; gap: 10px; }
+.lab-graph-text-reader-head-9b { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.lab-graph-text-reader-head-9b h3 { margin: 0 0 2px; }
+.lab-graph-text-reader-head-9b p { margin: 0; }
+.lab-graph-text-reader-navigation-9b { flex: 0 0 auto; }
+.lab-graph-text-reader-navigation-9b .reader-navigation { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.lab-graph-text-reader-body-9b { flex: 1; min-height: 0; overflow-y: auto; border: 1px solid #c1ccd3; border-radius: 10px; padding: 12px; background: var(--bg-elevated, #fff); }
+.lab-graph-text-reader-body-9b .reader-columns { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.lab-graph-text-reader-body-9b .reader-columns-head { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; font-weight: 600; margin-bottom: 10px; }
+.lab-graph-text-reader-body-9b .reader-paragraph { border-bottom: 1px solid #dde2e5; padding: 12px 0; }
+.lab-graph-text-reader-body-9b .reader-paragraph__number { font-size: .8rem; color: #667783; margin-bottom: 4px; }
+.lab-graph-text-reader-body-9b .reader-text { white-space: pre-wrap; line-height: 1.65; }
+.lab-graph-text-reader-body-9b mark.reader-highlight { background: #fff2ad; color: inherit; border-radius: 2px; padding: 1px 0; }
+.lab-graph-text-reader-body-9b .reader-paragraph--selected { border-left: 3px solid #d3b459; padding-left: 8px; }
+#gv-text-reader-message-9b { margin: 0; }
+@media (max-width: 700px) {
+  .lab-graph-text-reader-body-9b .reader-columns { grid-template-columns: 1fr; }
+  .lab-graph-text-reader-body-9b .reader-columns-head { display: none; }
+  .lab-graph-text-reader-body-9b .reader-text[lang="el"] { border-top: 1px dashed #b9c8d0; padding-top: 8px; }
+}

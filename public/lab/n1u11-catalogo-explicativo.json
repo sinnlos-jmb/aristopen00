@@ -1,0 +1,217 @@
+{
+  "schema": "agora.lab.n1u11.catalogo-explicativo.v1",
+  "estado": "borrador_editorial_para_curaduria",
+  "fuente": {
+    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
+    "base": "n1u5-fichas-explicativas.json + n1u7-fichas-red-piloto.json",
+    "puentes": "n1u6-puentes-explicativos.json + n1u7-fichas-red-piloto.json",
+    "nota": "Los ID FAQ y ficha base pueden coincidir como alias heredados; son entidades diferentes. Ninguna FAQ nueva se escribe en MariaDB. No se generan vínculos desde tags ni se alteran trayectos publicados."
+  },
+  "fichas": [
+    {
+      "id": "proemio",
+      "tipo": "base",
+      "titulo": "El Proemio: acción, bienes y política",
+      "contenido_en": "n1u5",
+      "estado": "explicacion_propuesta_lab"
+    },
+    {
+      "id": "faq.etica.intro",
+      "tipo": "base",
+      "titulo": "¿Qué es la ética? ¿Por dónde comienzo?",
+      "contenido_en": "n1u5",
+      "estado": "publicado_en_dump_con_comentario_provisional"
+    },
+    {
+      "id": "faq.agathon.pros_hen",
+      "tipo": "base",
+      "titulo": "¿Cómo se dice el bien? Hacia uno y por analogía",
+      "contenido_en": "n1u5",
+      "estado": "publicado_en_dump_con_comentario_provisional"
+    },
+    {
+      "id": "faq.lab.felicidad",
+      "tipo": "base",
+      "titulo": "¿Qué es la felicidad?",
+      "contenido_en": "n1u7",
+      "estado": "explicacion_propuesta_lab"
+    },
+    {
+      "id": "faq.lab.ergon",
+      "tipo": "base",
+      "titulo": "¿En qué consiste el argumento de la función propia (érgon)?",
+      "contenido_en": "n1u7",
+      "estado": "explicacion_propuesta_lab"
+    },
+    {
+      "id": "faq.lab.alma",
+      "tipo": "base",
+      "titulo": "¿Cuáles son las partes del alma?",
+      "contenido_en": "n1u7",
+      "estado": "explicacion_propuesta_lab"
+    },
+    {
+      "id": "faq.lab.virtudes",
+      "tipo": "base",
+      "titulo": "¿Qué tipos de virtudes hay?",
+      "contenido_en": "n1u7",
+      "estado": "explicacion_propuesta_lab"
+    }
+  ],
+  "subfichas": [
+    {
+      "id": "subficha.etica.proemio",
+      "tipo": "subficha",
+      "ficha_base_id": "proemio",
+      "faq_id": "faq.etica.intro",
+      "titulo": "La Ética como investigación práctica",
+      "foco": "Interpretar los fines del Proemio desde la investigación de las acciones humanas",
+      "adaptacion": "El marco de la praxis aclara por qué la Ética busca orientar la acción y por qué el bien humano aparece como fin. La clasificación entre teoría, práctica y producción sirve de contexto, pero no debe atribuirse literalmente a EN I.1.",
+      "pasajes": [
+        "1094a1-3",
+        "1094b7-10"
+      ],
+      "estado": "borrador_editorial"
+    },
+    {
+      "id": "subficha.felicidad.ergon",
+      "tipo": "subficha",
+      "ficha_base_id": "faq.lab.ergon",
+      "faq_id": "faq.lab.felicidad",
+      "titulo": "La función humana como respuesta a qué es la felicidad",
+      "foco": "Conectar el argumento del érgon con la determinación de la felicidad",
+      "adaptacion": "En esta pregunta no reconstruimos de nuevo el érgon entero: destacamos que la función humana permite precisar el contenido de la felicidad como actividad del alma conforme a virtud, sin confundir el argumento con una definición previa ya demostrada.",
+      "pasajes": [
+        "1097b25-28",
+        "1098a16-18"
+      ],
+      "estado": "borrador_editorial"
+    }
+  ],
+  "faqs": [
+    {
+      "id": "faq.etica.intro",
+      "titulo": "¿Qué es la ética? ¿Por dónde comienzo?",
+      "ficha_principal": "faq.etica.intro",
+      "componentes": [
+        {
+          "tipo": "ficha",
+          "id": "faq.etica.intro",
+          "rol": "Orientación inicial y método"
+        },
+        {
+          "tipo": "subficha",
+          "id": "subficha.etica.proemio",
+          "rol": "Precisión del carácter práctico"
+        },
+        {
+          "tipo": "ficha",
+          "id": "faq.agathon.pros_hen",
+          "rol": "Apertura del problema del bien"
+        }
+      ]
+    },
+    {
+      "id": "faq.agathon.pros_hen",
+      "titulo": "¿Cómo se dice el bien? Hacia uno y por analogía",
+      "ficha_principal": "faq.agathon.pros_hen",
+      "componentes": [
+        {
+          "tipo": "ficha",
+          "id": "faq.agathon.pros_hen",
+          "rol": "Discusión de los sentidos del bien"
+        }
+      ]
+    },
+    {
+      "id": "faq.lab.proemio.guia",
+      "titulo": "¿Cómo se presenta el problema del bien en el Proemio?",
+      "ficha_principal": "proemio",
+      "componentes": [
+        {
+          "tipo": "ficha",
+          "id": "proemio",
+          "rol": "Arquitectura inicial de fines y política"
+        },
+        {
+          "tipo": "ficha",
+          "id": "faq.lab.felicidad",
+          "rol": "Proyección de la pregunta inicial"
+        }
+      ]
+    },
+    {
+      "id": "faq.lab.felicidad",
+      "titulo": "¿Qué es la felicidad?",
+      "ficha_principal": "faq.lab.felicidad",
+      "componentes": [
+        {
+          "tipo": "ficha",
+          "id": "faq.lab.felicidad",
+          "rol": "Caracterización del bien humano"
+        },
+        {
+          "tipo": "subficha",
+          "id": "subficha.felicidad.ergon",
+          "rol": "Determinación de la actividad humana"
+        },
+        {
+          "tipo": "ficha",
+          "id": "faq.lab.virtudes",
+          "rol": "Aclaración del criterio de excelencia"
+        }
+      ]
+    },
+    {
+      "id": "faq.lab.ergon",
+      "titulo": "¿En qué consiste el argumento del érgon?",
+      "ficha_principal": "faq.lab.ergon",
+      "componentes": [
+        {
+          "tipo": "ficha",
+          "id": "faq.lab.ergon",
+          "rol": "Reconstrucción del argumento"
+        },
+        {
+          "tipo": "ficha",
+          "id": "faq.lab.alma",
+          "rol": "Proyección hacia la psicología ética"
+        }
+      ]
+    },
+    {
+      "id": "faq.lab.alma",
+      "titulo": "¿Cuáles son las partes del alma?",
+      "ficha_principal": "faq.lab.alma",
+      "componentes": [
+        {
+          "tipo": "ficha",
+          "id": "faq.lab.alma",
+          "rol": "Articulación del alma"
+        },
+        {
+          "tipo": "ficha",
+          "id": "faq.lab.virtudes",
+          "rol": "Consecuencia para la clasificación de virtudes"
+        }
+      ]
+    },
+    {
+      "id": "faq.lab.virtudes",
+      "titulo": "¿Qué tipos de virtudes hay?",
+      "ficha_principal": "faq.lab.virtudes",
+      "componentes": [
+        {
+          "tipo": "ficha",
+          "id": "faq.lab.virtudes",
+          "rol": "Distinción ética y dianoética"
+        },
+        {
+          "tipo": "ficha",
+          "id": "faq.lab.alma",
+          "rol": "Fundamento de la distinción"
+        }
+      ]
+    }
+  ]
+}

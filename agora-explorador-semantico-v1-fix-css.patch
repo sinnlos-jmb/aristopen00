@@ -1,0 +1,39 @@
+diff --git a/public/js/views/labSemanticExplorerView.js b/public/js/views/labSemanticExplorerView.js
+--- a/public/js/views/labSemanticExplorerView.js
++++ b/public/js/views/labSemanticExplorerView.js
+@@ -37,9 +37,9 @@
+     const label = n?.etiqueta || id;
+     return `<g><title>${esc(label)} · ${esc(n?.tipo || '')}</title><rect x="${p.x-47}" y="${p.y-22}" width="94" height="44" rx="8" fill="var(--surface, #ece8e1)" stroke="currentColor" stroke-opacity=".24"/><text x="${p.x}" y="${p.y+4}" text-anchor="middle" font-size="11" fill="currentColor">${esc(label.length > 15 ? label.slice(0, 14) + '…' : label)}</text></g>`;
+   }).join('');
+   const focus = index.get(vicinity.foco);
+-  return `<div style="overflow-x:auto"><svg viewBox="0 0 640 370" style="width:100%;min-width:440px;max-height:380px" role="img" aria-label="Vecinos directos de ${esc(focus?.etiqueta || vicinity.foco)}; las flechas indican dirección de aristas">
++  return `<div class="lab-semantic-svg-scroll"><svg class="lab-semantic-svg" viewBox="0 0 640 370" role="img" aria-label="Vecinos directos de ${esc(focus?.etiqueta || vicinity.foco)}; las flechas indican dirección de aristas">
+     <defs><marker id="agora-sem-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6Z" fill="currentColor"/></marker></defs>
+     ${lines}${labels}
+     <rect x="270" y="159" width="100" height="52" rx="10" fill="var(--gold, #a78a50)" fill-opacity=".15" stroke="currentColor" stroke-width="1.7"/>
+     <text x="320" y="181" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">${esc((focus?.etiqueta || '').slice(0, 15))}</text>
+@@ -101,9 +101,9 @@
+           <h3>Conceptos para explorar a continuación</h3>
+           <p class="hint">Estas sugerencias muestran caminos de procedencia de hasta 2 vínculos. Son opciones de investigación, NO respuestas ni relaciones filosóficas validadas; las asociaciones por tags se identifican aparte.</p>
+           <div class="lab-help">${sugerencias.map(s => `<button type="button" class="lab-help__item" data-sem-focus="${esc(s.uid)}">${esc(s.etiqueta)} <small>· ${esc(s.base)} · vía ${esc(s.recorrido.map(e => e.tipo + (e.recorridoEnSentidoOriginal ? ' →' : ' ←')).join(' / '))}</small></button>`).join('') || '<p class="hint">No hay conceptos candidatos en un radio de dos vínculos.</p>'}</div>
+           <h3>Relaciones y procedencia</h3>
+-          <div style="overflow:auto"><table class="lab-table" style="width:100%"><thead><tr><th>Desde → hacia</th><th>Tipo / relación</th><th>Fuente</th><th>Ref. / voz / sentido</th></tr></thead>
++          <div class="lab-semantic-table-scroll"><table class="lab-table lab-semantic-table"><thead><tr><th>Desde → hacia</th><th>Tipo / relación</th><th>Fuente</th><th>Ref. / voz / sentido</th></tr></thead>
+             <tbody>${edges.map(e => `<tr><td>${esc(label(e.desde))} → ${esc(label(e.hacia))}</td><td>${esc(e.tipo)}${e.relacion ? ` · ${esc(e.relacion)}` : ''}</td><td>${esc(e.fuente)}</td><td>${esc([e.referencia, e.voz, e.sentidoReferido, e.rol].filter(Boolean).join(' · ') || '—')}</td></tr>`).join('') || '<tr><td colspan="4">Sin aristas documentadas.</td></tr>'}</tbody></table></div>
+           <div class="lab-toolbar"><button type="button" class="lab-btn lab-btn--ghost" id="sem-export-selection">Exportar vecindad JSON</button></div>
+         </div>` : '<p class="lab-panel">No se encontraron nodos en el corpus cargado.</p>'}
+         <details class="lab-panel"><summary>Diagnóstico de referencias no resueltas (${graph.issues.length})</summary>
+diff --git a/public/css/app.css b/public/css/app.css
+--- a/public/css/app.css
++++ b/public/css/app.css
+@@ -1287,4 +1287,10 @@
+ @media (max-width: 768px) {
+   /* el botón de menú flotante no debe tapar el contenido del chat */
+   .chat__header { padding-left: 16px; }
+ }
++
++/* Laboratorio · Explorador semántico: estilos fuera del HTML generado. */
++.lab-semantic-svg-scroll { overflow-x: auto; }
++.lab-semantic-svg { width: 100%; min-width: 440px; max-height: 380px; }
++.lab-semantic-table-scroll { overflow: auto; }
++.lab-semantic-table { width: 100%; }

@@ -1,0 +1,434 @@
+diff --git a/docs/LAB_VISOR_AGENDA_REVISION.md b/docs/LAB_VISOR_AGENDA_REVISION.md
+new file mode 100644
+index 0000000..fec122d
+--- /dev/null
++++ b/docs/LAB_VISOR_AGENDA_REVISION.md
+@@ -0,0 +1,31 @@
++# Ágora · Agenda de revisión del grafo (después de 8B)
++
++**Estado:** ideas de diseño registradas, **no implementadas**. No constituyen autorizaciones para fusionar datos ni cambiar relaciones filosóficas.
++
++## R1. Dispersión y redundancia conceptual (revisión editorial prioritaria)
++
++Ejemplos observados en el visor:
++
++- Conceptos estáticos `vida` y `actividades y vida`.
++- Formulaciones `fin y bien` / `bien y fin`, `fin`, `bien`, `bienes` y representaciones estáticas y funcionales afines.
++
++No presuponer que una semejanza léxica es identidad filosófica. Elaborar inventario de posibles equivalencias, inclusiones, distinciones de sentido y solapamientos; mostrar fuentes y relaciones antes de aprobar cambios. Separar tres resultados: (a) duplicación real, (b) sentido o nivel diferente, (c) vínculo aún no registrado. Mantener los identificadores actuales mientras se audita; no usar ocultación visual como sustituto de la revisión.
++
++## R2. Anotaciones en el grafo
++
++Idea: recuadros explicativos conectados visualmente a un nodo o a una arista (o a varios elementos), desplegables y ocultables por el usuario. Considerar texto breve y ampliable, ancla visual estable por ID, procedencia y voz explícitas, indicador de nota del usuario frente a dato editorial, persistencia asociada a la disposición. **Una anotación no debe convertirse en una arista filosófica nueva ni modificar la relación original.** Explorar cómo evitar que esos recuadros saturen la vista.
++
++## R3. Familias de grafos por centro focal
++
++Idea: colecciones temáticas con una **base focal reconocible**, más variantes optativas. Ejemplo: base `phusis–arete–eudaimonia`, variantes `+theion`, `+polis` y otras. La base y cada variante pueden guardar posiciones, visibilidad de aristas y nodos, anotaciones y criterios didácticos sin multiplicar entradas indistinguibles en el catálogo.
++
++Estudiar nombres, búsqueda, versionado y relación base→variante; decidir explícitamente qué estado se hereda y qué estado pertenece a cada variante. **El Checkpoint 8B sigue guardando disposiciones por conjunto exacto de focos y huella del grafo; no crea todavía familias.** Evitar una migración automática que altere disposiciones ya guardadas.
++
++## Orden posible
++
++1. Cerrar 8B y validar interacción en notebook.
++2. Revisar R1 semánticamente antes de una función automática de sugerencias de equivalencia.
++3. Diseñar R3 junto con la persistencia actual, con migración reversible.
++4. Diseñar R2 como presentación y anotación explícita, separado del corpus.
++
++No hay implementación, migración de MariaDB ni cambios del Orientador en esta agenda.
+diff --git a/docs/LAB_VISOR_CHECKPOINT8B.md b/docs/LAB_VISOR_CHECKPOINT8B.md
+new file mode 100644
+index 0000000..2fd9c55
+--- /dev/null
++++ b/docs/LAB_VISOR_CHECKPOINT8B.md
+@@ -0,0 +1,41 @@
++# Ágora · Checkpoint 8B — Controles flotantes y notificaciones
++
++Incremento incremental sobre el **Checkpoint 8A**. No cambia datos, grafo semántico, MariaDB, Cytoscape ni contrato de persistencia.
++
++## Qué cambia
++
++- Botón **⚙ Controles**, sobre la esquina superior del lienzo de la **vista de focos**, abre un panel **no modal**. No desplaza el grafo ni bloquea la interacción con él.
++- Tres pestañas compactas: **Nodos** (tipos, párrafos, ocultos, ramas conservadas), **Aristas** (etiquetas globales), **Vista** (guardar, recuperar, contraer, restaurar focos).
++- El inspector lateral conserva la edición individual de títulos de aristas y las acciones de cada nodo.
++- Teclas: `Escape` cierra el panel; `←`/`→`, `Inicio` y `Fin` cambian de pestaña cuando el foco está en la barra. El botón tiene `aria-expanded`, las pestañas `aria-selected`, y el panel no usa fondo bloqueante.
++- Notificaciones temporales (2,8 segundos), **sin apilar**, solamente ante **guardado exitoso o fallido**, **agregar foco** y **quitar foco**. Los avisos de error no se confunden con confirmaciones. Las operaciones restantes siguen actualizando el estado textual.
++- Reutiliza los **mismos IDs** de los controles de 8A; no altera el formato ni el nombre de la clave en `localStorage`. Se puede aplicar sobre disposiciones ya guardadas.
++- CSS aislado en `public/css/lab-graph-controls-8b.css`, cargado únicamente por esta vista.
++
++## Aplicación
++
++```bash
++git apply --check agora-visor-cytoscape-checkpoint8b-panel-toasts.patch
++git apply agora-visor-cytoscape-checkpoint8b-panel-toasts.patch
++node public/scripts/check-visor-controles-8b.mjs
++node public/scripts/check-visor-visibilidad-8a.mjs
++node public/scripts/check-visor-faq-grupos.mjs
++node public/scripts/check-visor-titulos-aristas.mjs
++node public/scripts/check-visor-disposiciones.mjs
++```
++
++## Prueba manual
++
++1. Abrir `/#/lab/visor-grafos` y pulsar **Controles** sin desplazarse hacia arriba.
++2. Con el grafo visible, en **Nodos** alternar tipos y párrafos; recuperar un oculto. Confirmar que no se modifica la posición de nodos conservados.
++3. En **Aristas**, alternar la etiqueta global; seleccionar una arista e inspeccionar su título personalizado a la derecha.
++4. En **Vista**, guardar la disposición. Confirmar el aviso breve. Recuperarla y comprobar que el layout 8A es compatible.
++5. Añadir un foco desde la búsqueda y quitarlo con la × del chip; comprobar un solo aviso por operación.
++6. Probar teclado, cerrar con `Escape` y verificar que el panel desaparece al pasar a **Resumen por tipos** o **Universo completo**.
++7. Verificar un ancho de notebook y otro de móvil; el panel no debería tapar el inspector ni aumentar la altura de la página para operar los controles.
++
++## Alcance y pendientes
++
++No implementa deduplicación semántica; anotaciones enlazadas ni familias de disposiciones con variantes. Son temas para revisión posterior y requieren reglas independientes. Quedan registrados en `docs/LAB_VISOR_AGENDA_REVISION.md`. No ofrece sincronización entre dispositivos ni edición multiusuario.
++
++La prueba automatizada comprueba las notificaciones y el contrato estático de controles. Falta la prueba visual en el navegador del usuario.
+diff --git a/public/css/lab-graph-controls-8b.css b/public/css/lab-graph-controls-8b.css
+new file mode 100644
+index 0000000..7972460
+--- /dev/null
++++ b/public/css/lab-graph-controls-8b.css
+@@ -0,0 +1,41 @@
++/* Checkpoint 8B — controles locales al lienzo del visor, sin modal bloqueante. */
++.lab-graph-focus-heading { display:flex; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
++.lab-graph-focus-heading small { color:var(--muted, #697b89); }
++.lab-graph-canvas-wrap { position:relative; min-width:0; }
++.lab-graph-canvas-wrap > .lab-graph-canvas { width:100%; }
++.lab-graph-controls-launch { position:absolute; z-index:15; right:12px; top:12px; }
++.lab-graph-controls-launch > button { background:var(--surface, #fff); border:1px solid var(--border, #ccd3d9); color:var(--text, #253443); box-shadow:0 2px 10px rgba(15,30,48,.14); }
++.lab-graph-controls-popup { position:absolute; top:55px; right:12px; z-index:16; box-sizing:border-box;
++  width:min(314px, calc(100% - 24px)); max-height:min(430px, calc(100% - 72px)); min-height:0;
++  overflow:auto; overscroll-behavior:contain; padding:12px; border:1px solid var(--border, #aebbc8);
++  border-radius:12px; color:var(--text, #273746); background:var(--surface, #fff);
++  box-shadow:0 10px 34px rgba(20,38,54,.23); }
++.lab-graph-controls-popup[hidden], .lab-graph-controls-pane[hidden], .lab-graph-controls-launch button[hidden] { display:none !important; }
++.lab-graph-controls-heading { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:0 0 10px; }
++.lab-graph-controls-heading strong { font-size:.94rem; }
++.lab-graph-controls-close { border:1px solid transparent; border-radius:6px; background:transparent; color:inherit; font:inherit; cursor:pointer; font-size:1.4rem; line-height:1; width:32px; height:32px; }
++.lab-graph-controls-close:hover, .lab-graph-controls-close:focus-visible { border-color:var(--border, #aebbc8); }
++.lab-graph-controls-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; margin-bottom:10px; }
++.lab-graph-controls-tabs button { border:1px solid var(--border, #bac4cc); border-radius:7px; padding:7px 4px; background:transparent; color:inherit; cursor:pointer; font:inherit; font-size:.8rem; }
++.lab-graph-controls-tabs button[aria-selected="true"] { background:var(--bg-subtle, #e9edf0); border-color:var(--accent, #5780a2); font-weight:650; }
++.lab-graph-controls-pane { display:grid; gap:9px; font-size:.83rem; }
++.lab-graph-controls-pane .hint { font-size:.76rem; line-height:1.35; margin:0; }
++.lab-graph-controls-pane .lab-graph-type-filters { margin:0; padding:8px; display:grid; gap:6px; }
++.lab-graph-controls-pane .lab-graph-type-filters legend { font-size:.8rem; }
++.lab-graph-controls-pane .lab-graph-option { display:flex; align-items:flex-start; gap:6px; margin:0; }
++.lab-graph-controls-pane .lab-graph-option input { margin-top:3px; }
++.lab-graph-controls-actions { display:grid; gap:6px; }
++.lab-graph-controls-actions .lab-btn { font-size:.8rem; white-space:normal; text-align:left; }
++.lab-graph-controls-pane details { border-top:1px solid var(--border, #ccd3d9); padding-top:6px; }
++.lab-graph-controls-pane details summary { cursor:pointer; }
++.lab-graph-controls-pane .lab-graph-hidden-items { max-height:120px; }
++.lab-graph-toasts { position:absolute; z-index:17; left:12px; bottom:12px; max-width:min(360px, calc(100% - 24px)); pointer-events:none; }
++.lab-graph-toast { padding:10px 13px; border:1px solid var(--border, #aac2b1); border-left:4px solid #47825a;
++  border-radius:9px; background:var(--surface, #fff); color:var(--text, #243443); box-shadow:0 6px 22px rgba(13,37,48,.2);
++  font-size:.85rem; line-height:1.35; overflow-wrap:anywhere; }
++.lab-graph-toast--error { border-left-color:#b94d4d; }
++@media (max-width:700px) {
++  .lab-graph-controls-popup { max-height:min(330px, calc(100% - 70px)); }
++  .lab-graph-controls-launch { right:8px; top:8px; }
++}
++@media (prefers-reduced-motion:reduce) { .lab-graph-toast { animation:none; } }
+diff --git a/public/js/lab/graphUiFeedback.js b/public/js/lab/graphUiFeedback.js
+new file mode 100644
+index 0000000..1c1f7a3
+--- /dev/null
++++ b/public/js/lab/graphUiFeedback.js
+@@ -0,0 +1,25 @@
++// Notificaciones breves exclusivamente para acciones confirmadas del visor.
++// El estado persistente sigue siendo responsabilidad de graphLayoutPersistence.js.
++const DURACION_MS = 2800;
++
++export function crearNotificadorGrafo(contenedor, { programar = setTimeout, cancelar = clearTimeout } = {}) {
++  let timer = null;
++  let destruido = false;
++  function limpiar() {
++    if (timer != null) { cancelar(timer); timer = null; }
++    contenedor?.replaceChildren();
++  }
++  return {
++    mostrar(mensaje, { error = false } = {}) {
++      if (destruido || !contenedor || !String(mensaje || '').trim()) return;
++      limpiar(); // una notificación, nunca una pila
++      const aviso = contenedor.ownerDocument.createElement('div');
++      aviso.className = `lab-graph-toast${error ? ' lab-graph-toast--error' : ''}`;
++      aviso.setAttribute('role', error ? 'alert' : 'status');
++      aviso.textContent = String(mensaje);
++      contenedor.append(aviso);
++      timer = programar(() => { timer = null; if (!destruido) contenedor.replaceChildren(); }, DURACION_MS);
++    },
++    destruir() { destruido = true; limpiar(); },
++  };
++}
+diff --git a/public/js/views/labGraphPilotView.js b/public/js/views/labGraphPilotView.js
+index 8cb1929..19a4918 100644
+--- a/public/js/views/labGraphPilotView.js
++++ b/public/js/views/labGraphPilotView.js
+@@ -8,6 +8,7 @@ import { integrarIdentidadesVisuales } from '../lab/graphConceptIdentity.js';
+ import { agruparFaqs, TIPOS_VISIBLES, estadoTiposInicial, normalizarTiposVisibles } from '../lab/graphFaqGrouping.js';
+ import { incorporarConservados, ocultarNodos } from '../lab/graphNodeVisibility.js';
+ import { huellaGrafo, claveDisposicion, leerDisposicion, guardarDisposicion, decorarAristasFocales, normalizarTituloArista, MAX_TITULO_ARISTA } from '../lab/graphLayoutPersistence.js';
++import { crearNotificadorGrafo } from '../lab/graphUiFeedback.js';
+ 
+ // Checkpoint 2: Cytoscape permanece como visor experimental; el corpus es de sólo lectura.
+ // Focos estables + expansión local reversible + inspector lateral. Sin Relate/MariaDB.
+@@ -52,7 +53,7 @@ export function createLabGraphPilotView(App) {
+   const $ = selector => el.querySelector(selector);
+   const etiqueta = id => indice.nodos.get(id)?.data.label || id;
+ 
+-  el.innerHTML = `<div class="lab__inner">
++  el.innerHTML = `<link rel="stylesheet" href="/css/lab-graph-controls-8b.css" /><div class="lab__inner">
+     <nav class="lab-nav"><a class="btn btn--ghost btn--sm" href="#/lab">← Laboratorio</a></nav>
+     <header class="lab-exp__header"><h1 class="lab-exp__title">Visor de grafos · identidad compartida</h1></header>
+     <section class="lab-card">
+@@ -66,28 +67,8 @@ export function createLabGraphPilotView(App) {
+         <select id="gv-kind" class="lab-input" disabled><option value="todos">Todos los tipos</option>${tipos.map(t => `<option value="${esc(t)}">${esc(t.replaceAll('_', ' '))}</option>`).join('')}</select>
+       </div>
+       <div id="gv-focal-controls" class="lab-graph-focal-controls">
+-        <p class="hint">Focos permanentes (máximo 5). Se muestran sus aristas entrantes y salientes, pero NO las conexiones secundarias entre vecinos hasta que las expandas.</p>
++        <div class="lab-graph-focus-heading"><strong>Focos</strong><small>Máximo cinco · los focos permanecen visibles</small></div>
+         <div id="gv-foci" class="lab-graph-foci"></div>
+-        <label class="lab-graph-option"><input id="gv-parrafos" type="checkbox" /> Mostrar párrafos (ocultos inicialmente; incorporación voluntaria)</label>
+-        <fieldset class="lab-graph-type-filters"><legend>Mostrar tipos de nodo</legend>
+-          ${TIPOS_VISIBLES.map(([t, label]) => `<label class="lab-graph-option"><input type="checkbox" data-gv-tipo="${esc(t)}" checked /> ${esc(label)}</label>`).join('')}
+-        </fieldset>
+-        <p class="hint">Las FAQ salen del nodo agrupador al desplegarlas. Las líneas del agrupador son visuales, no aristas del corpus. Los focos nunca se ocultan.</p>
+-        <div class="lab-toolbar"><button type="button" id="gv-restore-nodes" class="lab-btn lab-btn--ghost">Restaurar nodos ocultos</button>
+-          <button type="button" id="gv-clear-pins" class="lab-btn lab-btn--ghost">Quitar nodos conservados</button></div>
+-        <p id="gv-hidden-nodes" class="hint">Sin nodos ocultos manualmente.</p>
+-        <details id="gv-hidden-list"><summary>Recuperar un nodo individual</summary><div id="gv-hidden-items" class="lab-graph-hidden-items"></div></details>
+-        <label class="lab-graph-option"><input id="gv-edge-labels" type="checkbox" /> Mostrar nombres de todas las aristas (vista detallada)</label>
+-        <p class="hint">Las aristas directas entre focos están destacadas. Los títulos se ocultan inicialmente: seleccioná una arista para ponerle un título propio y mostrar solo las etiquetas que te interesen.</p>
+-        <div class="lab-toolbar">
+-          <button type="button" id="gv-save-layout" class="lab-btn">Persistir ordenamiento</button>
+-          <button type="button" id="gv-reset-layout" class="lab-btn lab-btn--ghost">Recuperar ordenamiento guardado</button>
+-        </div>
+-        <p class="hint" id="gv-filter-status">Las subunidades se mantienen en el corpus, pero no se dibujan.</p>
+-        <div class="lab-toolbar">
+-          <button type="button" id="gv-collapse-all" class="lab-btn lab-btn--ghost">Contraer todas las expansiones</button>
+-          <button type="button" id="gv-default-foci" class="lab-btn lab-btn--ghost">Restaurar tres focos iniciales</button>
+-        </div>
+       </div>
+       <form id="gv-search-form" class="lab-form">
+         <label for="gv-search">Buscar un concepto para convertirlo en foco</label>
+@@ -106,13 +87,93 @@ export function createLabGraphPilotView(App) {
+       </div>
+       <p id="gv-usage" class="hint">Doble clic sobre un vecino: expandir sus conexiones. Otro doble clic: contraer su rama. Los focos permanecen visibles. Clic simple: propiedades a la derecha; rueda: zoom; arrastrar: mover.</p>
+       <div class="lab-graph-main">
+-        <div id="gv-canvas" class="lab-graph-canvas" role="region" aria-label="Grafo interactivo de Ágora"></div>
++        <div class="lab-graph-canvas-wrap">
++          <div class="lab-graph-controls-launch">
++            <button type="button" id="gv-controls-toggle" class="lab-btn lab-btn--ghost" aria-controls="gv-controls-panel" aria-expanded="false">⚙ Controles</button>
++          </div>
++          <div id="gv-canvas" class="lab-graph-canvas" role="region" aria-label="Grafo interactivo de Ágora"></div>
++          <section id="gv-controls-panel" class="lab-graph-controls-popup" role="dialog" aria-modal="false" aria-labelledby="gv-controls-title" hidden>
++            <div class="lab-graph-controls-heading">
++              <strong id="gv-controls-title">Controles del grafo</strong>
++              <button type="button" id="gv-controls-close" class="lab-graph-controls-close" aria-label="Cerrar controles">×</button>
++            </div>
++            <div class="lab-graph-controls-tabs" role="tablist" aria-label="Secciones de controles">
++              <button type="button" role="tab" id="gv-tab-nodos" aria-controls="gv-pane-nodos" data-gv-tab="nodos" aria-selected="true" tabindex="0">Nodos</button>
++              <button type="button" role="tab" id="gv-tab-aristas" aria-controls="gv-pane-aristas" data-gv-tab="aristas" aria-selected="false" tabindex="-1">Aristas</button>
++              <button type="button" role="tab" id="gv-tab-vista" aria-controls="gv-pane-vista" data-gv-tab="vista" aria-selected="false" tabindex="-1">Vista</button>
++            </div>
++            <div id="gv-pane-nodos" data-gv-pane="nodos" role="tabpanel" aria-labelledby="gv-tab-nodos" class="lab-graph-controls-pane">
++              <label class="lab-graph-option"><input id="gv-parrafos" type="checkbox" /> Incluir párrafos</label>
++              <fieldset class="lab-graph-type-filters"><legend>Tipos visibles</legend>
++                ${TIPOS_VISIBLES.map(([t, label]) => `<label class="lab-graph-option"><input type="checkbox" data-gv-tipo="${esc(t)}" checked /> ${esc(label)}</label>`).join('')}
++              </fieldset>
++              <p class="hint">Las FAQ se despliegan desde su agrupador. Los focos no se ocultan.</p>
++              <div class="lab-graph-controls-actions">
++                <button type="button" id="gv-restore-nodes" class="lab-btn lab-btn--ghost">Restaurar nodos ocultos</button>
++                <button type="button" id="gv-clear-pins" class="lab-btn lab-btn--ghost">Quitar ramas conservadas</button>
++              </div>
++              <p id="gv-hidden-nodes" class="hint">Sin nodos ocultos manualmente.</p>
++              <details id="gv-hidden-list"><summary>Recuperar uno individualmente</summary><div id="gv-hidden-items" class="lab-graph-hidden-items"></div></details>
++              <p class="hint" id="gv-filter-status">Las subunidades permanecen fuera del diagrama.</p>
++            </div>
++            <div id="gv-pane-aristas" data-gv-pane="aristas" role="tabpanel" class="lab-graph-controls-pane" aria-labelledby="gv-tab-aristas" hidden>
++              <label class="lab-graph-option"><input id="gv-edge-labels" type="checkbox" /> Mostrar nombres de todas las aristas</label>
++              <p class="hint">Las conexiones directas entre focos se destacan. Para titular o mostrar una arista individual, seleccionála en el grafo y usá el inspector lateral.</p>
++            </div>
++            <div id="gv-pane-vista" data-gv-pane="vista" role="tabpanel" class="lab-graph-controls-pane" aria-labelledby="gv-tab-vista" hidden>
++              <div class="lab-graph-controls-actions">
++                <button type="button" id="gv-save-layout" class="lab-btn">Persistir ordenamiento</button>
++                <button type="button" id="gv-reset-layout" class="lab-btn lab-btn--ghost">Recuperar ordenamiento guardado</button>
++                <button type="button" id="gv-collapse-all" class="lab-btn lab-btn--ghost">Contraer expansiones</button>
++                <button type="button" id="gv-default-foci" class="lab-btn lab-btn--ghost">Restaurar tres focos</button>
++              </div>
++              <p class="hint">Se guardan posiciones, títulos de aristas, filtros, nodos ocultos y ramas conservadas. Solo en este navegador.</p>
++            </div>
++          </section>
++          <div id="gv-toasts" class="lab-graph-toasts" aria-live="polite" aria-atomic="true"></div>
++        </div>
+         <aside id="gv-inspector" class="lab-panel lab-graph-inspector" aria-label="Propiedades de nodos y aristas"><h3>Propiedades</h3><p>Seleccioná un nodo o una arista.</p></aside>
+       </div>
+       <p id="gv-status" role="status" class="hint">Preparando el visualizador…</p>
+     </section></div>`;
+ 
+   const status = mensaje => { if (!closed) $('#gv-status').textContent = mensaje; };
++  const notificador = crearNotificadorGrafo($('#gv-toasts'));
++  const panel = $('#gv-controls-panel');
++  const botonControles = $('#gv-controls-toggle');
++  const pestanas = [...panel.querySelectorAll('[data-gv-tab]')];
++  function seleccionarPestana(seccion, moverFoco = false) {
++    for (const tab of pestanas) {
++      const activa = tab.dataset.gvTab === seccion;
++      tab.setAttribute('aria-selected', String(activa));
++      tab.tabIndex = activa ? 0 : -1;
++      $(`#gv-pane-${tab.dataset.gvTab}`).hidden = !activa;
++      if (activa && moverFoco) tab.focus();
++    }
++  }
++  function mostrarControles(mostrar, devolverFoco = false) {
++    panel.hidden = !mostrar;
++    botonControles.setAttribute('aria-expanded', String(mostrar));
++    if (mostrar) panel.querySelector('[aria-selected="true"]').focus();
++    else if (devolverFoco) botonControles.focus();
++  }
++  botonControles.addEventListener('click', () => mostrarControles(panel.hidden));
++  $('#gv-controls-close').addEventListener('click', () => mostrarControles(false, true));
++  panel.querySelector('[role="tablist"]').addEventListener('click', e => {
++    const tab = e.target.closest('[data-gv-tab]');
++    if (tab) seleccionarPestana(tab.dataset.gvTab);
++  });
++  panel.querySelector('[role="tablist"]').addEventListener('keydown', e => {
++    const pos = pestanas.indexOf(e.target);
++    if (pos < 0 || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
++    e.preventDefault();
++    const next = e.key === 'Home' ? 0 : e.key === 'End' ? pestanas.length - 1
++      : (pos + (e.key === 'ArrowLeft' ? -1 : 1) + pestanas.length) % pestanas.length;
++    seleccionarPestana(pestanas[next].dataset.gvTab, true);
++  });
++  el.addEventListener('keydown', e => {
++    if (e.key === 'Escape' && !panel.hidden) { e.preventDefault(); mostrarControles(false, true); }
++  });
+   function renderFocos() {
+     const caja = $('#gv-foci');
+     caja.innerHTML = estado.focos.map(id => `<span class="lab-graph-focus-chip"><strong>${esc(etiqueta(id))}</strong><small>${esc(id)}</small><button type="button" data-gv-remove="${esc(id)}" title="Quitar este foco" aria-label="Quitar foco ${esc(etiqueta(id))}" ${estado.focos.length === 1 ? 'disabled' : ''}>×</button></span>`).join('');
+@@ -246,6 +307,8 @@ export function createLabGraphPilotView(App) {
+             (indice.nodos.get(e.data.source)?.data.tipo === tipo && indice.nodos.get(e.data.target)?.data.tipo === tipo));
+     const stats = estadisticasElementos(elementos);
+     $('#gv-focal-controls').hidden = !focal;
++    botonControles.hidden = !focal;
++    if (!focal && !panel.hidden) mostrarControles(false);
+     $('#gv-kind').disabled = modo !== 'todo';
+     $('#gv-hide').disabled = focal;
+     $('#gv-restore').disabled = focal;
+@@ -296,7 +359,7 @@ export function createLabGraphPilotView(App) {
+   $('#gv-fit').addEventListener('click', () => viewer?.ajustar());
+   $('#gv-hide').addEventListener('click', () => { viewer?.ocultarSeleccion(); status('Selección ocultada sólo en esta vista.'); });
+   $('#gv-restore').addEventListener('click', () => { viewer?.restaurar(); status('Elementos restaurados.'); });
+-  $('#gv-focal-controls').addEventListener('change', e => {
++  $('#gv-controls-panel').addEventListener('change', e => {
+     const input = e.target.closest('[data-gv-tipo]');
+     if (!input) return;
+     preferencias.tiposVisibles = { ...preferencias.tiposVisibles, [input.dataset.gvTipo]: input.checked };
+@@ -317,6 +380,7 @@ export function createLabGraphPilotView(App) {
+     const ok = guardarDisposicion(almacenamiento, claveActual(), preferencias);
+     status(ok ? 'Ordenamiento, títulos, nodos ocultos y ramas conservadas guardados para estos focos.'
+       : 'No se pudo acceder al almacenamiento local. El ordenamiento no fue guardado.');
++    notificador.mostrar(ok ? 'Disposición guardada' : 'No se pudo guardar la disposición', { error: !ok });
+   });
+   $('#gv-reset-layout').addEventListener('click', () => {
+     leerPreferencias();
+@@ -413,7 +477,11 @@ export function createLabGraphPilotView(App) {
+   $('#gv-default-foci').addEventListener('click', () => seleccionarFocos(predeterminados));
+   $('#gv-foci').addEventListener('click', e => {
+     const b = e.target.closest('[data-gv-remove]');
+-    if (b && estado.focos.length > 1) seleccionarFocos(estado.focos.filter(id => id !== b.dataset.gvRemove));
++    if (b && estado.focos.length > 1) {
++      const nombre = etiqueta(b.dataset.gvRemove);
++      seleccionarFocos(estado.focos.filter(id => id !== b.dataset.gvRemove));
++      notificador.mostrar(`Foco «${nombre}» eliminado`);
++    }
+   });
+   function presentarResultados(matches) {
+     $('#gv-matches').innerHTML = matches.map(n => `<div class="lab-graph-search-result"><span><strong>${esc(n.etiqueta)}</strong><small>${esc(n.uid)}</small></span>
+@@ -449,12 +517,14 @@ export function createLabGraphPilotView(App) {
+       const id = agregar.dataset.gvAdd;
+       if (estado.focos.includes(id)) { status('Ese nodo ya forma parte de los focos.'); return; }
+       if (estado.focos.length >= 5) { status('Máximo cinco focos. Quitá uno antes de añadir otro.'); return; }
++      const nombre = etiqueta(id);
+       seleccionarFocos([...estado.focos, id]);
++      notificador.mostrar(`Foco «${nombre}» agregado`);
+     }
+   }
+   $('#gv-matches').addEventListener('click', eventoFocos);
+   $('#gv-inspector').addEventListener('click', eventoFocos);
+   if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => { if (!closed) void dibujar(); });
+   else setTimeout(() => { if (!closed) void dibujar(); }, 0);
+-  return { el, destroy() { closed = true; ++generation; viewer?.destruir(); viewer = null; } };
++  return { el, destroy() { closed = true; ++generation; notificador.destruir(); viewer?.destruir(); viewer = null; } };
+ }
+diff --git a/public/scripts/check-visor-controles-8b.mjs b/public/scripts/check-visor-controles-8b.mjs
+new file mode 100644
+index 0000000..cb694d7
+--- /dev/null
++++ b/public/scripts/check-visor-controles-8b.mjs
+@@ -0,0 +1,65 @@
++// Checkpoint 8B: contrato del panel compacto y toasts no invasivos.
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++import path from 'node:path';
++import { crearNotificadorGrafo } from '../js/lab/graphUiFeedback.js';
++
++const dir = path.dirname(fileURLToPath(import.meta.url));
++const view = readFileSync(path.join(dir, '../js/views/labGraphPilotView.js'), 'utf8');
++const css = readFileSync(path.join(dir, '../css/lab-graph-controls-8b.css'), 'utf8');
++const cuenta = (s, x) => (s.match(new RegExp(x, 'g')) || []).length;
++const ids = ['gv-controls-toggle', 'gv-controls-panel', 'gv-controls-close', 'gv-toasts',
++  'gv-pane-nodos', 'gv-pane-aristas', 'gv-pane-vista', 'gv-parrafos', 'gv-edge-labels',
++  'gv-save-layout', 'gv-reset-layout', 'gv-restore-nodes', 'gv-clear-pins',
++  'gv-collapse-all', 'gv-default-foci', 'gv-filter-status', 'gv-hidden-items'];
++for (const id of ids) assert.equal(cuenta(view, `id="${id}"`), 1, `ID único para ${id}`);
++for (const name of ['nodos', 'aristas', 'vista']) {
++  assert.match(view, new RegExp(`data-gv-tab="${name}"`));
++  assert.match(view, new RegExp(`data-gv-pane="${name}"`));
++}
++assert.match(view, /aria-modal="false"/); // el grafo nunca queda bloqueado
++assert.match(view, /aria-expanded="false"/);
++assert.match(view, /\['ArrowLeft', 'ArrowRight', 'Home', 'End'\]/);
++assert.match(view, /e\.key === 'Escape'/);
++assert.match(view, /!focal && !panel\.hidden/);
++assert.match(view, /notificador\.destruir\(\)/);
++assert.equal(cuenta(view, 'notificador\\.mostrar\\('), 3, 'solo guardar, añadir, quitar foco');
++assert.match(css, /lab-graph-controls-popup\[hidden\]/);
++assert.match(css, /lab-graph-controls-pane\[hidden\]/);
++assert.match(css, /max-height:/);
++
++// Prueba conductual del notificador sin dependencias de browser ni reloj real.
++const eventos = [];
++const timers = new Map();
++let nextTimer = 0;
++const container = {
++  items: [],
++  ownerDocument: { createElement: () => ({ attributes: {}, setAttribute(k, v) { this.attributes[k] = v; } }) },
++  replaceChildren() { this.items = []; eventos.push('limpiar'); },
++  append(n) { this.items.push(n); eventos.push('mostrar'); },
++};
++const notificador = crearNotificadorGrafo(container, {
++  programar(fn, ms) { assert.equal(ms, 2800); timers.set(++nextTimer, fn); return nextTimer; },
++  cancelar(id) { timers.delete(id); },
++});
++notificador.mostrar('Foco «Areté» agregado');
++assert.equal(container.items.length, 1);
++assert.equal(container.items[0].textContent, 'Foco «Areté» agregado');
++assert.equal(container.items[0].attributes.role, 'status');
++notificador.mostrar('Disposición guardada');
++assert.equal(container.items.length, 1, 'no se apilan toasts');
++assert.equal(container.items[0].textContent, 'Disposición guardada');
++assert.equal(timers.size, 1, 'no se acumulan temporizadores');
++const [pendienteId, pendienteFn] = [...timers.entries()][0];
++timers.delete(pendienteId); pendienteFn();
++assert.equal(container.items.length, 0, 'desaparece sin intervención');
++notificador.mostrar('Fallo al guardar', { error: true });
++assert.equal(container.items[0].attributes.role, 'alert');
++assert.match(container.items[0].className, /--error/);
++notificador.destruir();
++assert.equal(timers.size, 0, 'destruir limpia el temporizador');
++assert.equal(container.items.length, 0);
++notificador.mostrar('No debe mostrarse');
++assert.equal(container.items.length, 0);
++console.log('OK: panel flotante con tres pestañas, IDs existentes, cierre accesible y toasts limitados a operaciones confirmadas.');

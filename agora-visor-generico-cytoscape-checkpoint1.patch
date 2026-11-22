@@ -1,0 +1,403 @@
+diff --git a/public/js/main.js b/public/js/main.js
+--- a/public/js/main.js
++++ b/public/js/main.js
+@@ -15,6 +15,7 @@
+ import { createLabView, createLabCatalogView, EXPERIMENTS } from './views/lab.js';
+ import { createLabOrientadorView } from './views/labOrientadorView.js';
+ import { createLabSemanticExplorerView } from './views/labSemanticExplorerView.js';
++import { createLabGraphPilotView } from './views/labGraphPilotView.js';
+ 
+ const App = {
+   S: null,
+@@ -64,6 +65,7 @@
+     ...Object.fromEntries(Object.keys(EXPERIMENTS).map(id => [`/lab/${id}`, () => createLabView(App, { exp: id })])),
+     '/lab/orientador': () => createLabOrientadorView(App),
+     '/lab/semantica': () => createLabSemanticExplorerView(App),
++    '/lab/visor-grafos': () => createLabGraphPilotView(App),
+   },
+   notFound: () => createLandingView(App),
+   onChange: (path) => {
+diff --git a/public/js/views/lab.js b/public/js/views/lab.js
+--- a/public/js/views/lab.js
++++ b/public/js/views/lab.js
+@@ -9,6 +9,11 @@
+ 
+ // Catálogo de experimentos para la maqueta grid
+ export const EXPERIMENTS = Object.freeze({
++  visor_grafos: {
++    id: 'visor-grafos', tab: 6, title: 'Visor universal de grafos',
++    desc: 'Checkpoint: probá la navegación interactiva sobre la proyección semántica de Ágora.',
++    tag: 'Laboratorio experimental', icon: '🕸️', featured: false
++  },
+   semantica: {
+     id: 'semantica', tab: 5, title: 'Explorador semántico',
+     desc: 'Inspeccioná árboles, relaciones, tags y FAQ; exportá una proyección Cypher para Relate.',
+diff --git a/public/css/app.css b/public/css/app.css
+--- a/public/css/app.css
++++ b/public/css/app.css
+@@ -1294,3 +1294,10 @@
+ .lab-semantic-svg { width: 100%; min-width: 440px; max-height: 380px; }
+ .lab-semantic-table-scroll { overflow: auto; }
+ .lab-semantic-table { width: 100%; }
++
++/* Laboratorio: visor Cytoscape. El grafo se dibuja en canvas, sin SVG artesanal. */
++.lab-graph-canvas { width: 100%; min-height: 570px; border: 1px solid var(--border, #abb6c0); border-radius: 12px; background: var(--bg-elevated, #f7f9fb); touch-action: none; }
++.lab-graph-properties { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(0, 3fr); gap: 8px 12px; overflow-wrap: anywhere; }
++.lab-graph-properties dt { font-weight: 700; }
++.lab-graph-properties dd { margin: 0; }
++@media (max-width: 700px) { .lab-graph-canvas { min-height: 420px; } .lab-graph-properties { grid-template-columns: 1fr; } }
+diff --git a/public/js/lab/semanticGraphAdapter.js b/public/js/lab/semanticGraphAdapter.js
+new file mode 100644
+--- /dev/null
++++ b/public/js/lab/semanticGraphAdapter.js
+@@ -0,0 +1,50 @@
++// Adaptador independiente del renderer. No altera la proyección ni infiere aristas.
++export function proyeccionAElementos(proyeccion, { tipos = null } = {}) {
++  const permitido = tipos ? new Set(tipos) : null;
++  const nodes = (proyeccion?.nodes || []).filter(n => !permitido || permitido.has(n.tipo));
++  const ids = new Set(nodes.map(n => n.uid));
++  const edges = (proyeccion?.edges || []).filter(e => ids.has(e.desde) && ids.has(e.hacia));
++  return [
++    ...nodes.map(n => ({ group: 'nodes', data: {
++      id: n.uid, label: n.etiqueta, tipo: n.tipo, fuente: n.fuente,
++      griego: n.griego, referencia: n.referencia, voz: n.voz,
++    } })),
++    ...edges.map(e => ({ group: 'edges', data: {
++      id: e.uid, source: e.desde, target: e.hacia, tipo: e.tipo,
++      relacion: e.relacion, fuente: e.fuente, referencia: e.referencia,
++      voz: e.voz, sentidoReferido: e.sentidoReferido, rol: e.rol,
++    } })),
++  ];
++}
++
++// Vista resumida: cada nodo representa UNA CLASE, nunca un concepto filosófico.
++// Los vínculos agrupan ocurrencias documentales y NO expresan una nueva relación.
++export function resumenClasesAElementos(proyeccion) {
++  const counts = new Map();
++  for (const n of proyeccion?.nodes || []) counts.set(n.tipo, (counts.get(n.tipo) || 0) + 1);
++  const index = new Map((proyeccion?.nodes || []).map(n => [n.uid, n.tipo]));
++  const enlaces = new Map();
++  for (const e of proyeccion?.edges || []) {
++    const desde = index.get(e.desde), hacia = index.get(e.hacia);
++    if (!desde || !hacia) continue;
++    const key = JSON.stringify([desde, hacia, e.tipo]);
++    enlaces.set(key, (enlaces.get(key) || 0) + 1);
++  }
++  return [
++    ...[...counts].map(([tipo, cantidad]) => ({ group: 'nodes', data: {
++      id: `clase:${tipo}`, tipo, cantidad, label: `${tipo.replaceAll('_', ' ')} (${cantidad})`, resumen: true,
++    } })),
++    ...[...enlaces].map(([key, cantidad], i) => {
++      const [desde, hacia, relacion] = JSON.parse(key);
++      return { group: 'edges', data: {
++        id: `grupo:${i}`, source: `clase:${desde}`, target: `clase:${hacia}`,
++        tipo: relacion, cantidad, resumen: true,
++      } };
++    }),
++  ];
++}
++
++export function estadisticasElementos(elementos) {
++  return { nodos: elementos.filter(e => e.group === 'nodes').length,
++    aristas: elementos.filter(e => e.group === 'edges').length };
++}
+diff --git a/public/js/lab/cytoscapeLoader.js b/public/js/lab/cytoscapeLoader.js
+new file mode 100644
+--- /dev/null
++++ b/public/js/lab/cytoscapeLoader.js
+@@ -0,0 +1,18 @@
++// Sólo se carga al abrir el visor. El fichero local se prepara desde el paquete npm.
++let pending = null;
++export function cargarCytoscape() {
++  if (typeof window === 'undefined') return Promise.reject(new Error('El visor requiere navegador.'));
++  if (typeof window.cytoscape === 'function') return Promise.resolve(window.cytoscape);
++  if (pending) return pending;
++  pending = new Promise((resolve, reject) => {
++    const script = document.createElement('script');
++    script.src = '/vendor/cytoscape.min.js';
++    script.async = true;
++    script.onload = () => typeof window.cytoscape === 'function'
++      ? resolve(window.cytoscape)
++      : reject(new Error('La biblioteca Cytoscape cargó sin exponer su API.'));
++    script.onerror = () => reject(new Error('Falta /public/vendor/cytoscape.min.js. Consultá docs/LAB_VISOR_GENERICO_V1.md.'));
++    document.head.append(script);
++  }).catch(e => { pending = null; throw e; });
++  return pending;
++}
+diff --git a/public/js/lab/cytoscapeRenderer.js b/public/js/lab/cytoscapeRenderer.js
+new file mode 100644
+--- /dev/null
++++ b/public/js/lab/cytoscapeRenderer.js
+@@ -0,0 +1,66 @@
++// Único renderer, reutilizable con CUALQUIER colección de elementos Cytoscape.
++import { cargarCytoscape } from './cytoscapeLoader.js';
++
++export async function crearVisorGrafo(contenedor, elementos, { agrupado = false, alSeleccionar = () => {}, alOcultar = () => {} } = {}) {
++  const cytoscape = await cargarCytoscape();
++  const cy = cytoscape({
++    container: contenedor,
++    elements: elementos,
++    wheelSensitivity: 0.23,
++    minZoom: 0.12,
++    maxZoom: 3.5,
++    layout: agrupado
++      ? { name: 'circle', animate: false, padding: 35 }
++      : { name: 'cose', animate: false, randomize: true, numIter: 450, nodeRepulsion: () => 260000,
++          idealEdgeLength: () => 100, padding: 45 },
++    style: [
++      { selector: 'node', style: {
++        'background-color': '#dce7ec', 'border-color': '#7193a6', 'border-width': 1.3,
++        'label': 'data(label)', 'color': '#24394a', 'font-size': agrupado ? 12 : 9,
++        'text-wrap': 'ellipsis', 'text-max-width': agrupado ? 140 : 95,
++        'text-valign': 'center', 'text-halign': 'center',
++        'width': agrupado ? 138 : 76, 'height': agrupado ? 54 : 34,
++        'shape': 'round-rectangle', 'text-outline-width': 0,
++      } },
++      { selector: 'node[tipo = "nodo_funcional"]', style: { 'background-color': '#d5eadf' } },
++      { selector: 'node[tipo = "faq"]', style: { 'background-color': '#f4e6bf' } },
++      { selector: 'node[tipo = "subunidad"]', style: { 'background-color': '#e4dcf0' } },
++      { selector: 'edge', style: {
++        'curve-style': 'bezier', 'width': 1.2, 'line-color': '#99a8b5',
++        'target-arrow-shape': 'triangle', 'target-arrow-color': '#99a8b5',
++        'arrow-scale': 0.7, 'opacity': 0.75,
++      } },
++      { selector: ':selected', style: {
++        'border-color': '#b36d20', 'border-width': 3, 'line-color': '#b36d20',
++        'target-arrow-color': '#b36d20', 'opacity': 1,
++      } },
++    ],
++  });
++  let previous = { id: null, at: 0 };
++  cy.on('tap', 'node', evt => {
++    const item = evt.target;
++    const now = Date.now();
++    // El doble toque/clic oculta sólo la instancia visual, jamás el corpus.
++    if (item.id() === previous.id && now - previous.at < 340) {
++      item.hide(); previous = { id: null, at: 0 }; alOcultar(item.data()); return;
++    }
++    previous = { id: item.id(), at: now };
++    alSeleccionar({ clase: 'nodo', ...item.data() });
++  });
++  cy.on('tap', 'edge', evt => alSeleccionar({ clase: 'arista', ...evt.target.data() }));
++  cy.on('tap', evt => { if (evt.target === cy) alSeleccionar(null); });
++  return {
++    cy,
++    enfocar(id) {
++      const node = cy.getElementById(id);
++      if (node.empty()) return false;
++      node.show(); node.select(); cy.animate({ center: { eles: node }, zoom: Math.max(cy.zoom(), 1) }, { duration: 250 });
++      alSeleccionar({ clase: 'nodo', ...node.data() });
++      return true;
++    },
++    ocultarSeleccion() { const s = cy.$(':selected'); s.hide(); alOcultar(null); },
++    restaurar() { cy.elements().show(); },
++    ajustar() { cy.fit(undefined, 35); },
++    destruir() { cy.destroy(); },
++  };
++}
+diff --git a/public/js/views/labGraphPilotView.js b/public/js/views/labGraphPilotView.js
+new file mode 100644
+--- /dev/null
++++ b/public/js/views/labGraphPilotView.js
+@@ -0,0 +1,111 @@
++import { esc } from '../ui.js';
++import { buildSemanticProjection, buscarNodosSemanticos } from '../lab/semanticProjection.js';
++import { proyeccionAElementos, resumenClasesAElementos, estadisticasElementos } from '../lab/semanticGraphAdapter.js';
++import { crearVisorGrafo } from '../lab/cytoscapeRenderer.js';
++
++// Checkpoint 1: un visor genérico; todavía no modifica el Orientador ni las valoraciones didácticas.
++export function createLabGraphPilotView(App) {
++  const el = document.createElement('div');
++  el.className = 'view-lab scrollable has-scroll';
++  const projection = buildSemanticProjection(App?.S || {});
++  let modo = 'grupos';
++  let tipo = 'todos';
++  let viewer = null;
++  let closed = false;
++  let generation = 0;
++  const kinds = Object.keys(projection.stats.porTipo);
++  el.innerHTML = `<div class="lab__inner">
++    <nav class="lab-nav"><a class="btn btn--ghost btn--sm" href="#/lab">← Laboratorio</a></nav>
++    <header class="lab-exp__header"><h1 class="lab-exp__title">Visor genérico de grafos · Checkpoint 1</h1></header>
++    <section class="lab-card">
++      <h2>Inventario y exploración libre</h2>
++      <p class="hint">Copia de lectura del corpus: ${projection.stats.nodos} nodos, ${projection.stats.aristas} vínculos, ${projection.issues.length} incidencias. La dirección de las flechas representa la orientación documental; no implica causalidad.</p>
++      <div class="lab-toolbar">
++        <button id="gv-mode" type="button" class="lab-btn">Mostrar universo completo</button>
++        <label for="gv-kind">Tipo de nodo</label>
++        <select id="gv-kind" class="lab-input"><option value="todos">Todos</option>${kinds.map(k => `<option value="${esc(k)}">${esc(k.replaceAll('_',' '))}</option>`).join('')}</select>
++        <button id="gv-fit" type="button" class="lab-btn lab-btn--ghost">Ajustar vista</button>
++        <button id="gv-hide" type="button" class="lab-btn lab-btn--ghost">Ocultar selección</button>
++        <button id="gv-restore" type="button" class="lab-btn lab-btn--ghost">Restaurar ocultos</button>
++      </div>
++      <form id="gv-search-form" class="lab-form">
++        <label for="gv-search">Buscar y enfocar nodo</label>
++        <input id="gv-search" class="lab-input" type="search" placeholder="phusis, arete, eudaimonia…" />
++        <button type="submit" class="lab-btn">Encontrar</button>
++      </form>
++      <div id="gv-matches" class="lab-help"></div>
++      <p class="hint">Arrastrá un nodo para desplazarlo. Arrastrá el fondo para mover el grafo. Rueda para zoom. Clic para inspeccionar; doble clic para ocultar un nodo. Eliminar de la vista no modifica el corpus.</p>
++      <div id="gv-canvas" class="lab-graph-canvas" role="region" aria-label="Grafo interactivo de Ágora"></div>
++      <p id="gv-status" role="status" class="hint">Preparando el visualizador…</p>
++      <section id="gv-inspector" class="lab-panel" aria-label="Detalles de la selección"><h3>Selección</h3><p>Seleccioná un nodo o una arista para examinar sus propiedades.</p></section>
++    </section></div>`;
++  const $ = sel => el.querySelector(sel);
++  const status = text => { if (!closed) $('#gv-status').textContent = text; };
++  function inspeccionar(item) {
++    if (closed) return;
++    const out = $('#gv-inspector');
++    if (!item) { out.innerHTML = '<h3>Selección</h3><p>Seleccioná un nodo o arista.</p>'; return; }
++    // No se serializan datos ajenos al corpus como HTML ejecutable.
++    const attrs = Object.entries(item).filter(([k,v]) => !['id','label','clase'].includes(k) && v != null && v !== '');
++    out.innerHTML = `<h3>${esc(item.label || item.tipo || item.clase)}</h3><p><strong>ID:</strong> ${esc(item.id || '—')} · ${esc(item.clase)}</p><dl class="lab-graph-properties">${attrs.map(([k,v]) => `<dt>${esc(k)}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>`;
++    if (item.clase === 'nodo' && item.resumen) {
++      const button = document.createElement('button');
++      button.type = 'button'; button.className = 'lab-btn lab-btn--ghost';
++      button.textContent = `Explorar sólo ${item.tipo}`;
++      button.addEventListener('click', () => { modo = 'todo'; tipo = item.tipo; $('#gv-kind').value = tipo; dibujar(); });
++      out.append(button);
++    }
++  }
++  async function dibujar() {
++    const ticket = ++generation;
++    viewer?.destruir(); viewer = null;
++    $('#gv-canvas').replaceChildren();
++    const agrupado = modo === 'grupos';
++    const elements = agrupado ? resumenClasesAElementos(projection)
++      : proyeccionAElementos(projection, { tipos: tipo === 'todos' ? null : [tipo] });
++    const stats = estadisticasElementos(elements);
++    $('#gv-mode').textContent = agrupado ? 'Mostrar universo completo' : 'Vista por categorías';
++    $('#gv-kind').disabled = agrupado;
++    status(`Cargando ${stats.nodos} nodos y ${stats.aristas} vínculos…`);
++    try {
++      const instance = await crearVisorGrafo($('#gv-canvas'), elements, {
++        agrupado,
++        alSeleccionar: inspeccionar,
++        alOcultar: () => status('Nodo ocultado sólo en esta vista. Podés restaurarlo.'),
++      });
++      if (closed || ticket !== generation) { instance.destruir(); return; }
++      viewer = instance;
++      status(`${stats.nodos} nodos · ${stats.aristas} vínculos visibles inicialmente. ${agrupado ? 'Vista agregada por tipos, no por conceptos.' : 'Universo documental; se conservan las aristas originales.'}`);
++    } catch (error) {
++      if (closed || ticket !== generation) return;
++      status(`No se pudo cargar el visor: ${error.message}`);
++    }
++  }
++  $('#gv-mode').addEventListener('click', () => { modo = modo === 'grupos' ? 'todo' : 'grupos'; tipo = 'todos'; $('#gv-kind').value = tipo; dibujar(); });
++  $('#gv-kind').addEventListener('change', e => { tipo = e.target.value; dibujar(); });
++  $('#gv-fit').addEventListener('click', () => viewer?.ajustar());
++  $('#gv-hide').addEventListener('click', () => { viewer?.ocultarSeleccion(); status('Selección ocultada en la vista.'); });
++  $('#gv-restore').addEventListener('click', () => { viewer?.restaurar(); status('Elementos restaurados.'); });
++  $('#gv-search-form').addEventListener('submit', e => {
++    e.preventDefault();
++    const term = $('#gv-search').value.trim();
++    const matches = buscarNodosSemanticos(projection, term, 20);
++    $('#gv-matches').innerHTML = matches.map(n => `<button class="lab-help__item" type="button" data-gv-target="${esc(n.uid)}">${esc(n.etiqueta)} · ${esc(n.tipo)}</button>`).join('') || '<p class="hint">Sin coincidencias.</p>';
++  });
++  $('#gv-matches').addEventListener('click', async e => {
++    const button = e.target.closest('[data-gv-target]');
++    if (!button || !el.contains(button)) return;
++    const id = button.dataset.gvTarget;
++    const node = projection.nodes.find(n => n.uid === id);
++    if (!node) return;
++    if (modo !== 'todo' || (tipo !== 'todos' && tipo !== node.tipo)) {
++      modo = 'todo'; tipo = 'todos'; $('#gv-kind').value = tipo;
++      await dibujar();
++    }
++    if (viewer?.enfocar(id)) status(`Foco visual: ${node.etiqueta} (${node.uid}).`);
++  });
++  // El router monta la vista después de invocar esta factory. Dibujar con el contenedor ya visible.
++  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => { if (!closed) void dibujar(); });
++  else setTimeout(() => { if (!closed) void dibujar(); }, 0);
++  return { el, destroy() { closed = true; ++generation; viewer?.destruir(); viewer = null; } };
++}
+diff --git a/public/scripts/preparar-cytoscape.mjs b/public/scripts/preparar-cytoscape.mjs
+new file mode 100644
+--- /dev/null
++++ b/public/scripts/preparar-cytoscape.mjs
+@@ -0,0 +1,14 @@
++// Copia la distribución y la licencia del paquete npm previamente instalado.
++// Se ejecuta desde la raíz del repositorio con Node.js, sin añadir una dependencia al servidor.
++import { copyFile, mkdir, readFile } from 'node:fs/promises';
++import { fileURLToPath } from 'node:url';
++import { dirname, resolve } from 'node:path';
++const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
++const from = resolve(root, 'node_modules/cytoscape');
++const pkg = JSON.parse(await readFile(resolve(from, 'package.json'), 'utf8'));
++if (pkg.version !== '3.34.4') throw new Error(`Se esperaba Cytoscape 3.34.4; instalado: ${pkg.version}`);
++const to = resolve(root, 'vendor');
++await mkdir(to, { recursive: true });
++await copyFile(resolve(from, 'dist/cytoscape.min.js'), resolve(to, 'cytoscape.min.js'));
++await copyFile(resolve(from, 'LICENSE'), resolve(to, 'CYTOSCAPE-LICENSE.txt'));
++console.log(`OK: Cytoscape ${pkg.version} copiado a public/vendor/ con licencia MIT.`);
+diff --git a/public/scripts/check-visor-generico.mjs b/public/scripts/check-visor-generico.mjs
+new file mode 100644
+--- /dev/null
++++ b/public/scripts/check-visor-generico.mjs
+@@ -0,0 +1,21 @@
++import assert from 'node:assert/strict';
++import { buildSemanticProjection } from '../js/lab/semanticProjection.js';
++import { proyeccionAElementos, resumenClasesAElementos, estadisticasElementos } from '../js/lab/semanticGraphAdapter.js';
++const g = buildSemanticProjection({
++  N: { phusis: { label: 'Naturaleza', path: [] }, techne: { label: 'Técnica', path: ['phusis'] } },
++  FN: { phusis: { label: 'Naturaleza funcional', remite_a: ['phusis#principio'] } },
++  FE: [{ de: 'phusis', a: 'phusis', rel: 'es', voz: 'nuestra' }],
++});
++const els = proyeccionAElementos(g);
++assert.deepEqual(estadisticasElementos(els), { nodos: g.stats.nodos, aristas: g.stats.aristas });
++assert.ok(els.some(e => e.group === 'edges' && e.data.tipo === 'remision_editorial'
++  && e.data.source === 'nodo_funcional:phusis' && e.data.target === 'concepto_estatico:phusis'));
++assert.equal(els.filter(e => e.group === 'nodes' && e.data.id.endsWith(':phusis')).length, 2);
++assert.ok(els.filter(e => e.group === 'nodes' && e.data.tipo === 'concepto_estatico').length === 2);
++assert.deepEqual(estadisticasElementos(proyeccionAElementos(g, { tipos: ['nodo_funcional'] })), { nodos: 1, aristas: 1 });
++const groups = resumenClasesAElementos(g);
++assert.equal(groups.filter(e => e.group === 'nodes').length, 2);
++assert.equal(groups.filter(e => e.group === 'nodes').reduce((n,e) => n+e.data.cantidad, 0), g.nodes.length);
++assert.equal(groups.filter(e => e.group === 'edges').reduce((n,e) => n+e.data.cantidad, 0), g.edges.length);
++assert.ok(!groups.some(e => e.group === 'edges' && e.data.source.startsWith('concepto_estatico:')), 'los enlaces agrupados no son conceptos');
++console.log('OK: adaptador genérico de grafo, identidad, dirección, filtros y agregación sin pérdida de conteos.');
+diff --git a/docs/LAB_VISOR_GENERICO_V1.md b/docs/LAB_VISOR_GENERICO_V1.md
+new file mode 100644
+--- /dev/null
++++ b/docs/LAB_VISOR_GENERICO_V1.md
+@@ -0,0 +1,40 @@
++# Ágora — Checkpoint 1: visor genérico de grafos (Cytoscape.js)
++
++## Propósito
++
++Probar un solo renderer para **cualquier** proyección `{nodes, edges}` de Ágora, sin utilizar Relate/Neo4j, migrar MariaDB ni alterar el Orientador V2. Ruta `/#/lab/visor-grafos` desde el Laboratorio. La fuente sigue siendo `/api/contenido`; el visor es estrictamente de lectura.
++
++## Instalación local (Windows / Git Bash / PowerShell)
++
++Desde la raíz del proyecto:
++
++```bash
++npm --prefix public install --no-save --ignore-scripts cytoscape@3.34.4
++node public/scripts/preparar-cytoscape.mjs
++node public/scripts/check-visor-generico.mjs
++npm --prefix public run test:views
++```
++
++El segundo comando copia **el bundle minificado y la licencia MIT** a `public/vendor`. Este último directorio debe incluirse en el commit para que Ágora funcione sin conexión. La versión está fijada en 3.34.4 y se verifica antes de copiar. Si falta el bundle, la vista explica cómo instalarlo; el resto de Ágora sigue funcionando.
++
++## Prueba de uso
++
++1. Abrir `/#/lab/visor-grafos`. La vista inicial está **agregada por tipo** para evitar una maraña de 1.981 aristas de entrada.
++2. Elegir «Mostrar universo completo»; se renderizan todos los nodos y vínculos de la proyección. Usar zoom, paneo y arrastre de un nodo.
++3. Seleccionar un nodo o una arista para inspeccionar el identificador y procedencia. Doble toque/clic sobre nodo: ocultar en este visor; «Restaurar ocultos» para verlo nuevamente.
++4. Buscar `phusis`, seleccionar el resultado y comprobar que el visor pasa al universo completo y centra el nodo hallado. La identidad está separada: `concepto_estatico:phusis` y `nodo_funcional:phusis` siguen siendo entidades distintas.
++5. Filtrar por un tipo de nodo y volver a «Todos». En una vista filtrada, las aristas cuyos extremos no están visibles también se ocultan; no se borran de la proyección.
++6. Cerrar la ruta y volver: no hay ediciones ni ocultamiento persistente.
++
++## Criterios del checkpoint
++
++- Conteo del modo completo coincide con el inventario (salvo cambios en los datos de origen).
++- Distingue visualización agregada de grafo original.
++- Permite arrastrar nodos, mover lienzo, zoom, inspeccionar, ocultar y restaurar sin tocar los datos.
++- Adaptador `semanticGraphAdapter.js` no depende de Cytoscape ni del navegador y tiene pruebas.
++- Librería se carga sólo en el Laboratorio; errores de instalación no rompen rutas existentes.
++- **No implementado aún:** separación definitiva en Inventario / Vecindad, persistencia de poda didáctica, control de roles, búsquedas Cypher, comparación semántica o editor de grafos.
++
++## Nota de diseño
++
++En el resumen por clases, un vínculo representa un **recuento** de vínculos reales entre dos tipos de nodos. No representa una nueva afirmación filosófica ni tiene la semántica de cada arista individual. En el universo completo, las flechas corresponden a las direcciones registradas en la proyección.

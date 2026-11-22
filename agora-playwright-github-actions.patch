@@ -1,0 +1,270 @@
+diff --git a/.github/workflows/browser-e2e.yml b/.github/workflows/browser-e2e.yml
+new file mode 100644
+index 0000000..64d4067
+--- /dev/null
++++ b/.github/workflows/browser-e2e.yml
+@@ -0,0 +1,38 @@
++name: Ágora · navegador (Playwright)
++
++on:
++  pull_request:
++  push:
++    branches: [main]
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++jobs:
++  navegador:
++    runs-on: ubuntu-latest
++    timeout-minutes: 15
++    steps:
++      - name: Obtener código
++        uses: actions/checkout@v4
++      - name: Configurar Node
++        uses: actions/setup-node@v4
++        with:
++          node-version: '22'
++      - name: Instalar dependencias E2E
++        run: npm install --prefix e2e --no-audit --no-fund
++      - name: Instalar Chromium
++        run: npx --prefix e2e playwright install --with-deps chromium
++      - name: Ejecutar pruebas de navegador
++        run: npm --prefix e2e test
++      - name: Guardar resultados si falla
++        if: failure()
++        uses: actions/upload-artifact@v4
++        with:
++          name: playwright-resultados
++          path: |
++            e2e/playwright-report/
++            e2e/test-results/
++          retention-days: 7
++          if-no-files-found: ignore
+diff --git a/docs/PRUEBAS_NAVEGADOR.md b/docs/PRUEBAS_NAVEGADOR.md
+new file mode 100644
+index 0000000..5363694
+--- /dev/null
++++ b/docs/PRUEBAS_NAVEGADOR.md
+@@ -0,0 +1,22 @@
++# Ágora: pruebas automáticas de navegador
++
++Estas pruebas validan la **SPA real** con un corpus pequeño y ficticio. El servidor `e2e/server.mjs` entrega los archivos de `public/` y simula dos endpoints de solo lectura (`/api/contenido` y `/api/texto/EN_libro1_v8.txt`). **Nunca accede a MariaDB ni necesita credenciales.**
++
++## Ejecución local opcional
++
++Desde la raíz del repositorio:
++
++```bash
++npm install --prefix e2e
++npx --prefix e2e playwright install chromium
++npm --prefix e2e test
++```
++
++En GitHub, el workflow `.github/workflows/browser-e2e.yml` se ejecuta en Pull Requests, pushes a `main` y manualmente desde Actions. Prueba Chromium en escritorio (1440×900) y móvil (390×844), cubriendo cinco vistas, FAQ, desmontaje de Chat y texto bilingüe de muestra.
++
++## Alcance y limitaciones
++
++- Las aserciones comprueban el HTML y los eventos del navegador, pero **no** validan la conexión real Express–MariaDB, permisos editoriales ni contenido filológico.
++- No hay publicación ni escritura al corpus. Las pruebas SQL existentes siguen siendo complementarias.
++- Si falla una prueba en GitHub, descargar el artefacto `playwright-resultados` para capturas y trazas.
++- Para añadir pruebas reales del backend haría falta un entorno aislado adicional; **no** apuntar estas pruebas a la base `aristotle`.
+diff --git a/e2e/fixtures.mjs b/e2e/fixtures.mjs
+new file mode 100644
+index 0000000..62865ea
+--- /dev/null
++++ b/e2e/fixtures.mjs
+@@ -0,0 +1,22 @@
++// Corpus mínimo y ficticio. No accede a MariaDB ni contiene traducciones reales.
++export const contenido = {
++  tags: {
++    version: 'E2E fixture',
++    unidades: [],
++    faqs: [{ id: 'faq-demo', pregunta: '¿Qué es el bien?' }],
++    conceptos: [], pilares: [], claves: [], definiciones: [], parrafos: [],
++    mapa: { super_unidades: [], libro_tagueado: 'I' },
++  },
++  funcional: { categorias: [], aristas: [] },
++  estatico: { raices: [] },
++  manual: { por_concepto: {}, por_arista: {} },
++  argumentos: { argumentos: {} },
++  trayectos: { trayectos: [] },
++};
++
++export const texto = [
++  '1',
++  '{"parrafo_nro":1}',
++  'Toda acción humana tiende a algún bien.',
++  '1094a [1] Πᾶσα τέχνη καὶ πᾶσα μέθοδος ἀγαθοῦ τινὸς ἐφίεσθαι δοκεῖ.',
++].join('\n');
+diff --git a/e2e/package.json b/e2e/package.json
+new file mode 100644
+index 0000000..71fc199
+--- /dev/null
++++ b/e2e/package.json
+@@ -0,0 +1,12 @@
++{
++  "name": "agora-browser-tests",
++  "private": true,
++  "type": "module",
++  "scripts": {
++    "test": "playwright test",
++    "test:headed": "playwright test --headed"
++  },
++  "devDependencies": {
++    "@playwright/test": "1.58.2"
++  }
++}
+diff --git a/e2e/playwright.config.mjs b/e2e/playwright.config.mjs
+new file mode 100644
+index 0000000..c98ea96
+--- /dev/null
++++ b/e2e/playwright.config.mjs
+@@ -0,0 +1,27 @@
++import { defineConfig, devices } from '@playwright/test';
++
++export default defineConfig({
++  testDir: './tests',
++  timeout: 20_000,
++  expect: { timeout: 8_000 },
++  retries: process.env.CI ? 1 : 0,
++  workers: process.env.CI ? 2 : undefined,
++  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
++  use: {
++    baseURL: 'http://127.0.0.1:4173',
++    trace: 'retain-on-failure',
++    screenshot: 'only-on-failure',
++    video: 'retain-on-failure',
++  },
++  projects: [
++    { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
++    { name: 'mobile-chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
++  ],
++  webServer: {
++    command: 'node server.mjs',
++    cwd: import.meta.dirname,
++    url: 'http://127.0.0.1:4173/',
++    reuseExistingServer: false,
++    timeout: 20_000,
++  },
++});
+diff --git a/e2e/server.mjs b/e2e/server.mjs
+new file mode 100644
+index 0000000..6c16eae
+--- /dev/null
++++ b/e2e/server.mjs
+@@ -0,0 +1,46 @@
++// Solo para E2E: HTTP estático + API simulada, sin base de datos.
++import { createServer } from 'node:http';
++import { readFile, stat } from 'node:fs/promises';
++import { resolve, extname, sep } from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { contenido, texto } from './fixtures.mjs';
++
++const root = resolve(fileURLToPath(new URL('../public/', import.meta.url)));
++const host = '127.0.0.1';
++const port = Number(process.env.E2E_PORT || 4173);
++const types = {
++  '.html': 'text/html; charset=utf-8',
++  '.js': 'text/javascript; charset=utf-8',
++  '.css': 'text/css; charset=utf-8',
++  '.json': 'application/json; charset=utf-8',
++  '.svg': 'image/svg+xml',
++  '.png': 'image/png',
++  '.jpg': 'image/jpeg',
++  '.woff2': 'font/woff2',
++};
++
++function send(res, status, body, contentType = 'text/plain; charset=utf-8') {
++  res.writeHead(status, { 'content-type': contentType, 'cache-control': 'no-store' });
++  res.end(body);
++}
++
++const server = createServer(async (req, res) => {
++  if (req.method !== 'GET') return send(res, 405, 'Method not allowed');
++  let pathname;
++  try { pathname = decodeURIComponent(new URL(req.url, `http://${host}:${port}`).pathname); }
++  catch { return send(res, 400, 'Invalid URL'); }
++  if (pathname === '/api/contenido')
++    return send(res, 200, JSON.stringify(contenido), 'application/json; charset=utf-8');
++  if (pathname === '/api/texto/EN_libro1_v8.txt')
++    return send(res, 200, texto);
++  if (pathname.startsWith('/api/')) return send(res, 404, 'Not found');
++
++  const full = resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
++  if (full !== root && !full.startsWith(root + sep)) return send(res, 403, 'Forbidden');
++  try {
++    const info = await stat(full);
++    if (!info.isFile()) return send(res, 404, 'Not found');
++    return send(res, 200, await readFile(full), types[extname(full)] || 'application/octet-stream');
++  } catch { return send(res, 404, 'Not found'); }
++});
++server.listen(port, host, () => console.log(`E2E mock en http://${host}:${port}`));
+diff --git a/e2e/tests/navegacion.spec.mjs b/e2e/tests/navegacion.spec.mjs
+new file mode 100644
+index 0000000..a79d50e
+--- /dev/null
++++ b/e2e/tests/navegacion.spec.mjs
+@@ -0,0 +1,61 @@
++import { test, expect } from '@playwright/test';
++
++const links = [
++  ['/', '.landing-view'],
++  ['/chat', '.view-chat'],
++  ['/reading', '.reading-catalog'],
++  ['/grafos', '.card-grid--catalog'],
++  ['/lab', '.card-grid--catalog'],
++];
++
++test('navega entre las cinco secciones sin fallos JavaScript', async ({ page }) => {
++  const errors = [];
++  page.on('pageerror', err => errors.push(err.message));
++  await page.goto('/', { waitUntil: 'domcontentloaded' });
++  await expect(page.locator('#status')).toContainText('E2E fixture');
++  for (const [path, selector] of links) {
++    await page.evaluate(path => { location.hash = `#${path}`; }, path);
++    await expect(page.locator(`#app ${selector}`)).toBeVisible();
++    await expect(page.locator('#app')).not.toContainText('Error cargando la vista');
++  }
++  expect(errors).toEqual([]);
++});
++
++test('FAQ se abre, permite elegir pregunta y se cierra', async ({ page }) => {
++  const errors = [];
++  page.on('pageerror', err => errors.push(err.message));
++  await page.goto('/#/chat', { waitUntil: 'domcontentloaded' });
++  await expect(page.locator('#faq-btn')).toBeVisible();
++  await page.locator('#faq-btn').click();
++  await expect(page.locator('#faq-modal')).toHaveAttribute('open', '');
++  await expect(page.locator('#faq-body [data-faq="faq-demo"]')).toBeVisible();
++  await page.locator('#faq-body [data-faq="faq-demo"]').click();
++  await expect(page.locator('#faq-modal')).not.toHaveAttribute('open', '');
++  await expect(page.locator('#input')).toHaveValue('¿Qué es el bien?');
++  await page.locator('#faq-btn').click();
++  await page.locator('#faq-close').click();
++  await expect(page.locator('#faq-modal')).not.toHaveAttribute('open', '');
++  expect(errors).toEqual([]);
++});
++
++test('Chat se desmonta y vuelve a montarse sin modales huérfanos', async ({ page }) => {
++  const errors = [];
++  page.on('pageerror', err => errors.push(err.message));
++  await page.goto('/#/chat', { waitUntil: 'domcontentloaded' });
++  await page.locator('#faq-btn').click();
++  await page.evaluate(() => { location.hash = '#/reading'; });
++  await expect(page.locator('#app .reading-catalog')).toBeVisible();
++  await expect(page.locator('#faq-modal')).toHaveCount(0);
++  await page.evaluate(() => { location.hash = '#/chat'; });
++  await expect(page.locator('#faq-btn')).toBeVisible();
++  await page.locator('#faq-btn').click();
++  await expect(page.locator('#faq-modal')).toHaveAttribute('open', '');
++  expect(errors).toEqual([]);
++});
++
++test('lectura carga un capítulo bilingüe de la fixture', async ({ page }) => {
++  await page.goto('/#/reading', { waitUntil: 'domcontentloaded' });
++  await expect(page.locator('.reader-book')).toHaveCount(1);
++  await page.locator('.reader-chapter > summary').first().click();
++  await expect(page.locator('.reader-chapter-content').first()).toContainText('Toda acción humana');
++});

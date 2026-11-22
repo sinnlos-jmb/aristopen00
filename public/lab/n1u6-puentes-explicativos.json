@@ -1,0 +1,70 @@
+{
+  "schema": "agora.lab.n1u6.puentes.v1",
+  "estado": "borrador_editorial_para_curaduria",
+  "fuente": {
+    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
+    "fichas_schema": "agora.lab.n1u5.fichas.v1",
+    "criterio": "Puentes seleccionados manualmente: ni pertenencia automática de subunidad a unidad, ni inferencias por coincidencia de tags. En las FAQ, los pasajes de apoyo coinciden deliberadamente con los anclajes de los trayectos publicados de la exportación."
+  },
+  "puentes": [
+    {
+      "ficha_id": "proemio",
+      "contextos": {
+        "macros": [
+          { "id": "macro:I-V", "rol": "Apertura de la investigación", "explicacion": "Sitúa el inicio de la Ética dentro del planteamiento del bien humano y del método apropiado para estudiarlo." }
+        ],
+        "unidades": [
+          { "id": "proemio", "rol": "Núcleo textual de la ficha", "explicacion": "Aquí se desarrolla el movimiento desde los fines diversos hasta la dimensión política del bien humano." }
+        ]
+      },
+      "apoyos": [
+        { "sub_id": "1094a1-3", "rol": "Punto de partida", "explicacion": "Introduce la orientación de artes, investigaciones, acciones y elecciones hacia un bien." },
+        { "sub_id": "1094a18-22", "rol": "Problema abierto", "explicacion": "Plantea condicionalmente la cuestión de un fin querido por sí mismo." },
+        { "sub_id": "1094a26-b3", "rol": "Articulación central", "explicacion": "Sitúa la búsqueda del bien en relación con el saber rector de la vida política." },
+        { "sub_id": "1094b7-10", "rol": "Ampliación política", "explicacion": "Desplaza la perspectiva hacia el bien de la comunidad política." }
+      ]
+    },
+    {
+      "ficha_id": "faq.etica.intro",
+      "contextos": {
+        "macros": [
+          { "id": "macro:I-V", "rol": "Planteamiento inicial", "explicacion": "Incluye la orientación hacia fines, la preparación del oyente y la formación de la pregunta ética." },
+          { "id": "macro:VIII-XII", "rol": "Proyección hacia la felicidad", "explicacion": "El itinerario retorna posteriormente a la actividad y a la consideración de la felicidad." }
+        ],
+        "unidades": [
+          { "id": "proemio", "rol": "Acciones y fines", "explicacion": "Distingue actividades y obras en el inicio de la investigación." },
+          { "id": "metodo", "rol": "Condiciones del aprendizaje", "explicacion": "Examina la experiencia y disposición de quien escucha una investigación práctica." },
+          { "id": "felicidad_opiniones", "rol": "Punto de partida del conocimiento práctico", "explicacion": "Reflexiona sobre el comienzo desde lo conocido por nosotros y los principios adquiridos." },
+          { "id": "confirmacion", "rol": "La felicidad como actividad", "explicacion": "Vuelve sobre la relación entre disposición, actividad y felicidad." }
+        ]
+      },
+      "apoyos": [
+        { "sub_id": "1094a3-6", "paso_id": "p1", "rol": "Distinción inicial", "explicacion": "El contraste entre actividad y obra permite introducir el campo de la investigación práctica." },
+        { "sub_id": "1095a2-6", "paso_id": "p2", "rol": "Condición pedagógica", "explicacion": "La experiencia de las acciones es relevante para aprender ética." },
+        { "sub_id": "1098b31-1099a3", "paso_id": "p3", "rol": "Ejercicio y actividad", "explicacion": "El trayecto destaca la diferencia entre poseer una disposición y ponerla en actividad." },
+        { "sub_id": "1095b4-8", "paso_id": "p4", "rol": "Principios y aprendizaje", "explicacion": "Señala la importancia de partir de lo conocido para nosotros." },
+        { "sub_id": "1094b7-10", "paso_id": "p5", "rol": "Dimensión política", "explicacion": "Vincula el bien del individuo con el de la ciudad." },
+        { "sub_id": "1099a29-31", "paso_id": "p6", "rol": "Apertura final", "explicacion": "Se conserva el último anclaje del trayecto publicado, sin identificarlo con una conclusión deducida." }
+      ]
+    },
+    {
+      "ficha_id": "faq.agathon.pros_hen",
+      "contextos": {
+        "macros": [
+          { "id": "macro:VI-VII", "rol": "Crítica del bien universal", "explicacion": "Ubica el problema de la multiplicidad de sentidos del bien en la crítica a una Idea común." },
+          { "id": "macro:VIII-XII", "rol": "Vinculación posterior", "explicacion": "Contiene el anclaje final elegido en el recorrido editorial de esta FAQ; no es una inferencia desde las alternativas semánticas." }
+        ],
+        "unidades": [
+          { "id": "idea_bien", "rol": "Problema filosófico principal", "explicacion": "Expone la dificultad de una única definición del bien y abre la pregunta por sus diferentes modos de unidad." },
+          { "id": "confirmacion", "rol": "Retorno al bien humano", "explicacion": "El recorrido publicado salta hacia la consideración de la felicidad, sin cerrar la discusión semántica." }
+        ]
+      },
+      "apoyos": [
+        { "sub_id": "1096a11-13", "paso_id": "p1", "rol": "Planteamiento crítico", "explicacion": "Se abre el examen de la Idea universal del bien." },
+        { "sub_id": "1096a23-29", "paso_id": "p2", "rol": "Pluralidad de sentidos", "explicacion": "El bien se dice de maneras diferentes según las categorías." },
+        { "sub_id": "1096b26-31", "paso_id": "p3", "rol": "Alternativas abiertas", "explicacion": "Aristóteles pregunta por la derivación desde uno, la referencia hacia uno y la analogía, sin decidir aquí entre ellas." },
+        { "sub_id": "1099a29-31", "paso_id": "p4", "rol": "Proyección editorial", "explicacion": "Se mantiene el paso final del trayecto; su conexión es pedagógica y requiere examen interpretativo." }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { ZOOM_SENSITIVITY_ACTUAL } from '../js/lab/architectureUiControls.js';
+import { conexionesDeFicha, conexionesFichaHtml } from '../js/lab/architectureFichaNavigation.js';
+import { construirModeloArquitectura } from '../js/lab/architectureModel.js';
+import { construirRelacionesProemio } from '../js/lab/architectureRelations.js';
+import { construirCapasProemio } from '../js/lab/architectureLayers.js';
+import { construirFichasArquitectura } from '../js/lab/architectureCards.js';
+import { construirPuentesExplicativos } from '../js/lab/architectureBridges.js';
+import { construirAmpliacionFichas } from '../js/lab/architecturePilotNetwork.js';
+const read = p => JSON.parse(fs.readFileSync(new URL(p, import.meta.url),'utf8'));
+const model = construirModeloArquitectura(read('./fixtures/n1u2-unidades.json'),read('../lab/n1u1-propuestas-libro-i.json'));
+const rels = construirRelacionesProemio(model,read('../lab/n1u3-relaciones-proemio.json'));
+const capas = construirCapasProemio(model,rels,read('../lab/n1u4-modulos-proemio.json'));
+const fichasBase = construirFichasArquitectura(model,capas,read('../lab/n1u5-fichas-explicativas.json'));
+const puentesBase = construirPuentesExplicativos(model,fichasBase,read('../lab/n1u6-puentes-explicativos.json'));
+const {fichas,red} = construirAmpliacionFichas(model,fichasBase,puentesBase,read('../lab/n1u7-fichas-red-piloto.json'));
+assert.equal(ZOOM_SENSITIVITY_ACTUAL,.60);
+let total = 0;
+for(const f of fichas.fichas){
+  const cs=conexionesDeFicha(fichas,red,f.id);
+  assert.deepEqual(cs.map(c=>c.id),red.relaciones.filter(r=>r.desde===f.id||r.hacia===f.id).map(r=>r.id));
+  for (const c of cs) { assert(fichas.porId.has(c.otroId)); assert(red.porId.has(c.id)); }
+  total+=cs.length;
+  const html=conexionesFichaHtml(fichas,red,f.id);
+  assert.equal((html.match(/data-arch-related-go=/g)||[]).length,cs.length);
+  assert.equal((html.match(/data-arch-related-map=/g)||[]).length,cs.length);
+}
+assert.equal(total,16,'cada una de ocho aristas tiene dos extremos');
+assert.equal(conexionesDeFicha(fichas,red,'sin-ficha').length,0);
+const sample = { revision: red.revision, relaciones: [{id:'x<svg',desde:'proemio',hacia:'faq.lab.ergon',nombre:'<script>peligro</script>',explicacion:'<img src=x onerror=alert(1)>'}], porId: new Map() };
+sample.porId.set(sample.relaciones[0].id,sample.relaciones[0]);
+const safe = conexionesFichaHtml(fichas,sample,'proemio');
+assert(!safe.includes('<script>')&&!safe.includes('<img')&&!safe.includes('<svg'));
+assert(safe.includes('&lt;script&gt;')&&safe.includes('data-arch-related-id="x&lt;svg"'));
+const view=fs.readFileSync(new URL('../js/views/labArchitectureView.js',import.meta.url),'utf8');
+assert.match(view,/wheelSensitivity:\s*ZOOM_SENSITIVITY_ACTUAL/);
+assert.match(view,/data-arch-previous/);
+assert.match(view,/data-arch-related-go/);
+assert.match(view,/data-arch-related-map/);
+assert.match(view,/conexionesFichaHtml\(fichas, redFichas, ficha.id\)/);
+assert.match(view,/historialFichas\.pop\(\)/);
+console.log('N1-U.9 OK · zoom 0.60 · 7 fichas · 8 aristas · 16 conexiones direccionadas · navegación, retornos y escape HTML.');

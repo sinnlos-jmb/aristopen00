@@ -1,0 +1,3267 @@
+diff --git a/public/js/main.js b/public/js/main.js
+--- a/public/js/main.js
++++ b/public/js/main.js
+@@ -64,2 +64,3 @@
+     ...Object.fromEntries(Object.keys(EXPERIMENTS).map(id => [`/lab/${id}`, () => createLabView(App, { exp: id })])),
++    '/lab/arquitectura': async () => { const { createLabArchitectureView } = await import('./views/labArchitectureView.js'); return createLabArchitectureView(App); },
+     '/lab/orientador': () => createLabOrientadorView(App),
+diff --git a/public/js/views/lab.js b/public/js/views/lab.js
+--- a/public/js/views/lab.js
++++ b/public/js/views/lab.js
+@@ -12,2 +12,7 @@
+ export const EXPERIMENTS = Object.freeze({
++  arquitectura: {
++    id: 'arquitectura', tab: 7, title: 'Arquitectura argumentativa del Libro I',
++    desc: 'Explorá macrounidades, unidades, momentos y subunidades con datos reales y propuestas editoriales diferenciadas.',
++    tag: 'Experimento N1-U.2', icon: '🧩', featured: false
++  },
+   visor_grafos: {
+diff --git a/public/js/lab/architectureModel.js b/public/js/lab/architectureModel.js
+new file mode 100644
+--- /dev/null
++++ b/public/js/lab/architectureModel.js
+@@ -0,0 +1,120 @@
++// N1-U.2: proyección de lectura para el laboratorio. No muta tags ni produce relaciones filosóficas.
++const array = value => Array.isArray(value) ? value : [];
++const fail = message => { throw new Error(`Arquitectura del Libro I: ${message}`); };
++
++export function construirModeloArquitectura(lectura, propuesta) {
++  if (propuesta?.schema !== 'agora.lab.n1u1.propuestas.v0') fail('esquema de propuestas desconocido.');
++  if (!lectura?.revision || !Array.isArray(lectura.tags?.unidades)) fail('la API no devolvió unidades y revisión.');
++  if (propuesta.fuente?.revision !== lectura.revision) {
++    fail(`las propuestas pertenecen a otra revisión de MariaDB (${String(propuesta.fuente?.revision || 'sin revisión').slice(0, 12)}). Exportá la nueva revisión antes de asociar sus unidades.`);
++  }
++  const unidades = new Map(), subs = new Map();
++  for (const u of lectura.tags.unidades) {
++    if (!u?.id || unidades.has(u.id)) fail(`identificador de unidad vacío o duplicado: ${u?.id}`);
++    unidades.set(u.id, u);
++    for (const s of array(u.subunidades)) {
++      if (!s?.id || subs.has(s.id)) fail(`subunidad vacía o duplicada: ${s?.id}`);
++      subs.set(s.id, { ...s, unidad: u.id });
++    }
++  }
++  const macros = [], usados = new Set(), momentosPorUnidad = new Map();
++  const todasMacros = array(propuesta.macrounidades_propuestas);
++  if (todasMacros.length !== 4) fail('se esperaban las cuatro macrounidades propuestas.');
++  for (const m of todasMacros) {
++    if (!m.id || !Array.isArray(m.unit_ids)) fail('macrounidad sin identificador o unidades.');
++    const vinculadas = [];
++    for (const id of m.unit_ids) {
++      if (!unidades.has(id)) fail(`la unidad ${id} no existe en la revisión indicada.`);
++      if (usados.has(id)) fail(`la unidad ${id} aparece en más de una macrounidad.`);
++      usados.add(id); vinculadas.push(unidades.get(id));
++    }
++    macros.push({ ...m, unidades: vinculadas });
++  }
++  // La hipótesis debe cubrir íntegramente el Libro I, sin sustituir entidades existentes.
++  if (usados.size !== unidades.size) fail(`hay unidades sin macrounidad: ${[...unidades.keys()].filter(id => !usados.has(id)).join(', ')}`);
++  const propuestasPorUnidad = new Map();
++  for (const m of array(propuesta.momentos_propuestos_I_V)) {
++    if (!unidades.has(m.unidad_id)) fail(`el momento ${m.id} remite a una unidad inexistente.`);
++    if (propuestasPorUnidad.get(m.unidad_id)?.some(x => x.id === m.id)) fail(`momento duplicado: ${m.id}`);
++    const items = propuestasPorUnidad.get(m.unidad_id) || [];
++    items.push(m); propuestasPorUnidad.set(m.unidad_id, items);
++  }
++  for (const [uid, u] of unidades) {
++    const reales = array(u.articulacion?.momentos);
++    const propuestos = propuestasPorUnidad.get(uid) || [];
++    if (reales.length && propuestos.length) fail(`la unidad ${uid} tiene momentos canónicos y propuestas paralelas.`);
++    const originales = reales.length > 0;
++    const momentos = (originales ? reales : propuestos).map((m, i) => ({
++      id: originales ? `registrado:${uid}:${m.id}` : m.id,
++      orden: m.orden || m.id || String(i + 1), titulo: m.titulo, texto: m.t || m.explicacion || '',
++      subIds: originales ? array(m.subs) : array(m.sub_ids), origen: originales ? 'registrado' : 'propuesto',
++      unidadId: uid,
++    }));
++    const vistos = new Set();
++    for (const m of momentos) {
++      if (!m.id || !m.titulo || !m.subIds.length) fail(`momento incompleto en ${uid}.`);
++      for (const sid of m.subIds) {
++        if (!subs.has(sid) || subs.get(sid).unidad !== uid) fail(`el momento ${m.id} refiere una subunidad ajena: ${sid}`);
++        if (vistos.has(sid)) fail(`la subunidad ${sid} aparece en dos momentos de ${uid}.`);
++        vistos.add(sid);
++      }
++    }
++    if (vistos.size !== array(u.subunidades).length) fail(`la articulación de ${uid} no cubre todas sus subunidades.`);
++    momentosPorUnidad.set(uid, momentos);
++  }
++  return {
++    revision: lectura.revision, macros, unidades, subs, momentosPorUnidad,
++    stats: {
++      macrounidades: macros.length, unidades: unidades.size, subunidades: subs.size,
++      momentosRegistrados: [...momentosPorUnidad.values()].flat().filter(x => x.origen === 'registrado').length,
++      momentosPropuestos: [...momentosPorUnidad.values()].flat().filter(x => x.origen === 'propuesto').length,
++    },
++  };
++}
++
++export function obtenerContexto(modelo, estado) {
++  const macro = modelo.macros.find(m => m.id === estado.macroId) || null;
++  const unidad = macro?.unidades.find(u => u.id === estado.unidadId) || null;
++  const momentos = unidad ? modelo.momentosPorUnidad.get(unidad.id) : [];
++  const momento = momentos?.find(m => m.id === estado.momentoId) || null;
++  const subunidad = momento?.subIds.includes(estado.subId) ? modelo.subs.get(estado.subId) : null;
++  return { macro, unidad, momentos: momentos || [], momento, subunidad };
++}
++
++// El resultado contiene solo aristas de secuencia o pertenencia estructural.
++// 'orden_textual' no atribuye ninguna implicación o relación argumentativa.
++export function elementosArquitectura(modelo, estado) {
++  const { macro, unidad, momentos, momento } = obtenerContexto(modelo, estado);
++  const nodes = [], edges = [];
++  const node = (id, tipo, etiqueta, x, y, extra = {}) => nodes.push({ group: 'nodes', data: { id, tipo, label: etiqueta, ...extra }, position: { x, y } });
++  const edge = (id, source, target, tipo, label) => edges.push({ group: 'edges', data: { id, source, target, tipo, label } });
++  modelo.macros.forEach((m, i) => node(`macro:${m.id}`, 'macro', `${m.capitulos}\n${m.titulo}`, 110, 100 + 188 * i, { key: m.id, seleccionado: m.id === estado.macroId ? 1 : 0 }));
++  if (!macro) {
++    for (let i = 0; i < modelo.macros.length - 1; i++) {
++      edge(`orden:macro:${i}`, `macro:${modelo.macros[i].id}`, `macro:${modelo.macros[i + 1].id}`, 'orden_textual', 'orden de lectura');
++    }
++  }
++  if (macro) {
++    macro.unidades.forEach((u, i) => {
++      node(`unidad:${u.id}`, 'unidad', u.titulo, 440, 100 + 170 * i, { key: u.id, seleccionado: u.id === estado.unidadId ? 1 : 0 });
++      edge(`contiene:${macro.id}:${u.id}`, `macro:${macro.id}`, `unidad:${u.id}`, 'contiene', 'incluye');
++    });
++  }
++  if (unidad) {
++    momentos.forEach((m, i) => {
++      node(`momento:${m.id}`, 'momento', `${m.orden} · ${m.titulo}`, 785, 100 + 149 * i,
++        { key: m.id, origen: m.origen, seleccionado: m.id === estado.momentoId ? 1 : 0 });
++      edge(`articula:${unidad.id}:${m.id}`, `unidad:${unidad.id}`, `momento:${m.id}`,
++        'articula', m.origen === 'registrado' ? 'articula · registrado' : 'articula · propuesta');
++    });
++  }
++  if (momento) {
++    momento.subIds.forEach((sid, i) => {
++      const s = modelo.subs.get(sid);
++      node(`sub:${sid}`, 'subunidad', s?.titulo || sid, 1145, 100 + 118 * i,
++        { key: sid, seleccionado: sid === estado.subId ? 1 : 0 });
++      edge(`contiene:${momento.id}:${sid}`, `momento:${momento.id}`, `sub:${sid}`, 'contiene', 'incluye');
++    });
++  }
++  return [...nodes, ...edges];
++}
+diff --git a/public/js/views/labArchitectureView.js b/public/js/views/labArchitectureView.js
+new file mode 100644
+--- /dev/null
++++ b/public/js/views/labArchitectureView.js
+@@ -0,0 +1,306 @@
++// N1-U.2 · Arquitectura argumentativa. Experimento read-only sobre datos de MariaDB.
++import { esc } from '../ui.js';
++import { cargarCytoscape } from '../lab/cytoscapeLoader.js';
++import { construirModeloArquitectura, obtenerContexto, elementosArquitectura } from '../lab/architectureModel.js';
++import { localizarSubunidadEnBiblioteca, representarLecturaContextual } from '../lab/graphPassageReader.js';
++
++const safe = x => esc(String(x ?? ''));
++const text = x => x ? safe(x) : 'No consignado.';
++const ref = s => Array.isArray(s) ? s.join('–') : String(s || 'Sin referencia');
++const chip = (label, variant = 'registrado') => `<span class="arch-chip arch-chip--${variant}">${safe(label)}</span>`;
++function remisionLabel(model, id) {
++  const [clase, ...rest] = String(id || '').split(':');
++  const target = rest.join(':');
++  if (clase === 'sub') return model.subs.get(target)?.titulo || target;
++  if (clase === 'unidad') return model.unidades.get(target)?.titulo || target;
++  return id;
++}
++function renderRemisiones(model, remisiones, titulo = 'Remisiones editoriales') {
++  if (!remisiones.length) return `<p class="arch-muted">Sin remisiones editoriales explícitas en este tramo.</p>`;
++  return `<details class="arch-remisiones"><summary>${safe(titulo)} (${remisiones.length})</summary><ul>${remisiones.map(item => `
++    <li>${item.sub ? `<strong>${safe(item.sub.titulo)} → </strong>` : ''}<strong>${safe(remisionLabel(model, item.destino.a))}</strong>
++    <p>${safe(item.destino.t || 'Sin explicación editorial')}</p></li>`).join('')}</ul></details>`;
++}
++
++function inspectorHtml(model, state) {
++  const ctx = obtenerContexto(model, state);
++  if (ctx.subunidad) {
++    const s = ctx.subunidad;
++    const rels = Array.isArray(s.relaciones) ? s.relaciones : [];
++    return `<div class="arch-inspector-heading">${chip('Registro de MariaDB')}</div>
++      <h2>${safe(s.titulo)}</h2><p class="arch-muted">Subunidad · ${safe(ref(s.bekker))}</p>
++      <h3>Contenido</h3><p>${text(s.intro)}</p>
++      <h3>Función textual registrada</h3><p>${safe((s.movimientos || []).join(' · ') || 'Sin movimientos consignados')}</p>
++      <h3>Relaciones conceptuales de esta subunidad</h3>
++      ${rels.length ? `<ul class="arch-relations">${rels.map(r => `<li><strong>${safe(r.de)}</strong> — ${safe(r.rel)} → <strong>${safe(r.a)}</strong>
++        ${r.voz ? chip(`Voz: ${r.voz}`) : ''}${r.cond ? `<p class="arch-muted">Condición: ${safe(r.cond)}</p>` : ''}</li>`).join('')}</ul>` : '<p class="arch-muted">Sin relaciones conceptuales registradas.</p>'}
++      <p class="arch-muted">Estas relaciones tienen extremos conceptuales; no se dibujan como aristas entre subunidades.</p>
++      <h3>Remisiones del mapa editorial</h3>${renderRemisiones(model, (s.mapa || []).map(destino => ({ destino })), 'Conexiones documentales registradas')}
++      <button type="button" class="arch-primary" data-arch-read="${safe(s.id)}">Leer pasaje en griego y castellano</button>`;
++  }
++  if (ctx.momento) {
++    const m = ctx.momento;
++    return `<div class="arch-inspector-heading">${chip(m.origen === 'registrado' ? 'Articulación de MariaDB' : 'Propuesta editorial · no validada', m.origen)}</div>
++      <h2>${safe(m.titulo)}</h2><p class="arch-muted">Momento ${safe(m.orden)} · ${safe(ctx.unidad.titulo)}</p>
++      <h3>Función argumentativa</h3><p>${text(m.texto)}</p>
++      <h3>Subunidades que comprende</h3>
++      <div class="arch-nav-list">${m.subIds.map(id => { const s = model.subs.get(id); return `<button type="button" data-arch-kind="subunidad" data-arch-id="${safe(id)}">${safe(s?.titulo || id)} <small>${safe(ref(s?.bekker))}</small></button>`; }).join('')}</div>`;
++  }
++  if (ctx.unidad) {
++    const u = ctx.unidad;
++    const momentos = ctx.momentos;
++    const registrado = momentos[0]?.origen === 'registrado';
++    const remisiones = (u.subunidades || []).flatMap(sub => (sub.mapa || []).map(destino => ({ sub, destino })));
++    return `<div class="arch-inspector-heading">${chip('Unidad de MariaDB')} ${chip(registrado ? 'Momentos registrados' : 'Momentos propuestos', registrado ? 'registrado' : 'propuesto')}</div>
++      <h2>${safe(u.titulo)}</h2><p class="arch-muted">${safe(u.id)} · ${safe((u.tramos || []).map(ref).join(' · '))}</p>
++      <h3>Resumen editorial existente</h3><p>${text(u.resumen)}</p>
++      ${u.articulacion?.t ? `<h3>Articulación registrada</h3><p>${safe(u.articulacion.t)}</p>` : ''}
++      <h3>Desarrollo en momentos</h3>
++      <div class="arch-nav-list">${momentos.map(m => `<button type="button" data-arch-kind="momento" data-arch-id="${safe(m.id)}">${safe(m.orden)} · ${safe(m.titulo)} <small>${m.subIds.length} subunidades</small></button>`).join('')}</div>
++      <p class="arch-muted">Los momentos ${registrado ? 'son datos editoriales registrados' : 'son hipótesis de organización del Lab, no incorporadas al tagueo'}.</p>
++      <h3>Cómo se conectan sus pasajes</h3>
++      <p class="arch-muted">Las remisiones de <code>mapa</code> documentan referencias entre pasajes, unidades y libros. No son todavía aristas filosóficas tipadas.</p>
++      ${renderRemisiones(model, remisiones, 'Ver remisiones de sus subunidades')}`;
++  }
++  if (ctx.macro) {
++    const m = ctx.macro;
++    return `<div class="arch-inspector-heading">${chip('Macrounidad · propuesta editorial', 'propuesto')}</div>
++      <h2>${safe(m.titulo)}</h2><p class="arch-muted">EN ${safe(m.capitulos)}</p>
++      <h3>Problema</h3><p>${text(m.problema)}</p>
++      <h3>Resultado propuesto</h3><p>${text(m.resultado)}</p>
++      <h3>Unidades registradas</h3>
++      <div class="arch-nav-list">${m.unidades.map(u => `<button type="button" data-arch-kind="unidad" data-arch-id="${safe(u.id)}">${safe(u.titulo)} <small>${(u.subunidades || []).length} subunidades</small></button>`).join('')}</div>`;
++  }
++  return `<div class="arch-inspector-heading">${chip('Mapa general · propuesta editorial', 'propuesto')}</div>
++    <h2>Ética nicomáquea · Libro I</h2>
++    <p>Esta arquitectura del Libro I organiza la lectura en cuatro macrounidades. No modifica la división en unidades y subunidades registrada en MariaDB.</p>
++    <p>Las flechas del mapa general indican <strong>orden textual</strong>, no inferencias ni relaciones filosóficas acreditadas.</p>
++    <h3>Elegí un bloque para explorarlo</h3>
++    <div class="arch-nav-list">${model.macros.map(m => `<button type="button" data-arch-kind="macro" data-arch-id="${safe(m.id)}">${safe(m.capitulos)} · ${safe(m.titulo)} <small>${m.unidades.length} unidades</small></button>`).join('')}</div>
++    <h3>Alcance</h3><p class="arch-muted">${model.stats.unidades} unidades · ${model.stats.subunidades} subunidades · ${model.stats.momentosRegistrados} momentos registrados · ${model.stats.momentosPropuestos} propuestos.</p>`;
++}
++
++function graphStyle() {
++  return [
++    { selector: 'node', style: {
++      'label': 'data(label)', 'text-wrap': 'wrap', 'text-max-width': '204px', 'text-valign': 'center',
++      'text-halign': 'center', 'font-size': 14, 'font-family': 'system-ui, sans-serif',
++      'color': '#142538', 'background-color': '#edf2f4', 'border-width': 2,
++      'border-color': '#8ea5b0', 'shape': 'round-rectangle', 'width': 238, 'height': 78,
++      'padding': 12, 'text-events': 'yes', 'overlay-opacity': 0,
++    } },
++    { selector: 'node[tipo = "macro"]', style: { 'background-color': '#dbe9e9', 'border-color': '#4c817f', 'font-weight': 650 } },
++    { selector: 'node[tipo = "unidad"]', style: { 'background-color': '#e5ebff', 'border-color': '#627bb2', 'width': 232 } },
++    { selector: 'node[tipo = "momento"]', style: { 'background-color': '#f6eedb', 'border-color': '#b08f46', 'width': 242, 'height': 76 } },
++    { selector: 'node[tipo = "subunidad"]', style: { 'background-color': '#f4f0ff', 'border-color': '#9c85b6', 'width': 230, 'height': 78, 'font-size': 12 } },
++    { selector: 'node[origen = "propuesto"]', style: { 'border-style': 'dashed' } },
++    { selector: 'node[seleccionado = 1]', style: { 'border-width': 5, 'border-color': '#255e76' } },
++    { selector: 'edge', style: {
++      'curve-style': 'bezier', 'width': 2.5, 'line-color': '#8c9da5',
++      'target-arrow-shape': 'triangle', 'target-arrow-color': '#8c9da5', 'arrow-scale': 1.2,
++      'label': 'data(label)', 'font-size': 11, 'color': '#52626d',
++      'text-background-color': '#ffffff', 'text-background-opacity': 0.87,
++      'text-background-padding': 3, 'text-rotation': 'autorotate',
++    } },
++    { selector: 'edge[tipo = "orden_textual"]', style: { 'line-style': 'dashed', 'line-color': '#aaa', 'target-arrow-color': '#aaa' } },
++    { selector: 'edge[tipo = "articula"]', style: { 'line-style': 'dashed', 'line-color': '#b99d54', 'target-arrow-color': '#b99d54' } },
++  ];
++}
++
++export async function createLabArchitectureView(App) {
++  const el = document.createElement('div');
++  el.className = 'lab-architecture scrollable has-scroll';
++  // El CSS se instala solo al abrir el experimento.
++  const css = document.createElement('link');
++  css.rel = 'stylesheet'; css.href = '/css/lab-arquitectura-n1u2.css'; css.dataset.agoraLabArquitectura = '1';
++  document.head.append(css);
++  el.innerHTML = `<div class="arch-page">
++    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.2 · Experimento de lectura · Solo consulta</span></nav>
++    <h1>Arquitectura argumentativa del Libro I</h1>
++    <p class="arch-intro">Macrounidades propuestas y unidades reales de MariaDB. La virtud completa en una vida entera.</p>
++    <p class="arch-status" role="status" aria-live="polite">Cargando la revisión editorial…</p>
++    <div class="arch-main" hidden>
++      <div class="arch-toolbar">
++        <button type="button" data-arch-back="libro">Libro I</button>
++        <button type="button" data-arch-back="macro" hidden>Volver a macrounidad</button>
++        <button type="button" data-arch-back="unidad" hidden>Volver a unidad</button>
++        <button type="button" data-arch-back="momento" hidden>Volver a momento</button>
++        <button type="button" data-arch-fit>Ajustar grafo</button>
++        <span class="arch-legend">Línea continua: pertenencia · Punteada: orden o articulación editorial</span>
++      </div>
++      <div class="arch-columns">
++        <section class="arch-graph-shell" aria-label="Grafo del libro">
++          <div class="arch-graph" role="img" aria-label="Grafo de macrounidades, unidades, momentos y subunidades"></div>
++          <div class="arch-graph-fallback" hidden>El grafo requiere Cytoscape. Podés seguir navegando desde el inspector.</div>
++        </section>
++        <aside class="arch-inspector" aria-label="Ficha editorial"><div class="arch-inspector-content"></div></aside>
++      </div>
++      <p class="arch-footer">Las macrounidades y los momentos de I–V son propuestas del Lab. Las unidades, subunidades y los restantes momentos provienen de MariaDB. Ninguna de las conexiones de navegación acredita por sí sola una relación filosófica.</p>
++    </div>
++    <section class="arch-reader" hidden>
++      <div class="arch-reader-head"><button type="button" data-arch-reader-back>← Volver al grafo</button><div><h2 data-arch-reader-title>Lectura</h2><p class="arch-muted" data-arch-reader-ref></p></div></div>
++      <div data-arch-reader-nav></div><div class="arch-reader-body" tabindex="0" data-arch-reader-body></div>
++      <p class="arch-muted" role="status" data-arch-reader-message></p>
++    </section>
++  </div>`;
++  const $ = selector => el.querySelector(selector);
++  const status = $('.arch-status');
++  const main = $('.arch-main'), inspector = $('.arch-inspector-content'), reader = $('.arch-reader');
++  const graph = $('.arch-graph');
++  const state = { macroId: null, unidadId: null, momentoId: null, subId: null };
++  let model = null, cy = null, destroyed = false, readerModel = null, chapterNumber = null, readerTicket = 0;
++  const abort = new AbortController();
++  const positions = new Map();
++  const selected = () => obtenerContexto(model, state);
++  function navegar(kind, id = null) {
++    if (!model) return;
++    if (kind === 'libro') Object.assign(state, { macroId: null, unidadId: null, momentoId: null, subId: null });
++    if (kind === 'macro') {
++      if (!model.macros.some(x => x.id === id)) return;
++      Object.assign(state, { macroId: id, unidadId: null, momentoId: null, subId: null });
++    }
++    if (kind === 'unidad') {
++      if (!selected().macro?.unidades.some(u => u.id === id)) return;
++      Object.assign(state, { unidadId: id, momentoId: null, subId: null });
++    }
++    if (kind === 'momento') {
++      if (!selected().momentos.some(m => m.id === id)) return;
++      Object.assign(state, { momentoId: id, subId: null });
++    }
++    if (kind === 'subunidad') {
++      if (!selected().momento?.subIds.includes(id)) return;
++      state.subId = id;
++    }
++    dibujar();
++  }
++  function dibujar() {
++    if (!model || destroyed) return;
++    inspector.innerHTML = inspectorHtml(model, state);
++    const ctx = selected();
++    $('[data-arch-back="macro"]').hidden = !ctx.macro;
++    $('[data-arch-back="unidad"]').hidden = !ctx.unidad;
++    $('[data-arch-back="momento"]').hidden = !ctx.momento;
++    if (cy) {
++      const elements = elementosArquitectura(model, state);
++      // Conserva posiciones manuales de los nodos que continúan visibles durante la sesión.
++      for (const e of elements) if (e.group === 'nodes' && positions.has(e.data.id)) e.position = positions.get(e.data.id);
++      cy.batch(() => { cy.elements().remove(); cy.add(elements); });
++      cy.resize(); cy.fit(cy.elements(), 38);
++    }
++  }
++  function volverLectura() {
++    ++readerTicket; readerModel = null; chapterNumber = null;
++    reader.hidden = true; main.hidden = false;
++    $('[data-arch-reader-body]').replaceChildren();
++    if (cy) { cy.resize(); cy.fit(cy.elements(), 38); }
++  }
++  function pintarLectura() {
++    if (!readerModel?.ok || destroyed) return;
++    const vista = representarLecturaContextual(readerModel, chapterNumber);
++    $('[data-arch-reader-title]').textContent = vista.title;
++    $('[data-arch-reader-ref]').textContent = vista.reference ? `Subunidad: ${readerModel.passage.title || readerModel.passage.id} · ${ref(vista.reference)}` : 'Capítulo de contexto, sin resaltado';
++    $('[data-arch-reader-nav]').innerHTML = vista.navigationHtml;
++    $('[data-arch-reader-body]').innerHTML = vista.passageHtml;
++    $('[data-arch-reader-message]').textContent = vista.message;
++    const body = $('[data-arch-reader-body]'); body.scrollTop = 0;
++    if (vista.highlighted) {
++      const chosen = body.querySelector('.reader-paragraph--selected');
++      if (chosen) requestAnimationFrame(() => { if (!reader.hidden) body.scrollTop = Math.max(0, chosen.offsetTop - body.offsetTop - 24); });
++    }
++  }
++  async function leer(subId) {
++    if (!model?.subs.has(subId)) return;
++    const snap = model.subs.get(subId), source = App.S?.SUB?.[subId];
++    // App.getLibrary procede de /api/contenido. Evitar una lectura cruzada si se modificó el tagueo.
++    if (!source || JSON.stringify(source.bekker) !== JSON.stringify(snap.bekker)
++      || JSON.stringify(source.gr_ancla) !== JSON.stringify(snap.gr_ancla)
++      || JSON.stringify(source.es_ancla) !== JSON.stringify(snap.es_ancla)) {
++      status.textContent = 'El corpus cambió desde que abriste Ágora. Recargá la página antes de leer este pasaje.';
++      return;
++    }
++    const ticket = ++readerTicket; main.hidden = true; reader.hidden = false;
++    $('[data-arch-reader-title]').textContent = 'Preparando lectura…';
++    $('[data-arch-reader-body]').replaceChildren();
++    $('[data-arch-reader-nav]').replaceChildren();
++    $('[data-arch-reader-message]').textContent = 'Localizando el pasaje en ambas lenguas…';
++    try {
++      const library = await App.getLibrary();
++      if (destroyed || reader.hidden || ticket !== readerTicket) return;
++      readerModel = localizarSubunidadEnBiblioteca(library, subId);
++      if (!readerModel.ok) {
++        $('[data-arch-reader-title]').textContent = 'Pasaje no localizado';
++        $('[data-arch-reader-message]').textContent = readerModel.motivo;
++        return;
++      }
++      chapterNumber = readerModel.passage.chapter;
++      pintarLectura();
++    } catch (error) {
++      if (destroyed || ticket !== readerTicket) return;
++      $('[data-arch-reader-title]').textContent = 'No se pudo cargar el texto';
++      $('[data-arch-reader-message]').textContent = String(error.message || error);
++    }
++  }
++  el.addEventListener('click', event => {
++    const nav = event.target.closest('[data-arch-kind]');
++    if (nav) { navegar(nav.dataset.archKind, nav.dataset.archId); return; }
++    const back = event.target.closest('[data-arch-back]');
++    if (back) {
++      const { macro, unidad, momento } = selected();
++      if (back.dataset.archBack === 'libro') navegar('libro');
++      if (back.dataset.archBack === 'macro' && macro) navegar('macro', macro.id);
++      if (back.dataset.archBack === 'unidad' && unidad) navegar('unidad', unidad.id);
++      if (back.dataset.archBack === 'momento' && momento) navegar('momento', momento.id);
++      return;
++    }
++    const read = event.target.closest('[data-arch-read]');
++    if (read) { void leer(read.dataset.archRead); return; }
++    if (event.target.closest('[data-arch-fit]')) { cy?.resize(); cy?.fit(cy.elements(), 38); return; }
++    if (event.target.closest('[data-arch-reader-back]')) { volverLectura(); return; }
++    if (!readerModel?.ok) return;
++    const direction = event.target.closest('[data-reader-direction]');
++    if (direction) {
++      const i = readerModel.book.chapters.findIndex(c => c.number === chapterNumber);
++      const next = readerModel.book.chapters[i + Number(direction.dataset.readerDirection)];
++      if (next) { chapterNumber = next.number; pintarLectura(); }
++    }
++  });
++  reader.addEventListener('change', event => {
++    if (!event.target.matches('[data-reader-chapter]') || !readerModel?.ok) return;
++    const next = readerModel.book.chapters.find(c => c.number === Number(event.target.value));
++    if (next) { chapterNumber = next.number; pintarLectura(); }
++  });
++  try {
++    const [r, p] = await Promise.all([
++      fetch('/api/labo/lectura', { cache: 'no-store', signal: abort.signal }),
++      fetch('/lab/n1u1-propuestas-libro-i.json', { cache: 'no-store', signal: abort.signal }),
++    ]);
++    if (!r.ok || !p.ok) throw new Error(`No se pudieron cargar las fuentes (MariaDB: ${r.status}; propuestas: ${p.status}).`);
++    model = construirModeloArquitectura(await r.json(), await p.json());
++    if (destroyed) return { el, destroy() {} };
++    main.hidden = false;
++    status.textContent = `Revisión ${model.revision.slice(0, 12)}… · ${model.stats.unidades} unidades · ${model.stats.subunidades} subunidades · sin modificar datos`;
++    dibujar();
++    try {
++      const cytoscape = await cargarCytoscape();
++      if (destroyed) return { el, destroy() {} };
++      cy = cytoscape({ container: graph, elements: [], style: graphStyle(), layout: { name: 'preset' },
++        minZoom: 0.22, maxZoom: 2.5, wheelSensitivity: 0.16, boxSelectionEnabled: false });
++      cy.on('tap', 'node', event => {
++        const n = event.target;
++        const kind = ({ macro: 'macro', unidad: 'unidad', momento: 'momento', subunidad: 'subunidad' })[n.data('tipo')];
++        if (kind) navegar(kind, n.data('key'));
++      });
++      cy.on('dragfree', 'node', event => positions.set(event.target.id(), { ...event.target.position() }));
++      dibujar();
++    } catch (error) {
++      $('.arch-graph-fallback').hidden = false;
++      $('.arch-graph-fallback').textContent = `No se pudo iniciar Cytoscape: ${String(error.message || error)}. El inspector continúa disponible.`;
++    }
++  } catch (error) {
++    if (!destroyed && error?.name !== 'AbortError') {
++      status.textContent = `No se pudo abrir el experimento: ${String(error.message || error)}`;
++      status.classList.add('arch-status--error');
++    }
++  }
++  return { el, destroy() { destroyed = true; abort.abort(); ++readerTicket; cy?.destroy(); css.remove(); } };
++}
+diff --git a/public/css/lab-arquitectura-n1u2.css b/public/css/lab-arquitectura-n1u2.css
+new file mode 100644
+--- /dev/null
++++ b/public/css/lab-arquitectura-n1u2.css
+@@ -0,0 +1,65 @@
++/* N1-U.2 · Experimento autónomo de arquitectura argumentativa del Libro I. */
++.lab-architecture { min-height: 100%; overflow: auto; }
++.arch-page { max-width: 1640px; margin: 0 auto; padding: clamp(16px, 2vw, 32px); color: var(--text, inherit); }
++.arch-top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: .86rem; color: var(--text-muted, #626e75); margin-bottom: 15px; }
++.arch-top a { color: var(--accent, #276789); }
++.arch-page h1 { font-size: clamp(1.5rem, 2vw, 2.1rem); margin: 0 0 6px; line-height: 1.2; }
++.arch-intro { margin: 0 0 14px; color: var(--text-muted, #596c76); }
++.arch-status { margin: 0 0 12px; font-size: .84rem; color: var(--text-muted, #536875); word-break: break-word; }
++.arch-status--error { color: #a13e2d; border-left: 3px solid #a13e2d; padding: 10px; }
++.arch-main[hidden], .arch-reader[hidden], .arch-toolbar [hidden], .arch-graph-fallback[hidden] { display: none !important; }
++.arch-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
++.arch-toolbar button, .arch-reader-head button { border: 1px solid var(--border, #9daeb7); border-radius: 7px; padding: 8px 11px; background: var(--bg-elevated, #fff); color: var(--text, #172e3e); cursor: pointer; font: inherit; }
++.arch-toolbar button:hover, .arch-reader-head button:hover { border-color: #4783a1; }
++.arch-legend { margin-left: auto; font-size: .78rem; color: var(--text-muted, #607580); }
++.arch-columns { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(310px, 1fr); gap: 15px; align-items: stretch; }
++.arch-graph-shell { border: 1px solid var(--border, #becdd3); border-radius: 12px; background: var(--bg-elevated, #f9fbfc); min-width: 0; overflow: hidden; }
++.arch-graph { width: 100%; height: clamp(520px, 68vh, 790px); touch-action: none; }
++.arch-graph-fallback { padding: 14px; font-size: .88rem; }
++.arch-inspector { border: 1px solid var(--border, #becdd3); border-radius: 12px; background: var(--bg-elevated, #fff); height: clamp(520px, 68vh, 790px); overflow-y: auto; }
++.arch-inspector-content { padding: 20px; overflow-wrap: anywhere; }
++.arch-inspector h2 { font-size: 1.22rem; line-height: 1.3; margin: 8px 0 4px; }
++.arch-inspector h3 { font-size: .96rem; margin: 20px 0 7px; }
++.arch-inspector p { line-height: 1.55; margin: 8px 0; }
++.arch-inspector-heading { display: flex; flex-wrap: wrap; gap: 5px; }
++.arch-chip { display: inline-flex; padding: 3px 8px; border: 1px solid #8aa9a5; color: #225652; border-radius: 20px; font-size: .7rem; font-weight: 600; }
++.arch-chip--propuesto { border-color: #bb9561; color: #815823; }
++.arch-muted { font-size: .85rem; color: var(--text-muted, #5f6c75); }
++.arch-nav-list { display: flex; flex-direction: column; gap: 7px; }
++.arch-nav-list button { display: block; text-align: left; background: var(--bg-elevated, #f8fbfc); border: 1px solid var(--border, #bfced5); border-radius: 8px; padding: 10px; color: inherit; font: inherit; font-size: .9rem; cursor: pointer; }
++.arch-nav-list button:hover, .arch-nav-list button:focus-visible { border-color: #4e819a; outline-color: #4e819a; }
++.arch-nav-list small { display: block; color: var(--text-muted, #6c757d); margin-top: 3px; }
++.arch-relations { padding-left: 20px; line-height: 1.5; }
++.arch-relations li { margin-bottom: 12px; }
++.arch-primary { display: block; width: 100%; margin-top: 20px; background: #1d607b; border: 0; border-radius: 8px; padding: 11px 14px; color: white; font: inherit; font-weight: 600; cursor: pointer; }
++.arch-primary:hover { background: #124a60; }
++.arch-footer { margin-top: 12px; font-size: .83rem; color: var(--text-muted, #526c77); line-height: 1.5; }
++.arch-reader { border: 1px solid var(--border, #bfccd2); border-radius: 12px; padding: 18px; background: var(--bg-elevated, #fff); }
++.arch-reader-head { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
++.arch-reader-head h2 { margin: 0; font-size: 1.3rem; }
++.arch-reader-body { height: clamp(430px, 66vh, 760px); overflow-y: auto; border: 1px solid var(--border, #d1d9df); border-radius: 8px; padding: 14px; margin: 12px 0; }
++.arch-reader .reader-navigation { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
++.arch-reader .reader-columns-head, .arch-reader .reader-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
++.arch-reader .reader-columns-head { font-weight: 600; border-bottom: 1px solid var(--border, #c3ccd2); padding-bottom: 8px; }
++.arch-reader .reader-paragraph { padding: 14px 0; border-bottom: 1px solid var(--border, #d9e0e5); }
++.arch-reader .reader-paragraph--selected { border-left: 4px solid #bc9355; padding-left: 10px; }
++.arch-reader .reader-paragraph__number { font-size: .78rem; margin-bottom: 5px; color: var(--text-muted, #526875); }
++.arch-reader .reader-text { white-space: pre-wrap; line-height: 1.68; }
++.arch-reader mark.reader-highlight { background: #fff0ac; color: #182c36; }
++@media (max-width: 1050px) {
++  .arch-columns { grid-template-columns: 1fr; }
++  .arch-graph { height: 490px; }
++  .arch-inspector { height: auto; max-height: 680px; }
++  .arch-legend { margin-left: 0; }
++}
++@media (max-width: 650px) {
++  .arch-graph { height: 430px; }
++  .arch-reader .reader-columns { grid-template-columns: 1fr; }
++  .arch-reader .reader-columns-head { display: none; }
++  .arch-reader .reader-text[lang="el"] { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #bbcbd2; }
++}
++.arch-remisiones { margin: 10px 0; padding: 9px 11px; border: 1px solid var(--border, #c5d0d6); border-radius: 8px; }
++.arch-remisiones summary { cursor: pointer; font-size: .87rem; font-weight: 600; }
++.arch-remisiones ul { margin: 10px 0; padding-left: 21px; }
++.arch-remisiones li { margin-bottom: 10px; }
++.arch-remisiones li p { margin: 3px 0 0; font-size: .82rem; }
+diff --git a/public/lab/n1u1-propuestas-libro-i.json b/public/lab/n1u1-propuestas-libro-i.json
+new file mode 100644
+--- /dev/null
++++ b/public/lab/n1u1-propuestas-libro-i.json
+@@ -0,0 +1,514 @@
++{
++  "schema": "agora.lab.n1u1.propuestas.v0",
++  "fuente": {
++    "origen": "exportacion /api/labo/lectura - tags.unidades; sin acceso ni modificación de MariaDB",
++    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
++    "exportado": "2026-11-19T18:35:02.804Z",
++    "sha256_archivo": "ce288e1a0306c6dfb2c652e08220dcd5546214e01ac752246cbfae8011ebc733"
++  },
++  "criterios": {
++    "no_es_corpus": "Este archivo contiene propuestas editoriales no incorporadas al tagueo. Cargar siempre las entidades canónicas desde la API con su revisión.",
++    "tipos_arista_estructural": [
++      "contiene",
++      "articula"
++    ],
++    "relaciones_filosoficas_automaticas": false,
++    "norma_traduccion": "virtud completa en una vida entera",
++    "aristas_entre_macrounidades": "pendientes_de_revision_editorial"
++  },
++  "macrounidades_propuestas": [
++    {
++      "id": "macro:I-V",
++      "capitulos": "I.1–5",
++      "titulo": "Planteamiento de la investigación práctica",
++      "problema": "¿Qué bien buscamos en nuestras acciones, y cómo debe investigarse?",
++      "resultado": "La felicidad recibe un nombre compartido, pero su contenido sigue abierto a examen.",
++      "unit_ids": [
++        "proemio",
++        "metodo",
++        "felicidad_opiniones",
++        "modos_vida"
++      ],
++      "cantidad_unidades": 4,
++      "cantidad_subunidades": 38,
++      "estado": "propuesta_editorial_versión_lab"
++    },
++    {
++      "id": "macro:VI-VII",
++      "capitulos": "I.6–7",
++      "titulo": "Crítica y determinación del bien humano",
++      "problema": "¿Cómo determinar el bien humano sin reducirlo a una Idea universal?",
++      "resultado": "El argumento del érgon formula el bien humano como actividad del alma conforme a la virtud completa en una vida entera.",
++      "unit_ids": [
++        "idea_bien",
++        "forma_fin",
++        "ergon",
++        "esbozo_metodo"
++      ],
++      "cantidad_unidades": 4,
++      "cantidad_subunidades": 47,
++      "estado": "propuesta_editorial_versión_lab"
++    },
++    {
++      "id": "macro:VIII-XII",
++      "capitulos": "I.8–12",
++      "titulo": "Examen y determinaciones de la felicidad",
++      "problema": "¿Cómo se sostiene y precisa la definición frente a las opiniones, la fortuna y la vida entera?",
++      "resultado": "Se examinan su concordancia con las opiniones, sus condiciones, su estabilidad y su carácter digno de honor.",
++      "unit_ids": [
++        "confirmacion",
++        "adquisicion",
++        "solon",
++        "elogio"
++      ],
++      "cantidad_unidades": 4,
++      "cantidad_subunidades": 68,
++      "estado": "propuesta_editorial_versión_lab"
++    },
++    {
++      "id": "macro:XIII",
++      "capitulos": "I.13",
++      "titulo": "El alma y la transición hacia las virtudes",
++      "problema": "¿Qué distinciones del alma son necesarias para estudiar la virtud humana?",
++      "resultado": "Se distingue la participación en el logos y se prepara la investigación de las virtudes.",
++      "unit_ids": [
++        "alma_virtudes"
++      ],
++      "cantidad_unidades": 1,
++      "cantidad_subunidades": 22,
++      "estado": "propuesta_editorial_versión_lab"
++    }
++  ],
++  "momentos_propuestos_I_V": [
++    {
++      "id": "n1u:proemio:I",
++      "unidad_id": "proemio",
++      "orden": "I",
++      "titulo": "Fines de las acciones y pluralidad del bien",
++      "sub_ids": [
++        "1094a1-3",
++        "1094a3-6",
++        "1094a6-9"
++      ],
++      "explicacion": "La investigación comienza por la tendencia hacia el bien, distingue actividad y obra, y reconoce la pluralidad de fines.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:proemio:II",
++      "unidad_id": "proemio",
++      "orden": "II",
++      "titulo": "Jerarquía de actividades y fines",
++      "sub_ids": [
++        "1094a9-16",
++        "1094a16-18"
++      ],
++      "explicacion": "La subordinación de actividades permite ordenar los fines; la diferencia entre obra y actividad no cambia ese orden.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:proemio:III",
++      "unidad_id": "proemio",
++      "orden": "III",
++      "titulo": "El fin último como problema práctico",
++      "sub_ids": [
++        "1094a18-22",
++        "1094a22-24"
++      ],
++      "explicacion": "La condición de un fin querido por sí y la analogía del arquero justifican indagarlo, sin dar por demostrada su existencia.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:proemio:IV",
++      "unidad_id": "proemio",
++      "orden": "IV",
++      "titulo": "El bien humano y la política",
++      "sub_ids": [
++        "1094a24-26",
++        "1094a26-b3",
++        "1094b4-7",
++        "1094b7-10",
++        "1094b10-11"
++      ],
++      "explicacion": "La pregunta por el bien y su saber rector conduce a la política, al bien humano y al bien de la ciudad.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:metodo:I",
++      "unidad_id": "metodo",
++      "orden": "I",
++      "titulo": "El rigor correspondiente a la materia",
++      "sub_ids": [
++        "1094b11-14",
++        "1094b14-19",
++        "1094b19-22",
++        "1094b22-27"
++      ],
++      "explicacion": "La variabilidad de lo noble, lo justo y los bienes exige una exposición en esbozo y un rigor proporcional al objeto.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:metodo:II",
++      "unidad_id": "metodo",
++      "orden": "II",
++      "titulo": "Quién puede escuchar provechosamente",
++      "sub_ids": [
++        "1094b27-1095a2",
++        "1095a2-6",
++        "1095a6-11"
++      ],
++      "explicacion": "La educación, la experiencia y el gobierno de los deseos condicionan la utilidad de una investigación orientada a la acción.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:metodo:III",
++      "unidad_id": "metodo",
++      "orden": "III",
++      "titulo": "Cierre y transición del proemio",
++      "sub_ids": [
++        "1095a11-13"
++      ],
++      "explicacion": "El cierre remite a los tres asuntos iniciales y prepara la reanudación de la pregunta por la felicidad.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:felicidad_opiniones:I",
++      "unidad_id": "felicidad_opiniones",
++      "orden": "I",
++      "titulo": "La pregunta retomada y el acuerdo nominal",
++      "sub_ids": [
++        "1095a14-17",
++        "1095a17-20"
++      ],
++      "explicacion": "La política pregunta por el bien más alto; la mayoría coincide en llamarlo felicidad y asociarlo con vivir bien y obrar bien.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:felicidad_opiniones:II",
++      "unidad_id": "felicidad_opiniones",
++      "orden": "II",
++      "titulo": "Divergencias sobre qué es la felicidad",
++      "sub_ids": [
++        "1095a20-26",
++        "1095a26-28",
++        "1095a28-30"
++      ],
++      "explicacion": "Aparecen respuestas distintas, incluida la Idea del bien, y se delimita qué opiniones merece la pena investigar.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:felicidad_opiniones:III",
++      "unidad_id": "felicidad_opiniones",
++      "orden": "III",
++      "titulo": "Punto de partida y formación del oyente",
++      "sub_ids": [
++        "1095a30-b4",
++        "1095b4-8",
++        "1095b8-13"
++      ],
++      "explicacion": "La investigación parte de lo conocido para nosotros; la educación y el ejemplo de Hesíodo precisan sus condiciones.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:modos_vida:I",
++      "unidad_id": "modos_vida",
++      "orden": "I",
++      "titulo": "Las vidas propuestas y la vida de disfrute",
++      "sub_ids": [
++        "1095b14-16",
++        "1095b16-17",
++        "1095b17-19",
++        "1095b19-22"
++      ],
++      "explicacion": "La discusión de las opiniones se hace visible en los modos de vida; se presenta y cuestiona la vida de placer.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:modos_vida:II",
++      "unidad_id": "modos_vida",
++      "orden": "II",
++      "titulo": "El honor y la virtud en la vida política",
++      "sub_ids": [
++        "1095b22-23",
++        "1095b23-26",
++        "1095b26-30",
++        "1095b30-1096a3"
++      ],
++      "explicacion": "Del honor se pasa a la virtud, pero poseer una disposición sin ejercerla tampoco basta para la felicidad.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:modos_vida:III",
++      "unidad_id": "modos_vida",
++      "orden": "III",
++      "titulo": "La vida contemplativa queda diferida",
++      "sub_ids": [
++        "1096a4-5"
++      ],
++      "explicacion": "La tercera vida se menciona y se deja para un examen posterior.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    },
++    {
++      "id": "n1u:modos_vida:IV",
++      "unidad_id": "modos_vida",
++      "orden": "IV",
++      "titulo": "La riqueza como fin subordinado",
++      "sub_ids": [
++        "1096a5-10"
++      ],
++      "explicacion": "La vida de negocios y la riqueza son examinadas como medios buscados por otra cosa.",
++      "voz": "nuestra",
++      "estado": "propuesta_no_validada"
++    }
++  ],
++  "resumen_inventario": [
++    {
++      "id": "proemio",
++      "titulo": "Proemio: el bien y la política",
++      "tramos": [
++        [
++          "1094a1",
++          "1094b11"
++        ]
++      ],
++      "resumen": "Todo lo que hacemos busca algún bien. Los fines se ordenan unos bajo otros, y tiene que haber uno último, querido por sí mismo: el bien supremo. El saber que se ocupa de él es la política, porque dirige a todos los demás.",
++      "n_subunidades": 12,
++      "n_momentos_registrados": 0,
++      "n_relaciones_conceptuales": 29,
++      "n_remisiones_mapa": 0,
++      "n_sub_estado_corchete": 1
++    },
++    {
++      "id": "metodo",
++      "titulo": "Método: el rigor y el oyente",
++      "tramos": [
++        [
++          "1094b11",
++          "1095a13"
++        ]
++      ],
++      "resumen": "La ética no puede ser exacta como la matemática: habla en esbozo y de lo que pasa por lo general. Y no sirve a cualquiera: quien la escucha necesita experiencia y vivir según la razón, porque su fin es actuar, no solo saber.",
++      "n_subunidades": 8,
++      "n_momentos_registrados": 0,
++      "n_relaciones_conceptuales": 12,
++      "n_remisiones_mapa": 4,
++      "n_sub_estado_corchete": 0
++    },
++    {
++      "id": "felicidad_opiniones",
++      "titulo": "La felicidad: el nombre, las opiniones y el punto de partida",
++      "tramos": [
++        [
++          "1095a14",
++          "1095b13"
++        ]
++      ],
++      "resumen": "Todos llaman felicidad al bien más alto y dicen que es vivir bien y obrar bien. Pero no coinciden en qué es: unos dicen placer, riqueza u honor; los platónicos, un bien en sí. Para examinarlo hay que partir de lo que nos es conocido, y por eso hace falta haber sido bien criado.",
++      "n_subunidades": 8,
++      "n_momentos_registrados": 0,
++      "n_relaciones_conceptuales": 10,
++      "n_remisiones_mapa": 1,
++      "n_sub_estado_corchete": 0
++    },
++    {
++      "id": "modos_vida",
++      "titulo": "Los tres modos de vida",
++      "tramos": [
++        [
++          "1095b14",
++          "1096a10"
++        ]
++      ],
++      "resumen": "Lo que cada uno entiende por el bien se ve en la vida que lleva. Tres vidas sobresalen: la de disfrute, la política y la contemplativa. El placer es un bien de bestias; el honor depende de quien lo da; la virtud se puede tener durmiendo; la riqueza es útil y se busca por otra cosa. La vida contemplativa queda para más adelante.",
++      "n_subunidades": 10,
++      "n_momentos_registrados": 0,
++      "n_relaciones_conceptuales": 15,
++      "n_remisiones_mapa": 3,
++      "n_sub_estado_corchete": 0
++    },
++    {
++      "id": "idea_bien",
++      "titulo": "Crítica de la Idea del bien",
++      "tramos": [
++        [
++          "1096a11",
++          "1097a14"
++        ]
++      ],
++      "resumen": "Aristóteles examina el bien universal y cómo se dice. No hay una Idea común: el bien se dice con anterior y posterior, en todas las categorías y por muchas ciencias; lo en sí y lo eterno no agregan bondad; y aun los bienes por sí tienen definiciones distintas. ¿Cómo se dice, entonces? Desde uno, hacia uno o por analogía: la cuestión queda para otra filosofía. Aunque la Idea existiera, no sería realizable: el bien que se busca es el que se realiza, y el médico mira la salud de este hombre.",
++      "n_subunidades": 17,
++      "n_momentos_registrados": 6,
++      "n_relaciones_conceptuales": 21,
++      "n_remisiones_mapa": 19,
++      "n_sub_estado_corchete": 0
++    },
++    {
++      "id": "forma_fin",
++      "titulo": "La forma del fin: completo y autosuficiente",
++      "tramos": [
++        [
++          "1097a15",
++          "1097b21"
++        ]
++      ],
++      "resumen": "Antes de decir qué es la felicidad, se fija la forma del bien buscado: es el fin de todo lo realizable, completo (se elige siempre por sí y nunca por otra cosa) y autosuficiente (basta por sí solo para hacer digna de elección la vida).",
++      "n_subunidades": 11,
++      "n_momentos_registrados": 4,
++      "n_relaciones_conceptuales": 5,
++      "n_remisiones_mapa": 18,
++      "n_sub_estado_corchete": 0
++    },
++    {
++      "id": "ergon",
++      "titulo": "Argumento del érgon",
++      "tramos": [
++        [
++          "1097b22",
++          "1098a20"
++        ]
++      ],
++      "resumen": "De la pregunta por qué es la felicidad a su definición. Por analogía con los artífices y los órganos se busca la función propia del hombre; descartado lo común (vivir, sentir), queda la vida práctica de lo que tiene razón, tomada en ejercicio. El bien humano es actividad del alma según la virtud, y en una vida entera.",
++      "n_subunidades": 11,
++      "n_momentos_registrados": 4,
++      "n_relaciones_conceptuales": 15,
++      "n_remisiones_mapa": 19,
++      "n_sub_estado_corchete": 1
++    },
++    {
++      "id": "esbozo_metodo",
++      "titulo": "Esbozo y método",
++      "tramos": [
++        [
++          "1098a20",
++          "1098b8"
++        ]
++      ],
++      "resumen": "La definición es un bosquejo: el tiempo y otros la completarán. Se recuerda el rigor según la materia (el carpintero y el geómetra), se advierte que no en todo hay que pedir la causa y se distingue cómo se alcanzan los principios, que valen más de la mitad del todo.",
++      "n_subunidades": 8,
++      "n_momentos_registrados": 3,
++      "n_relaciones_conceptuales": 1,
++      "n_remisiones_mapa": 15,
++      "n_sub_estado_corchete": 0
++    },
++    {
++      "id": "confirmacion",
++      "titulo": "Confirmación por las opiniones",
++      "tramos": [
++        [
++          "1098b9",
++          "1099b8"
++        ]
++      ],
++      "resumen": "La definición se prueba también con lo que se dice de la felicidad. Concuerda con la división de los bienes y con el «vivir bien y obrar bien», y recoge lo que unos y otros buscan en ella: la virtud, pero en ejercicio y no solo como disposición; el placer, que no se le agrega como un amuleto, porque las acciones según la virtud son placenteras por sí mismas; y los bienes exteriores, que necesita como instrumentos. La felicidad es lo mejor, lo más noble y lo más placentero: las mejores actividades, o la mejor de ellas.",
++      "n_subunidades": 17,
++      "n_momentos_registrados": 7,
++      "n_relaciones_conceptuales": 13,
++      "n_remisiones_mapa": 30,
++      "n_sub_estado_corchete": 0
++    },
++    {
++      "id": "adquisicion",
++      "titulo": "Cómo se adquiere la felicidad",
++      "tramos": [
++        [
++          "1099b9",
++          "1100a9"
++        ]
++      ],
++      "resumen": "La pregunta por cómo llega la felicidad distingue aprendizaje, habituación y práctica de destino divino y fortuna. Aun adquirida mediante la virtud, la felicidad es divina y ampliamente compartible. La argumentación la identifica con cierta actividad del alma según la virtud; los demás bienes son necesarios o instrumentales. La política forma ciudadanos para lo noble, pero la actividad y una vida entera excluyen de la felicidad al niño y hacen problemática la vida de Príamo.",
++      "n_subunidades": 14,
++      "n_momentos_registrados": 6,
++      "n_relaciones_conceptuales": 3,
++      "n_remisiones_mapa": 6,
++      "n_sub_estado_corchete": 0
++    },
++    {
++      "id": "solon",
++      "titulo": "Solón y la vida entera",
++      "tramos": [
++        [
++          "1100a10",
++          "1101b9"
++        ]
++      ],
++      "resumen": "En I.10 la pregunta de Solón conduce a considerar la felicidad de los vivos, la firmeza de la actividad virtuosa y la incidencia de la fortuna. En I.11 se examina si las vicisitudes de descendientes y amigos afectan a los difuntos y se concluye que su eventual influencia no altera su felicidad.",
++      "n_subunidades": 28,
++      "n_momentos_registrados": 10,
++      "n_relaciones_conceptuales": 0,
++      "n_remisiones_mapa": 0,
++      "n_sub_estado_corchete": 0
++    },
++    {
++      "id": "elogio",
++      "titulo": "La felicidad: ¿elogiable u honorable?",
++      "tramos": [
++        [
++          "1101b10",
++          "1102a4"
++        ]
++      ],
++      "resumen": "La felicidad no se cuenta entre las capacidades ni se elogia como la virtud: se proclama bienaventurada, como algo digno de honor y completo. El capítulo examina el carácter referencial del elogio, la defensa del placer de Eudoxo y la felicidad como principio y causa de los bienes.",
++      "n_subunidades": 9,
++      "n_momentos_registrados": 4,
++      "n_relaciones_conceptuales": 0,
++      "n_remisiones_mapa": 0,
++      "n_sub_estado_corchete": 0
++    },
++    {
++      "id": "alma_virtudes",
++      "titulo": "Partes del alma y división de las virtudes",
++      "tramos": [
++        [
++          "1102a5",
++          "1103a10"
++        ],
++        [
++          "1098a3",
++          "1098a5"
++        ]
++      ],
++      "resumen": "La felicidad como actividad del alma según virtud completa conduce al examen político del alma, a la distinción de sus partes y a la división entre virtudes dianoéticas y éticas.",
++      "n_subunidades": 22,
++      "n_momentos_registrados": 8,
++      "n_relaciones_conceptuales": 0,
++      "n_remisiones_mapa": 0,
++      "n_sub_estado_corchete": 0
++    }
++  ],
++  "validaciones": {
++    "unidades": 13,
++    "subunidades": 175,
++    "unidades_articuladas": 9,
++    "momentos_registrados": 52,
++    "subunidades_con_momento_registrado": 137,
++    "subunidades_sin_momento_registrado": 38,
++    "relaciones_conceptuales_en_subunidades": 124,
++    "remisiones_mapa": 115,
++    "remisiones_mapa_validas": 115,
++    "referencias_mapa_por_tipo": {
++      "sub": 58,
++      "unidad": 28,
++      "super": 29
++    },
++    "estados_textuales": {
++      "seguro": 173,
++      "corchete": 2
++    },
++    "estados_editoriales": {
++      "unidades_propuesto": 13,
++      "subunidades_propuesto": 175
++    }
++  }
++}
+diff --git a/public/scripts/check-lab-arquitectura-n1u2.mjs b/public/scripts/check-lab-arquitectura-n1u2.mjs
+new file mode 100644
+--- /dev/null
++++ b/public/scripts/check-lab-arquitectura-n1u2.mjs
+@@ -0,0 +1,37 @@
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import { construirModeloArquitectura, obtenerContexto, elementosArquitectura } from '../js/lab/architectureModel.js';
++
++const lectura = JSON.parse(fs.readFileSync(new URL('./fixtures/n1u2-unidades.json', import.meta.url), 'utf8'));
++const propuesta = JSON.parse(fs.readFileSync(new URL('../lab/n1u1-propuestas-libro-i.json', import.meta.url), 'utf8'));
++const model = construirModeloArquitectura(lectura, propuesta);
++assert.equal(model.stats.macrounidades, 4);
++assert.equal(model.stats.unidades, 13);
++assert.equal(model.stats.subunidades, 175);
++assert.equal(model.stats.momentosRegistrados, 52);
++assert.equal(model.stats.momentosPropuestos, 14);
++assert.equal(model.macros[0].unidades.map(u => u.id).join(','), 'proemio,metodo,felicidad_opiniones,modos_vida');
++assert.match(propuesta.macrounidades_propuestas[1].resultado, /virtud completa en una vida entera/);
++const initial = { macroId: null, unidadId: null, momentoId: null, subId: null };
++const root = elementosArquitectura(model, initial);
++assert.equal(root.filter(x => x.group === 'nodes').length, 4);
++assert.equal(root.filter(x => x.group === 'edges').length, 3);
++assert(root.filter(x => x.group === 'edges').every(x => x.data.tipo === 'orden_textual'));
++const macro = { ...initial, macroId: 'macro:I-V' };
++assert.equal(elementosArquitectura(model, macro).filter(x => x.data.tipo === 'unidad').length, 4);
++const unit = { ...macro, unidadId: 'proemio' };
++assert.equal(obtenerContexto(model, unit).momentos.length, 4);
++const moment = { ...unit, momentoId: 'n1u:proemio:I' };
++const elements = elementosArquitectura(model, moment);
++assert.equal(elements.filter(x => x.data.tipo === 'subunidad').length, 3);
++assert(elements.filter(x => x.group === 'edges').every(x => ['orden_textual','contiene','articula'].includes(x.data.tipo)));
++const registered = { ...initial, macroId: 'macro:VI-VII', unidadId: 'idea_bien' };
++assert.equal(obtenerContexto(model, registered).momentos[0].origen, 'registrado');
++assert.throws(() => construirModeloArquitectura({ revision: 'otra', tags: lectura.tags }, propuesta), /otra revisión/);
++const invalid = structuredClone(propuesta);
++invalid.momentos_propuestos_I_V[0].sub_ids.push('no-existe');
++assert.throws(() => construirModeloArquitectura(lectura, invalid), /subunidad ajena/);
++const duplicated = structuredClone(propuesta);
++duplicated.macrounidades_propuestas[1].unit_ids.push('proemio');
++assert.throws(() => construirModeloArquitectura(lectura, duplicated), /más de una macrounidad/);
++console.log('N1-U.2 OK: 4 macrounidades, 13 unidades, 175 subunidades, 52 momentos registrados, 14 propuestos; navegación y validaciones.');
+diff --git a/public/scripts/fixtures/n1u2-unidades.json b/public/scripts/fixtures/n1u2-unidades.json
+new file mode 100644
+--- /dev/null
++++ b/public/scripts/fixtures/n1u2-unidades.json
+@@ -0,0 +1,2117 @@
++{
++  "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
++  "tags": {
++    "unidades": [
++      {
++        "id": "proemio",
++        "titulo": "Proemio: el bien y la política",
++        "resumen": "Todo lo que hacemos busca algún bien. Los fines se ordenan unos bajo otros, y tiene que haber uno último, querido por sí mismo: el bien supremo. El saber que se ocupa de él es la política, porque dirige a todos los demás.",
++        "tramos": [
++          [
++            "1094a1",
++            "1094b11"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1094a1-3",
++            "titulo": "Todo tiende a algún bien",
++            "bekker": [
++              "1094a1",
++              "1094a3"
++            ]
++          },
++          {
++            "id": "1094a3-6",
++            "titulo": "Fines: actividades y obras",
++            "bekker": [
++              "1094a3",
++              "1094a6"
++            ]
++          },
++          {
++            "id": "1094a6-9",
++            "titulo": "Muchos fines",
++            "bekker": [
++              "1094a6",
++              "1094a9"
++            ]
++          },
++          {
++            "id": "1094a9-16",
++            "titulo": "Subordinación de las artes",
++            "bekker": [
++              "1094a9",
++              "1094a16"
++            ]
++          },
++          {
++            "id": "1094a16-18",
++            "titulo": "Actividad u obra: indiferente",
++            "bekker": [
++              "1094a16",
++              "1094a18"
++            ]
++          },
++          {
++            "id": "1094a18-22",
++            "titulo": "Si hay un fin último",
++            "bekker": [
++              "1094a18",
++              "1094a22"
++            ]
++          },
++          {
++            "id": "1094a22-24",
++            "titulo": "Los arqueros y el blanco",
++            "bekker": [
++              "1094a22",
++              "1094a24"
++            ]
++          },
++          {
++            "id": "1094a24-26",
++            "titulo": "Programa: qué es y de qué ciencia",
++            "bekker": [
++              "1094a24",
++              "1094a26"
++            ]
++          },
++          {
++            "id": "1094a26-b3",
++            "titulo": "La política, la más arquitectónica",
++            "bekker": [
++              "1094a26",
++              "1094b3"
++            ]
++          },
++          {
++            "id": "1094b4-7",
++            "titulo": "Su fin abarca los demás: el bien humano",
++            "bekker": [
++              "1094b4",
++              "1094b7"
++            ]
++          },
++          {
++            "id": "1094b7-10",
++            "titulo": "El bien de uno y el de la ciudad",
++            "bekker": [
++              "1094b7",
++              "1094b10"
++            ]
++          },
++          {
++            "id": "1094b10-11",
++            "titulo": "La investigación es política",
++            "bekker": [
++              "1094b10",
++              "1094b11"
++            ]
++          }
++        ]
++      },
++      {
++        "id": "metodo",
++        "titulo": "Método: el rigor y el oyente",
++        "resumen": "La ética no puede ser exacta como la matemática: habla en esbozo y de lo que pasa por lo general. Y no sirve a cualquiera: quien la escucha necesita experiencia y vivir según la razón, porque su fin es actuar, no solo saber.",
++        "tramos": [
++          [
++            "1094b11",
++            "1095a13"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1094b11-14",
++            "titulo": "El rigor depende de la materia",
++            "bekker": [
++              "1094b11",
++              "1094b14"
++            ]
++          },
++          {
++            "id": "1094b14-19",
++            "titulo": "Lo noble, lo justo y los bienes varían",
++            "bekker": [
++              "1094b14",
++              "1094b19"
++            ]
++          },
++          {
++            "id": "1094b19-22",
++            "titulo": "Hablar en esbozo y por lo general",
++            "bekker": [
++              "1094b19",
++              "1094b22"
++            ]
++          },
++          {
++            "id": "1094b22-27",
++            "titulo": "El hombre educado pide el rigor justo",
++            "bekker": [
++              "1094b22",
++              "1094b27"
++            ]
++          },
++          {
++            "id": "1094b27-1095a2",
++            "titulo": "Juzga bien quien conoce",
++            "bekker": [
++              "1094b27",
++              "1095a2"
++            ]
++          },
++          {
++            "id": "1095a2-6",
++            "titulo": "El joven no es oyente adecuado",
++            "bekker": [
++              "1095a2",
++              "1095a6"
++            ]
++          },
++          {
++            "id": "1095a6-11",
++            "titulo": "No es la edad: es vivir según la pasión",
++            "bekker": [
++              "1095a6",
++              "1095a11"
++            ]
++          },
++          {
++            "id": "1095a11-13",
++            "titulo": "Cierre del proemio",
++            "bekker": [
++              "1095a11",
++              "1095a13"
++            ]
++          }
++        ]
++      },
++      {
++        "id": "felicidad_opiniones",
++        "titulo": "La felicidad: el nombre, las opiniones y el punto de partida",
++        "resumen": "Todos llaman felicidad al bien más alto y dicen que es vivir bien y obrar bien. Pero no coinciden en qué es: unos dicen placer, riqueza u honor; los platónicos, un bien en sí. Para examinarlo hay que partir de lo que nos es conocido, y por eso hace falta haber sido bien criado.",
++        "tramos": [
++          [
++            "1095a14",
++            "1095b13"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1095a14-17",
++            "titulo": "Retomamos: ¿cuál es el bien más alto?",
++            "bekker": [
++              "1095a14",
++              "1095a17"
++            ]
++          },
++          {
++            "id": "1095a17-20",
++            "titulo": "Su nombre: la felicidad",
++            "bekker": [
++              "1095a17",
++              "1095a20"
++            ]
++          },
++          {
++            "id": "1095a20-26",
++            "titulo": "Qué es: acá empiezan las diferencias",
++            "bekker": [
++              "1095a20",
++              "1095a26"
++            ]
++          },
++          {
++            "id": "1095a26-28",
++            "titulo": "Los platónicos: un bien en sí, causa de los demás",
++            "bekker": [
++              "1095a26",
++              "1095a28"
++            ]
++          },
++          {
++            "id": "1095a28-30",
++            "titulo": "Basta con las opiniones que más pesan",
++            "bekker": [
++              "1095a28",
++              "1095a30"
++            ]
++          },
++          {
++            "id": "1095a30-b4",
++            "titulo": "Desde los principios o hacia los principios",
++            "bekker": [
++              "1095a30",
++              "1095b4"
++            ]
++          },
++          {
++            "id": "1095b4-8",
++            "titulo": "El oyente bien criado parte del hecho",
++            "bekker": [
++              "1095b4",
++              "1095b8"
++            ]
++          },
++          {
++            "id": "1095b8-13",
++            "titulo": "Hesíodo: pensar por sí, obedecer o ser inútil",
++            "bekker": [
++              "1095b8",
++              "1095b13"
++            ]
++          }
++        ]
++      },
++      {
++        "id": "modos_vida",
++        "titulo": "Los tres modos de vida",
++        "resumen": "Lo que cada uno entiende por el bien se ve en la vida que lleva. Tres vidas sobresalen: la de disfrute, la política y la contemplativa. El placer es un bien de bestias; el honor depende de quien lo da; la virtud se puede tener durmiendo; la riqueza es útil y se busca por otra cosa. La vida contemplativa queda para más adelante.",
++        "tramos": [
++          [
++            "1095b14",
++            "1096a10"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1095b14-16",
++            "titulo": "Retomamos: el bien se lee en las vidas",
++            "bekker": [
++              "1095b14",
++              "1095b16"
++            ]
++          },
++          {
++            "id": "1095b16-17",
++            "titulo": "La mayoría: el bien es el placer",
++            "bekker": [
++              "1095b16",
++              "1095b17"
++            ]
++          },
++          {
++            "id": "1095b17-19",
++            "titulo": "Tres vidas sobresalen",
++            "bekker": [
++              "1095b17",
++              "1095b19"
++            ]
++          },
++          {
++            "id": "1095b19-22",
++            "titulo": "Una vida de bestias: Sardanápalo",
++            "bekker": [
++              "1095b19",
++              "1095b22"
++            ]
++          },
++          {
++            "id": "1095b22-23",
++            "titulo": "Los refinados: el honor",
++            "bekker": [
++              "1095b22",
++              "1095b23"
++            ]
++          },
++          {
++            "id": "1095b23-26",
++            "titulo": "El honor es superficial: está en quien lo da",
++            "bekker": [
++              "1095b23",
++              "1095b26"
++            ]
++          },
++          {
++            "id": "1095b26-30",
++            "titulo": "Se busca por la virtud: la virtud es superior",
++            "bekker": [
++              "1095b26",
++              "1095b30"
++            ]
++          },
++          {
++            "id": "1095b30-1096a3",
++            "titulo": "Ni la virtud: se la puede tener durmiendo",
++            "bekker": [
++              "1095b30",
++              "1096a3"
++            ]
++          },
++          {
++            "id": "1096a4-5",
++            "titulo": "La vida contemplativa, para más adelante",
++            "bekker": [
++              "1096a4",
++              "1096a5"
++            ]
++          },
++          {
++            "id": "1096a5-10",
++            "titulo": "La riqueza es útil, por otra cosa",
++            "bekker": [
++              "1096a5",
++              "1096a10"
++            ]
++          }
++        ]
++      },
++      {
++        "id": "idea_bien",
++        "titulo": "Crítica de la Idea del bien",
++        "resumen": "Aristóteles examina el bien universal y cómo se dice. No hay una Idea común: el bien se dice con anterior y posterior, en todas las categorías y por muchas ciencias; lo en sí y lo eterno no agregan bondad; y aun los bienes por sí tienen definiciones distintas. ¿Cómo se dice, entonces? Desde uno, hacia uno o por analogía: la cuestión queda para otra filosofía. Aunque la Idea existiera, no sería realizable: el bien que se busca es el que se realiza, y el médico mira la salud de este hombre.",
++        "tramos": [
++          [
++            "1096a11",
++            "1097a14"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1096a11-13",
++            "titulo": "¿Cómo se dice el bien universal?",
++            "bekker": [
++              "1096a11",
++              "1096a13"
++            ]
++          },
++          {
++            "id": "1096a13-17",
++            "titulo": "Amigos, pero primero la verdad",
++            "bekker": [
++              "1096a13",
++              "1096a17"
++            ]
++          },
++          {
++            "id": "1096a17-23",
++            "titulo": "Donde hay anterior y posterior no hay Idea común",
++            "bekker": [
++              "1096a17",
++              "1096a23"
++            ]
++          },
++          {
++            "id": "1096a23-29",
++            "titulo": "El bien se dice como el ente",
++            "bekker": [
++              "1096a23",
++              "1096a29"
++            ]
++          },
++          {
++            "id": "1096a29-34",
++            "titulo": "Muchas ciencias del bien",
++            "bekker": [
++              "1096a29",
++              "1096a34"
++            ]
++          },
++          {
++            "id": "1096a34-b3",
++            "titulo": "El hombre en sí no es más hombre",
++            "bekker": [
++              "1096a34",
++              "1096b3"
++            ]
++          },
++          {
++            "id": "1096b3-5",
++            "titulo": "Lo eterno no es más bueno",
++            "bekker": [
++              "1096b3",
++              "1096b5"
++            ]
++          },
++          {
++            "id": "1096b5-8",
++            "titulo": "Los pitagóricos: lo uno en la columna de los bienes",
++            "bekker": [
++              "1096b5",
++              "1096b8"
++            ]
++          },
++          {
++            "id": "1096b8-13",
++            "titulo": "Lo que produce o protege se dice bien por lo bueno por sí",
++            "bekker": [
++              "1096b8",
++              "1096b13"
++            ]
++          },
++          {
++            "id": "1096b13-19",
++            "titulo": "¿Cuáles son bienes por sí?",
++            "bekker": [
++              "1096b13",
++              "1096b19"
++            ]
++          },
++          {
++            "id": "1096b19-26",
++            "titulo": "Honor, pensamiento y placer: definiciones distintas",
++            "bekker": [
++              "1096b19",
++              "1096b26"
++            ]
++          },
++          {
++            "id": "1096b26-31",
++            "titulo": "¿Desde uno, hacia uno o por analogía?",
++            "bekker": [
++              "1096b26",
++              "1096b31"
++            ]
++          },
++          {
++            "id": "1096b31-35",
++            "titulo": "Aunque exista, no es realizable",
++            "bekker": [
++              "1096b31",
++              "1096b35"
++            ]
++          },
++          {
++            "id": "1096b35-1097a3",
++            "titulo": "¿Modelo o blanco?",
++            "bekker": [
++              "1096b35",
++              "1097a3"
++            ]
++          },
++          {
++            "id": "1097a3-8",
++            "titulo": "Las técnicas no la buscan",
++            "bekker": [
++              "1097a3",
++              "1097a8"
++            ]
++          },
++          {
++            "id": "1097a8-11",
++            "titulo": "El tejedor y el general",
++            "bekker": [
++              "1097a8",
++              "1097a11"
++            ]
++          },
++          {
++            "id": "1097a11-14",
++            "titulo": "El médico mira la salud de este hombre",
++            "bekker": [
++              "1097a11",
++              "1097a14"
++            ]
++          }
++        ],
++        "articulacion": {
++          "momentos": [
++            {
++              "id": "I",
++              "titulo": "La pregunta",
++              "subs": [
++                "1096a11-13",
++                "1096a13-17"
++              ],
++              "t": "Cómo se dice el bien universal, y por qué discutirlo aunque las formas las hayan introducido amigos."
++            },
++            {
++              "id": "II",
++              "titulo": "El bien no es uno por Idea",
++              "subs": [
++                "1096a17-23",
++                "1096a23-29",
++                "1096a29-34"
++              ],
++              "t": "El bien se dice con anterior y posterior, en todas las categorías y por muchas ciencias: no hay una Idea común."
++            },
++            {
++              "id": "III",
++              "titulo": "Lo separado no agrega bondad",
++              "subs": [
++                "1096a34-b3",
++                "1096b3-5",
++                "1096b5-8"
++              ],
++              "t": "Lo en sí no cambia la definición, ni lo eterno la bondad; los pitagóricos hablan con más verosimilitud."
++            },
++            {
++              "id": "IV",
++              "titulo": "Por sí y por otro",
++              "subs": [
++                "1096b8-13",
++                "1096b13-19",
++                "1096b19-26"
++              ],
++              "t": "La Idea sería solo de los bienes por sí; pero aun el honor, el pensamiento y el placer tienen definiciones distintas en cuanto bienes."
++            },
++            {
++              "id": "V",
++              "titulo": "Bisagra",
++              "subs": [
++                "1096b26-31"
++              ],
++              "t": "¿Cómo se dice, entonces? Desde uno, hacia uno o por analogía. La cuestión queda para otra filosofía, pero las dos últimas salidas articulan lo que sigue."
++            },
++            {
++              "id": "VI",
++              "titulo": "El uno buscado es realizable",
++              "subs": [
++                "1096b31-35",
++                "1096b35-1097a3",
++                "1097a3-8",
++                "1097a8-11",
++                "1097a11-14"
++              ],
++              "t": "Aunque existiera, la Idea no sería realizable ni serviría de modelo a las técnicas: el médico mira la salud de este hombre."
++            }
++          ]
++        }
++      },
++      {
++        "id": "forma_fin",
++        "titulo": "La forma del fin: completo y autosuficiente",
++        "resumen": "Antes de decir qué es la felicidad, se fija la forma del bien buscado: es el fin de todo lo realizable, completo (se elige siempre por sí y nunca por otra cosa) y autosuficiente (basta por sí solo para hacer digna de elección la vida).",
++        "tramos": [
++          [
++            "1097a15",
++            "1097b21"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1097a15-18",
++            "titulo": "Volvamos al bien buscado",
++            "bekker": [
++              "1097a15",
++              "1097a18"
++            ]
++          },
++          {
++            "id": "1097a18-22",
++            "titulo": "El bien de cada arte: aquello en vista de lo cual",
++            "bekker": [
++              "1097a18",
++              "1097a22"
++            ]
++          },
++          {
++            "id": "1097a22-24",
++            "titulo": "Si hay un fin de todo lo realizable",
++            "bekker": [
++              "1097a22",
++              "1097a24"
++            ]
++          },
++          {
++            "id": "1097a24-30",
++            "titulo": "No todos los fines son completos",
++            "bekker": [
++              "1097a24",
++              "1097a30"
++            ]
++          },
++          {
++            "id": "1097a30-34",
++            "titulo": "Más completo y completo sin más",
++            "bekker": [
++              "1097a30",
++              "1097a34"
++            ]
++          },
++          {
++            "id": "1097a34-b6",
++            "titulo": "La felicidad se elige siempre por sí misma",
++            "bekker": [
++              "1097a34",
++              "1097b6"
++            ]
++          },
++          {
++            "id": "1097b6-11",
++            "titulo": "No para uno solo: el hombre es político por naturaleza",
++            "bekker": [
++              "1097b6",
++              "1097b11"
++            ]
++          },
++          {
++            "id": "1097b11-14",
++            "titulo": "Un límite; se examinará después",
++            "bekker": [
++              "1097b11",
++              "1097b14"
++            ]
++          },
++          {
++            "id": "1097b14-16",
++            "titulo": "Lo que por sí solo hace digna de elección la vida",
++            "bekker": [
++              "1097b14",
++              "1097b16"
++            ]
++          },
++          {
++            "id": "1097b16-20",
++            "titulo": "No se cuenta junto con los demás bienes",
++            "bekker": [
++              "1097b16",
++              "1097b20"
++            ]
++          },
++          {
++            "id": "1097b20-21",
++            "titulo": "Completa y autosuficiente, fin de lo realizable",
++            "bekker": [
++              "1097b20",
++              "1097b21"
++            ]
++          }
++        ],
++        "articulacion": {
++          "momentos": [
++            {
++              "id": "I",
++              "titulo": "El bien de cada acción",
++              "subs": [
++                "1097a15-18",
++                "1097a18-22",
++                "1097a22-24"
++              ],
++              "t": "En cada arte el bien es aquello en vista de lo cual se hace lo demás; si hay un fin de todo lo realizable, ese es el bien."
++            },
++            {
++              "id": "II",
++              "titulo": "Grados de lo completo",
++              "subs": [
++                "1097a24-30",
++                "1097a30-34",
++                "1097a34-b6"
++              ],
++              "t": "Hay fines por otro y fines por sí; completo sin más es lo que se elige siempre por sí. Así es la felicidad."
++            },
++            {
++              "id": "III",
++              "titulo": "Autosuficiencia",
++              "subs": [
++                "1097b6-11",
++                "1097b11-14",
++                "1097b14-16",
++                "1097b16-20"
++              ],
++              "t": "El bien completo basta por sí: no para uno aislado sino para una vida con otros, sin carencia y sin que nada se le sume."
++            },
++            {
++              "id": "IV",
++              "titulo": "Conclusión",
++              "subs": [
++                "1097b20-21"
++              ],
++              "t": "Completa y autosuficiente, fin de todo lo realizable."
++            }
++          ]
++        }
++      },
++      {
++        "id": "ergon",
++        "titulo": "Argumento del érgon",
++        "resumen": "De la pregunta por qué es la felicidad a su definición. Por analogía con los artífices y los órganos se busca la función propia del hombre; descartado lo común (vivir, sentir), queda la vida práctica de lo que tiene razón, tomada en ejercicio. El bien humano es actividad del alma según la virtud, y en una vida entera.",
++        "tramos": [
++          [
++            "1097b22",
++            "1098a20"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1097b22-25",
++            "titulo": "Lo mejor, sí; pero ¿qué es?",
++            "bekker": [
++              "1097b22",
++              "1097b25"
++            ]
++          },
++          {
++            "id": "1097b25-28",
++            "titulo": "El paradigma de los artífices",
++            "bekker": [
++              "1097b25",
++              "1097b28"
++            ]
++          },
++          {
++            "id": "1097b28-33",
++            "titulo": "¿Inactivo por naturaleza? Oficios y órganos",
++            "bekker": [
++              "1097b28",
++              "1097b33"
++            ]
++          },
++          {
++            "id": "1097b33-1098a3",
++            "titulo": "Lo común: vivir y sentir",
++            "bekker": [
++              "1097b33",
++              "1098a3"
++            ]
++          },
++          {
++            "id": "1098a3-5",
++            "titulo": "Lo que resta: la vida práctica de lo que tiene razón",
++            "bekker": [
++              "1098a3",
++              "1098a5"
++            ]
++          },
++          {
++            "id": "1098a5-7",
++            "titulo": "En ejercicio, que se dice con más propiedad",
++            "bekker": [
++              "1098a5",
++              "1098a7"
++            ]
++          },
++          {
++            "id": "1098a7-8",
++            "titulo": "La función: actividad del alma según razón",
++            "bekker": [
++              "1098a7",
++              "1098a8"
++            ]
++          },
++          {
++            "id": "1098a8-12",
++            "titulo": "El citarista y el buen citarista",
++            "bekker": [
++              "1098a8",
++              "1098a12"
++            ]
++          },
++          {
++            "id": "1098a12-16",
++            "titulo": "Reformulación (corchete de la edición)",
++            "bekker": [
++              "1098a12",
++              "1098a16"
++            ]
++          },
++          {
++            "id": "1098a16-18",
++            "titulo": "Conclusión: el bien humano",
++            "bekker": [
++              "1098a16",
++              "1098a18"
++            ]
++          },
++          {
++            "id": "1098a18-20",
++            "titulo": "Una golondrina no hace verano",
++            "bekker": [
++              "1098a18",
++              "1098a20"
++            ]
++          }
++        ],
++        "articulacion": {
++          "momentos": [
++            {
++              "id": "I",
++              "titulo": "Aporía y paradigma",
++              "subs": [
++                "1097b22-25",
++                "1097b25-28",
++                "1097b28-33"
++              ],
++              "t": "Se acepta que la felicidad es lo mejor; falta decir qué es. El paradigma de los artífices y de los órganos: si ellos tienen función, también el hombre."
++            },
++            {
++              "id": "II",
++              "titulo": "La criba de lo propio",
++              "subs": [
++                "1097b33-1098a3",
++                "1098a3-5",
++                "1098a5-7"
++              ],
++              "t": "Se descarta lo común (vivir, sentir) y queda la vida práctica de lo que tiene razón, tomada en ejercicio."
++            },
++            {
++              "id": "III",
++              "titulo": "El argumento",
++              "subs": [
++                "1098a7-8",
++                "1098a8-12",
++                "1098a12-16",
++                "1098a16-18"
++              ],
++              "t": "La función del hombre, la del hombre bueno y la virtud que se suma: el bien humano es actividad del alma según la virtud."
++            },
++            {
++              "id": "IV",
++              "titulo": "Una vida entera",
++              "subs": [
++                "1098a18-20"
++              ],
++              "t": "Y en una vida entera: un día no hace feliz."
++            }
++          ]
++        }
++      },
++      {
++        "id": "esbozo_metodo",
++        "titulo": "Esbozo y método",
++        "resumen": "La definición es un bosquejo: el tiempo y otros la completarán. Se recuerda el rigor según la materia (el carpintero y el geómetra), se advierte que no en todo hay que pedir la causa y se distingue cómo se alcanzan los principios, que valen más de la mitad del todo.",
++        "tramos": [
++          [
++            "1098a20",
++            "1098b8"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1098a20-22",
++            "titulo": "Primero un bosquejo",
++            "bekker": [
++              "1098a20",
++              "1098a22"
++            ]
++          },
++          {
++            "id": "1098a22-26",
++            "titulo": "El tiempo, descubridor o colaborador",
++            "bekker": [
++              "1098a22",
++              "1098a26"
++            ]
++          },
++          {
++            "id": "1098a26-29",
++            "titulo": "Recordar lo dicho: el rigor según la materia",
++            "bekker": [
++              "1098a26",
++              "1098a29"
++            ]
++          },
++          {
++            "id": "1098a29-32",
++            "titulo": "El carpintero y el geómetra",
++            "bekker": [
++              "1098a29",
++              "1098a32"
++            ]
++          },
++          {
++            "id": "1098a32-33",
++            "titulo": "Que lo accesorio no supere a lo principal",
++            "bekker": [
++              "1098a32",
++              "1098a33"
++            ]
++          },
++          {
++            "id": "1098b1-3",
++            "titulo": "No pedir la causa en todo: el hecho es principio",
++            "bekker": [
++              "1098b1",
++              "1098b3"
++            ]
++          },
++          {
++            "id": "1098b3-7",
++            "titulo": "Cómo se alcanzan los principios",
++            "bekker": [
++              "1098b3",
++              "1098b7"
++            ]
++          },
++          {
++            "id": "1098b7-8",
++            "titulo": "El principio, más de la mitad del todo",
++            "bekker": [
++              "1098b7",
++              "1098b8"
++            ]
++          }
++        ],
++        "articulacion": {
++          "momentos": [
++            {
++              "id": "I",
++              "titulo": "El bosquejo",
++              "subs": [
++                "1098a20-22",
++                "1098a22-26"
++              ],
++              "t": "Primero un bosquejo; el tiempo y otros agregan lo que falta."
++            },
++            {
++              "id": "II",
++              "titulo": "El rigor",
++              "subs": [
++                "1098a26-29",
++                "1098a29-32",
++                "1098a32-33"
++              ],
++              "t": "Cada materia admite su rigor: el carpintero y el geómetra."
++            },
++            {
++              "id": "III",
++              "titulo": "Los principios",
++              "subs": [
++                "1098b1-3",
++                "1098b3-7",
++                "1098b7-8"
++              ],
++              "t": "No pedir la causa en todo; el hecho es principio, y los principios se alcanzan de distintos modos."
++            }
++          ]
++        }
++      },
++      {
++        "id": "confirmacion",
++        "titulo": "Confirmación por las opiniones",
++        "resumen": "La definición se prueba también con lo que se dice de la felicidad. Concuerda con la división de los bienes y con el «vivir bien y obrar bien», y recoge lo que unos y otros buscan en ella: la virtud, pero en ejercicio y no solo como disposición; el placer, que no se le agrega como un amuleto, porque las acciones según la virtud son placenteras por sí mismas; y los bienes exteriores, que necesita como instrumentos. La felicidad es lo mejor, lo más noble y lo más placentero: las mejores actividades, o la mejor de ellas.",
++        "tramos": [
++          [
++            "1098b9",
++            "1099b8"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1098b9-12",
++            "titulo": "Examinarla también por lo que se dice",
++            "bekker": [
++              "1098b9",
++              "1098b12"
++            ]
++          },
++          {
++            "id": "1098b12-16",
++            "titulo": "Tres clases de bienes: los del alma, los más propios",
++            "bekker": [
++              "1098b12",
++              "1098b16"
++            ]
++          },
++          {
++            "id": "1098b16-20",
++            "titulo": "Una opinión antigua: el fin son acciones y actividades",
++            "bekker": [
++              "1098b16",
++              "1098b20"
++            ]
++          },
++          {
++            "id": "1098b20-22",
++            "titulo": "Vivir bien y obrar bien",
++            "bekker": [
++              "1098b20",
++              "1098b22"
++            ]
++          },
++          {
++            "id": "1098b22-26",
++            "titulo": "Virtud, prudencia, sabiduría, placer, prosperidad",
++            "bekker": [
++              "1098b22",
++              "1098b26"
++            ]
++          },
++          {
++            "id": "1098b26-29",
++            "titulo": "Muchos y antiguos, pocos y reputados: nadie yerra del todo",
++            "bekker": [
++              "1098b26",
++              "1098b29"
++            ]
++          },
++          {
++            "id": "1098b30-31",
++            "titulo": "Concuerda con los que dicen que es la virtud",
++            "bekker": [
++              "1098b30",
++              "1098b31"
++            ]
++          },
++          {
++            "id": "1098b31-1099a3",
++            "titulo": "Posesión o uso, disposición o actividad: el que duerme",
++            "bekker": [
++              "1098b31",
++              "1099a3"
++            ]
++          },
++          {
++            "id": "1099a3-7",
++            "titulo": "En Olimpia coronan a los que compiten",
++            "bekker": [
++              "1099a3",
++              "1099a7"
++            ]
++          },
++          {
++            "id": "1099a7-11",
++            "titulo": "Una vida placentera por sí misma: a cada uno le place lo que ama",
++            "bekker": [
++              "1099a7",
++              "1099a11"
++            ]
++          },
++          {
++            "id": "1099a11-17",
++            "titulo": "Placeres en pugna y placeres por naturaleza: el placer no es un amuleto",
++            "bekker": [
++              "1099a11",
++              "1099a17"
++            ]
++          },
++          {
++            "id": "1099a17-21",
++            "titulo": "No es bueno quien no goza obrando bien",
++            "bekker": [
++              "1099a17",
++              "1099a21"
++            ]
++          },
++          {
++            "id": "1099a22-24",
++            "titulo": "Buenas y nobles en grado sumo, a juicio del hombre ejemplar",
++            "bekker": [
++              "1099a22",
++              "1099a24"
++            ]
++          },
++          {
++            "id": "1099a24-28",
++            "titulo": "No están separados, como en el epigrama de Delos",
++            "bekker": [
++              "1099a24",
++              "1099a28"
++            ]
++          },
++          {
++            "id": "1099a29-31",
++            "titulo": "Las mejores actividades, o la mejor de ellas: la felicidad",
++            "bekker": [
++              "1099a29",
++              "1099a31"
++            ]
++          },
++          {
++            "id": "1099a31-b6",
++            "titulo": "Sin recursos no se obra lo noble; lo que falta mancha la bienaventuranza",
++            "bekker": [
++              "1099a31",
++              "1099b6"
++            ]
++          },
++          {
++            "id": "1099b6-8",
++            "titulo": "Unos ponen la buena fortuna junto a la felicidad; otros, la virtud",
++            "bekker": [
++              "1099b6",
++              "1099b8"
++            ]
++          }
++        ],
++        "articulacion": {
++          "momentos": [
++            {
++              "id": "I",
++              "titulo": "La prueba por lo que se dice",
++              "subs": [
++                "1098b9-12"
++              ],
++              "t": "La definición se examina también con lo que se dice: con lo verdadero todo concuerda."
++            },
++            {
++              "id": "II",
++              "titulo": "Bienes del alma",
++              "subs": [
++                "1098b12-16",
++                "1098b16-20",
++                "1098b20-22"
++              ],
++              "t": "Los bienes del alma son los más propios; el fin son acciones y actividades; el feliz vive bien y obra bien."
++            },
++            {
++              "id": "III",
++              "titulo": "Lo que se busca de la felicidad",
++              "subs": [
++                "1098b22-26",
++                "1098b26-29"
++              ],
++              "t": "Virtud, prudencia, sabiduría, placer, prosperidad: muchos y pocos, y nadie yerra del todo."
++            },
++            {
++              "id": "IV",
++              "titulo": "La virtud: tenerla o ejercerla",
++              "subs": [
++                "1098b30-31",
++                "1098b31-1099a3",
++                "1099a3-7"
++              ],
++              "t": "La felicidad está en la actividad, no en la sola disposición: en Olimpia coronan a los que compiten."
++            },
++            {
++              "id": "V",
++              "titulo": "El placer",
++              "subs": [
++                "1099a7-11",
++                "1099a11-17",
++                "1099a17-21"
++              ],
++              "t": "La vida buena es placentera por sí misma: las acciones según la virtud lo son por naturaleza, y el placer no se les cuelga como un amuleto."
++            },
++            {
++              "id": "VI",
++              "titulo": "Lo mejor, lo más noble y lo más placentero",
++              "subs": [
++                "1099a22-24",
++                "1099a24-28",
++                "1099a29-31"
++              ],
++              "t": "Lo que el epigrama de Delos separa se reúne en las mejores actividades, o en la mejor: eso es la felicidad."
++            },
++            {
++              "id": "VII",
++              "titulo": "Bienes exteriores",
++              "subs": [
++                "1099a31-b6",
++                "1099b6-8"
++              ],
++              "t": "Sin recursos no se obra lo noble; por eso algunos confunden la felicidad con la buena fortuna."
++            }
++          ]
++        }
++      },
++      {
++        "id": "adquisicion",
++        "titulo": "Cómo se adquiere la felicidad",
++        "resumen": "La pregunta por cómo llega la felicidad distingue aprendizaje, habituación y práctica de destino divino y fortuna. Aun adquirida mediante la virtud, la felicidad es divina y ampliamente compartible. La argumentación la identifica con cierta actividad del alma según la virtud; los demás bienes son necesarios o instrumentales. La política forma ciudadanos para lo noble, pero la actividad y una vida entera excluyen de la felicidad al niño y hacen problemática la vida de Príamo.",
++        "tramos": [
++          [
++            "1099b9",
++            "1100a9"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1099b9-11",
++            "titulo": "¿Cómo llega la felicidad?",
++            "bekker": [
++              "1099b9",
++              "11"
++            ]
++          },
++          {
++            "id": "1099b11-14",
++            "titulo": "La posibilidad de un don divino",
++            "bekker": [
++              "1099b11",
++              "14"
++            ]
++          },
++          {
++            "id": "1099b14-18",
++            "titulo": "Aunque no sea enviada por los dioses",
++            "bekker": [
++              "1099b14",
++              "18"
++            ]
++          },
++          {
++            "id": "1099b18-20",
++            "titulo": "Un bien ampliamente compartible",
++            "bekker": [
++              "1099b18",
++              "1099b20"
++            ]
++          },
++          {
++            "id": "1099b20-24",
++            "titulo": "Lo mejor y la mejor causa",
++            "bekker": [
++              "1099b20",
++              "1099b24"
++            ]
++          },
++          {
++            "id": "1099b24-25",
++            "titulo": "No confiar lo supremo a la fortuna",
++            "bekker": [
++              "1099b24",
++              "1099b25"
++            ]
++          },
++          {
++            "id": "1099b25-27",
++            "titulo": "La respuesta desde la argumentación",
++            "bekker": [
++              "1099b25",
++              "1099b27"
++            ]
++          },
++          {
++            "id": "1099b27-28",
++            "titulo": "Los demás bienes",
++            "bekker": [
++              "1099b27",
++              "1099b28"
++            ]
++          },
++          {
++            "id": "1099b28-31",
++            "titulo": "La concordancia con la política",
++            "bekker": [
++              "1099b28",
++              "1099b31"
++            ]
++          },
++          {
++            "id": "1099b31-1100a1",
++            "titulo": "Los demás animales",
++            "bekker": [
++              "1099b31",
++              "1100a1"
++            ]
++          },
++          {
++            "id": "1100a1-3",
++            "titulo": "El niño y la esperanza",
++            "bekker": [
++              "1100a1",
++              "1100a3"
++            ]
++          },
++          {
++            "id": "1100a3-5",
++            "titulo": "Virtud completa y vida entera",
++            "bekker": [
++              "1100a3",
++              "1100a5"
++            ]
++          },
++          {
++            "id": "1100a5-8",
++            "titulo": "Las vicisitudes: Príamo",
++            "bekker": [
++              "1100a5",
++              "1100a8"
++            ]
++          },
++          {
++            "id": "1100a8-9",
++            "titulo": "Una muerte miserable",
++            "bekker": [
++              "1100a8",
++              "1100a9"
++            ]
++          }
++        ],
++        "articulacion": {
++          "momentos": [
++            {
++              "id": "I",
++              "titulo": "La pregunta y el don divino",
++              "subs": [
++                "1099b9-11",
++                "1099b11-14"
++              ],
++              "t": "La dificultad sobre la adquisición y la hipótesis de un don divino, reservada para otra investigación."
++            },
++            {
++              "id": "II",
++              "titulo": "Divina y, sin embargo, adquirible",
++              "subs": [
++                "1099b14-18",
++                "1099b18-20"
++              ],
++              "t": "No hace falta que sea enviada por los dioses para ser divina; podría ser muy compartida mediante aprendizaje y cultivo."
++            },
++            {
++              "id": "III",
++              "titulo": "La fortuna y la mejor causa",
++              "subs": [
++                "1099b20-24",
++                "1099b24-25"
++              ],
++              "t": "Es razonable que lo mejor no se confíe a la fortuna: naturaleza, arte y causas."
++            },
++            {
++              "id": "IV",
++              "titulo": "La definición y los demás bienes",
++              "subs": [
++                "1099b25-27",
++                "1099b27-28"
++              ],
++              "t": "El argumento recuerda la actividad del alma y distingue los demás bienes necesarios de los instrumentales."
++            },
++            {
++              "id": "V",
++              "titulo": "La política y la actividad",
++              "subs": [
++                "1099b28-31",
++                "1099b31-1100a1",
++                "1100a1-3"
++              ],
++              "t": "La política forma ciudadanos buenos; animales y niños no participan de esa actividad en el sentido requerido."
++            },
++            {
++              "id": "VI",
++              "titulo": "Virtud completa y vida entera",
++              "subs": [
++                "1100a3-5",
++                "1100a5-8",
++                "1100a8-9"
++              ],
++              "t": "La virtud completa y la vida entera: las vicisitudes y el caso de Príamo abren el problema del final de la vida."
++            }
++          ]
++        }
++      },
++      {
++        "id": "solon",
++        "titulo": "Solón y la vida entera",
++        "resumen": "En I.10 la pregunta de Solón conduce a considerar la felicidad de los vivos, la firmeza de la actividad virtuosa y la incidencia de la fortuna. En I.11 se examina si las vicisitudes de descendientes y amigos afectan a los difuntos y se concluye que su eventual influencia no altera su felicidad.",
++        "tramos": [
++          [
++            "1100a10",
++            "1101b9"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1100a10-12",
++            "titulo": "¿Esperar al fin?",
++            "bekker": [
++              "1100a10",
++              "1100a11"
++            ]
++          },
++          {
++            "id": "1100a12-14",
++            "titulo": "La felicidad y el muerto",
++            "bekker": [
++              "1100a11",
++              "1100a14"
++            ]
++          },
++          {
++            "id": "1100a14-18",
++            "titulo": "La seguridad del juicio",
++            "bekker": [
++              "1100a14",
++              "1100a18"
++            ]
++          },
++          {
++            "id": "1100a18-21",
++            "titulo": "Bienes y males sin percepción",
++            "bekker": [
++              "1100a18",
++              "1100a21"
++            ]
++          },
++          {
++            "id": "1100a21-27",
++            "titulo": "Los cambios de los descendientes",
++            "bekker": [
++              "1100a21",
++              "1100a27"
++            ]
++          },
++          {
++            "id": "1100a27-30",
++            "titulo": "La doble dificultad",
++            "bekker": [
++              "1100a27",
++              "1100a30"
++            ]
++          },
++          {
++            "id": "1100a30-1100b3",
++            "titulo": "El problema de reconocer la felicidad",
++            "bekker": [
++              "1100a31",
++              "1100b4"
++            ]
++          },
++          {
++            "id": "1100b3-7",
++            "titulo": "El hombre feliz como camaleón",
++            "bekker": [
++              "1100b4",
++              "1100b7"
++            ]
++          },
++          {
++            "id": "1100b7-11",
++            "titulo": "Las actividades son rectoras",
++            "bekker": [
++              "1100b7",
++              "1100b11"
++            ]
++          },
++          {
++            "id": "1100b11-15",
++            "titulo": "La firmeza de las actividades virtuosas",
++            "bekker": [
++              "1100b11",
++              "1100b14"
++            ]
++          },
++          {
++            "id": "1100b15-17",
++            "titulo": "Las actividades más valiosas",
++            "bekker": [
++              "1100b15",
++              "1100b17"
++            ]
++          },
++          {
++            "id": "1100b17-22",
++            "titulo": "Una vida de actividad virtuosa",
++            "bekker": [
++              "1100b18",
++              "1100b22"
++            ]
++          },
++          {
++            "id": "1100b22-25",
++            "titulo": "Pequeños y grandes acontecimientos",
++            "bekker": [
++              "1100b22",
++              "1100b25"
++            ]
++          },
++          {
++            "id": "1100b25-30",
++            "titulo": "Bienes favorables y adversidades",
++            "bekker": [
++              "1100b25",
++              "1100b30"
++            ]
++          },
++          {
++            "id": "1100b30-33",
++            "titulo": "Lo noble en el infortunio",
++            "bekker": [
++              "1100b30",
++              "1100b33"
++            ]
++          },
++          {
++            "id": "1100b33-1101a5",
++            "titulo": "El hombre bueno y sensato",
++            "bekker": [
++              "1100b33",
++              "1101a6"
++            ]
++          },
++          {
++            "id": "1101a6-8",
++            "titulo": "El límite de Príamo",
++            "bekker": [
++              "1101a6",
++              "1101a8"
++            ]
++          },
++          {
++            "id": "1101a8-13",
++            "titulo": "Desplazamiento y recuperación",
++            "bekker": [
++              "1101a8",
++              "1101a13"
++            ]
++          },
++          {
++            "id": "1101a13-16",
++            "titulo": "La formulación de la felicidad",
++            "bekker": [
++              "1101a14",
++              "1101a16"
++            ]
++          },
++          {
++            "id": "1101a16-19",
++            "titulo": "El futuro oculto",
++            "bekker": [
++              "1101a16",
++              "1101a19"
++            ]
++          },
++          {
++            "id": "1101a19-21",
++            "titulo": "Bienaventurados en cuanto hombres",
++            "bekker": [
++              "1101a19",
++              "1101a21"
++            ]
++          },
++          {
++            "id": "1101a22-24",
++            "titulo": "Las vicisitudes de descendientes y amigos",
++            "bekker": [
++              "1101a22",
++              "1101a24"
++            ]
++          },
++          {
++            "id": "1101a24-28",
++            "titulo": "Un examen general y esquemático",
++            "bekker": [
++              "1101a24",
++              "1101a28"
++            ]
++          },
++          {
++            "id": "1101a28-31",
++            "titulo": "El peso desigual de las vicisitudes",
++            "bekker": [
++              "1101a28",
++              "1101a31"
++            ]
++          },
++          {
++            "id": "1101a31-34",
++            "titulo": "La diferencia entre vivos y difuntos",
++            "bekker": [
++              "1101a31",
++              "1101a34"
++            ]
++          },
++          {
++            "id": "1101a34-1101b1",
++            "titulo": "La aporía sobre la participación de los difuntos",
++            "bekker": [
++              "1101a34",
++              "1101b1"
++            ]
++          },
++          {
++            "id": "1101b1-5",
++            "titulo": "Lo que llega a los difuntos",
++            "bekker": [
++              "1101b1",
++              "1101b5"
++            ]
++          },
++          {
++            "id": "1101b5-9",
++            "titulo": "Influencia limitada sobre los difuntos",
++            "bekker": [
++              "1101b5",
++              "1101b9"
++            ]
++          }
++        ],
++        "articulacion": {
++          "momentos": [
++            {
++              "id": "I",
++              "titulo": "Solón y el final de la vida",
++              "subs": [
++                "1100a10-12",
++                "1100a12-14",
++                "1100a14-18"
++              ],
++              "t": "La pregunta por el final y las dos interpretaciones de Solón."
++            },
++            {
++              "id": "II",
++              "titulo": "Los descendientes y la dificultad del muerto",
++              "subs": [
++                "1100a18-21",
++                "1100a21-27",
++                "1100a27-30"
++              ],
++              "t": "Bienes y males después de la muerte y la doble dificultad."
++            },
++            {
++              "id": "III",
++              "titulo": "La felicidad de los vivos y el camaleón",
++              "subs": [
++                "1100a30-1100b3",
++                "1100b3-7"
++              ],
++              "t": "La dificultad de reconocer la felicidad y el riesgo de seguir cada giro de la fortuna."
++            },
++            {
++              "id": "IV",
++              "titulo": "Actividad virtuosa y permanencia",
++              "subs": [
++                "1100b7-11",
++                "1100b11-15",
++                "1100b15-17",
++                "1100b17-22"
++              ],
++              "t": "La actividad virtuosa es rectora; su firmeza sostiene la vida feliz."
++            },
++            {
++              "id": "V",
++              "titulo": "El peso de la fortuna",
++              "subs": [
++                "1100b22-25",
++                "1100b25-30",
++                "1100b30-33"
++              ],
++              "t": "Acontecimientos pequeños y grandes, y lo noble en el infortunio."
++            },
++            {
++              "id": "VI",
++              "titulo": "Firmeza, límites y recuperación",
++              "subs": [
++                "1100b33-1101a5",
++                "1101a6-8",
++                "1101a8-13"
++              ],
++              "t": "El hombre bueno, el límite de Príamo y la posibilidad de recuperación."
++            },
++            {
++              "id": "VII",
++              "titulo": "Felicidad humana y vida entera",
++              "subs": [
++                "1101a13-16",
++                "1101a16-19",
++                "1101a19-21"
++              ],
++              "t": "La formulación final, la incertidumbre del futuro y la felicidad humana."
++            },
++            {
++              "id": "VIII",
++              "titulo": "La dificultad y el alcance de la investigación",
++              "subs": [
++                "1101a22-24",
++                "1101a24-28"
++              ],
++              "t": "Se plantea la dificultad de negar toda influencia y se propone tratarla en términos generales y esquemáticos."
++            },
++            {
++              "id": "IX",
++              "titulo": "Las diferencias que deben ponderarse",
++              "subs": [
++                "1101a28-31",
++                "1101a31-34",
++                "1101a34-1101b1"
++              ],
++              "t": "Peso desigual de las vicisitudes, diferencia entre vivos y difuntos y aporía de la participación de los muertos."
++            },
++            {
++              "id": "X",
++              "titulo": "Una influencia limitada",
++              "subs": [
++                "1101b1-5",
++                "1101b5-9"
++              ],
++              "t": "Lo que llegue a los difuntos, si llega algo, no altera su condición de felices o no felices en los términos expuestos."
++            }
++          ]
++        }
++      },
++      {
++        "id": "elogio",
++        "titulo": "La felicidad: ¿elogiable u honorable?",
++        "resumen": "La felicidad no se cuenta entre las capacidades ni se elogia como la virtud: se proclama bienaventurada, como algo digno de honor y completo. El capítulo examina el carácter referencial del elogio, la defensa del placer de Eudoxo y la felicidad como principio y causa de los bienes.",
++        "tramos": [
++          [
++            "1101b10",
++            "1102a4"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1101b10-12",
++            "titulo": "¿Elogiable o digna de honor?",
++            "bekker": [
++              "1101b10",
++              "1101b12"
++            ]
++          },
++          {
++            "id": "1101b12-18",
++            "titulo": "El elogio y la referencia",
++            "bekker": [
++              "1101b12",
++              "1101b18"
++            ]
++          },
++          {
++            "id": "1101b18-21",
++            "titulo": "Los elogios a los dioses",
++            "bekker": [
++              "1101b18",
++              "1101b21"
++            ]
++          },
++          {
++            "id": "1101b21-25",
++            "titulo": "Más allá del elogio",
++            "bekker": [
++              "1101b21",
++              "1101b25"
++            ]
++          },
++          {
++            "id": "1101b25-27",
++            "titulo": "La felicidad no se elogia",
++            "bekker": [
++              "1101b25",
++              "1101b27"
++            ]
++          },
++          {
++            "id": "1101b27-31",
++            "titulo": "La defensa de Eudoxo",
++            "bekker": [
++              "1101b27",
++              "1101b31"
++            ]
++          },
++          {
++            "id": "1101b31-34",
++            "titulo": "Elogio de la virtud y encomio de las obras",
++            "bekker": [
++              "1101b31",
++              "1101b34"
++            ]
++          },
++          {
++            "id": "1101b34-1102a1",
++            "titulo": "Dignas de honor y completas",
++            "bekker": [
++              "1101b34",
++              "1102a1"
++            ]
++          },
++          {
++            "id": "1102a2-4",
++            "titulo": "La felicidad como principio y causa",
++            "bekker": [
++              "1102a2",
++              "1102a4"
++            ]
++          }
++        ],
++        "articulacion": {
++          "momentos": [
++            {
++              "id": "I",
++              "titulo": "La pregunta y el carácter del elogio",
++              "subs": [
++                "1101b10-12",
++                "1101b12-18"
++              ],
++              "t": "La felicidad y la distinción propuesta; la índole y la referencia de lo elogiable."
++            },
++            {
++              "id": "II",
++              "titulo": "Las mejores cosas y la felicidad",
++              "subs": [
++                "1101b18-21",
++                "1101b21-25",
++                "1101b25-27"
++              ],
++              "t": "Los elogios a los dioses y la proclamación de bienaventuranza para las mejores cosas y para la felicidad."
++            },
++            {
++              "id": "III",
++              "titulo": "Eudoxo, elogio y encomio",
++              "subs": [
++                "1101b27-31",
++                "1101b31-34"
++              ],
++              "t": "La defensa de Eudoxo y la distinción entre el elogio de la virtud y el encomio de las obras."
++            },
++            {
++              "id": "IV",
++              "titulo": "La conclusión y su fundamento",
++              "subs": [
++                "1101b34-1102a1",
++                "1102a2-4"
++              ],
++              "t": "La felicidad es digna de honor y completa; se la presenta como principio y causa de los bienes."
++            }
++          ]
++        }
++      },
++      {
++        "id": "alma_virtudes",
++        "titulo": "Partes del alma y división de las virtudes",
++        "resumen": "La felicidad como actividad del alma según virtud completa conduce al examen político del alma, a la distinción de sus partes y a la división entre virtudes dianoéticas y éticas.",
++        "tramos": [
++          [
++            "1102a5",
++            "1103a10"
++          ],
++          [
++            "1098a3",
++            "1098a5"
++          ]
++        ],
++        "subunidades": [
++          {
++            "id": "1102a5-7",
++            "titulo": "La virtud como objeto de examen",
++            "bekker": [
++              "1102a5",
++              "1102a7"
++            ]
++          },
++          {
++            "id": "1102a7-12",
++            "titulo": "La tarea del político",
++            "bekker": [
++              "1102a7",
++              "1102a12"
++            ]
++          },
++          {
++            "id": "1102a12-13",
++            "titulo": "Continuidad de la investigación",
++            "bekker": [
++              "1102a12",
++              "1102a13"
++            ]
++          },
++          {
++            "id": "1102a13-18",
++            "titulo": "La virtud humana es la del alma",
++            "bekker": [
++              "1102a13",
++              "1102a18"
++            ]
++          },
++          {
++            "id": "1102a18-23",
++            "titulo": "La analogía con la medicina",
++            "bekker": [
++              "1102a18",
++              "1102a23"
++            ]
++          },
++          {
++            "id": "1102a23-26",
++            "titulo": "El alcance del examen",
++            "bekker": [
++              "1102a23",
++              "1102a26"
++            ]
++          },
++          {
++            "id": "1102a26-28",
++            "titulo": "Lo irracional y lo que posee razón",
++            "bekker": [
++              "1102a26",
++              "1102a28"
++            ]
++          },
++          {
++            "id": "1102a28-32",
++            "titulo": "Separación o distinción en la definición",
++            "bekker": [
++              "1102a28",
++              "1102a32"
++            ]
++          },
++          {
++            "id": "1102a32-1102b2",
++            "titulo": "Nutrición y crecimiento",
++            "bekker": [
++              "1102a32",
++              "1102b2"
++            ]
++          },
++          {
++            "id": "1102b3-11",
++            "titulo": "El sueño y la virtud humana",
++            "bekker": [
++              "1102b3",
++              "1102b11"
++            ]
++          },
++          {
++            "id": "1102b11-13",
++            "titulo": "La parte nutritiva queda de lado",
++            "bekker": [
++              "1102b11",
++              "1102b13"
++            ]
++          },
++          {
++            "id": "1102b13-14",
++            "titulo": "Otra naturaleza irracional",
++            "bekker": [
++              "1102b13",
++              "1102b14"
++            ]
++          },
++          {
++            "id": "1102b14-18",
++            "titulo": "Continencia e incontinencia",
++            "bekker": [
++              "1102b14",
++              "1102b18"
++            ]
++          },
++          {
++            "id": "1102b18-21",
++            "titulo": "La analogía de los miembros paralizados",
++            "bekker": [
++              "1102b18",
++              "1102b21"
++            ]
++          },
++          {
++            "id": "1102b21-25",
++            "titulo": "La oposición en el alma",
++            "bekker": [
++              "1102b21",
++              "1102b25"
++            ]
++          },
++          {
++            "id": "1102b25-28",
++            "titulo": "Del continente al templado y al valiente",
++            "bekker": [
++              "1102b25",
++              "1102b28"
++            ]
++          },
++          {
++            "id": "1102b28-31",
++            "titulo": "Dos aspectos de lo irracional",
++            "bekker": [
++              "1102b28",
++              "1102b31"
++            ]
++          },
++          {
++            "id": "1102b31-33",
++            "titulo": "La razón del padre y de los amigos",
++            "bekker": [
++              "1102b31",
++              "1102b33"
++            ]
++          },
++          {
++            "id": "1102b33-1103a1",
++            "titulo": "Persuasión y exhortación",
++            "bekker": [
++              "1102b33",
++              "1103a1"
++            ]
++          },
++          {
++            "id": "1103a1-3",
++            "titulo": "Dos modos de poseer razón",
++            "bekker": [
++              "1103a1",
++              "1103a3"
++            ]
++          },
++          {
++            "id": "1103a3-7",
++            "titulo": "Virtudes dianoéticas y éticas",
++            "bekker": [
++              "1103a3",
++              "1103a7"
++            ]
++          },
++          {
++            "id": "1103a7-10",
++            "titulo": "Carácter, modo de ser y elogio",
++            "bekker": [
++              "1103a7",
++              "1103a10"
++            ]
++          }
++        ],
++        "articulacion": {
++          "momentos": [
++            {
++              "id": "I",
++              "titulo": "De la felicidad a la virtud",
++              "subs": [
++                "1102a5-7",
++                "1102a7-12",
++                "1102a12-13"
++              ],
++              "t": "La felicidad conduce al examen de la virtud dentro de la política."
++            },
++            {
++              "id": "II",
++              "titulo": "Por qué el político estudia el alma",
++              "subs": [
++                "1102a13-18",
++                "1102a18-23",
++                "1102a23-26"
++              ],
++              "t": "El político estudia el alma en la medida necesaria para su investigación."
++            },
++            {
++              "id": "III",
++              "titulo": "Una primera división del alma",
++              "subs": [
++                "1102a26-28",
++                "1102a28-32"
++              ],
++              "t": "Se distinguen partes del alma y se deja abierta su separación."
++            },
++            {
++              "id": "IV",
++              "titulo": "La parte vegetativa",
++              "subs": [
++                "1102a32-1102b2",
++                "1102b3-11",
++                "1102b11-13"
++              ],
++              "t": "La parte vegetativa es común y se deja fuera del examen de la virtud humana."
++            },
++            {
++              "id": "V",
++              "titulo": "El conflicto con la razón",
++              "subs": [
++                "1102b13-14",
++                "1102b14-18",
++                "1102b18-21",
++                "1102b21-25"
++              ],
++              "t": "La razón y los impulsos pueden entrar en conflicto."
++            },
++            {
++              "id": "VI",
++              "titulo": "Participación y concordancia con la razón",
++              "subs": [
++                "1102b25-28",
++                "1102b28-31",
++                "1102b31-33"
++              ],
++              "t": "Lo desiderativo participa de la razón de maneras que se distinguen en los distintos caracteres."
++            },
++            {
++              "id": "VII",
++              "titulo": "Dos modos de poseer razón",
++              "subs": [
++                "1102b33-1103a1",
++                "1103a1-3"
++              ],
++              "t": "La persuasión y la doble acepción de poseer razón precisan esa participación."
++            },
++            {
++              "id": "VIII",
++              "titulo": "La división de las virtudes",
++              "subs": [
++                "1103a3-7",
++                "1103a7-10"
++              ],
++              "t": "Las virtudes se dividen conforme a la diferencia establecida y se reconocen como disposiciones elogiables."
++            }
++          ]
++        }
++      }
++    ]
++  }
++}
+diff --git a/docs/LAB_N1U2_ARQUITECTURA_LIBRO_I.md b/docs/LAB_N1U2_ARQUITECTURA_LIBRO_I.md
+new file mode 100644
+--- /dev/null
++++ b/docs/LAB_N1U2_ARQUITECTURA_LIBRO_I.md
+@@ -0,0 +1,55 @@
++# Ágora · N1-U.2 · Arquitectura argumentativa del Libro I
++
++## Alcance
++
++Nueva ruta experimental `/#/lab/arquitectura` dentro del catálogo del Lab. Usa el corpus de MariaDB **en tiempo de ejecución** (`GET /api/labo/lectura`). No modifica MariaDB, archivos editoriales ni la organización persistente del visor 9B.
++
++Niveles del explorador: 4 macrounidades propuestas → 13 unidades de MariaDB → momentos (52 registrados, 14 propuestos para I–V) → 175 subunidades registradas. La selección abre una ficha lateral que muestra los resúmenes y las remisiones `mapa` registradas, distinguiéndolas de las relaciones filosóficas tipadas. Las subunidades permiten leer el capítulo original en griego y castellano mediante el motor de 9B, sin perder la selección del experimento al volver.
++
++## Proveniencia
++
++- `public/lab/n1u1-propuestas-libro-i.json` es la **hipótesis editorial del experimento**, procedente del documento N1-U.1, no un nuevo tagueo ni un corpus canónico. Incluye ID de revisión, 4 macrounidades, 14 momentos en I–V y la norma de traducción **«virtud completa en una vida entera»**.
++- Unidades, subunidades, Bekker, textos introductorios, relaciones conceptuales, articulaciones de las restantes unidades: lectura en vivo de MariaDB.
++- Las flechas `incluye` y `articula` representan solo pertenencia estructural. Las flechas `orden de lectura` son una **secuencia de capítulos**, no inferencias filosóficas. Las relaciones conceptuales de una subunidad se leen en su ficha y no se transforman en aristas entre subunidades.
++- Si `revision` de la API no coincide con `fuente.revision` de la propuesta, el experimento **se niega a mezclar los datos** y explica la discrepancia. Exportar una nueva revisión y volver a auditar antes de editar la propuesta.
++
++## Instalación
++
++Aplicar sobre la rama con 9B instalado:
++
++```powershell
++git apply --check agora-lab-arquitectura-n1u2.patch
++git apply agora-lab-arquitectura-n1u2.patch
++```
++
++No ejecutar `git apply` sobre el JSON original descargado. El parche instala una copia de la propuesta como recurso estático del experimento; no inserta nada en la base.
++
++Abrir Ágora normalmente y entrar en **Lab → Arquitectura argumentativa** o navegar a `/#/lab/arquitectura`.
++
++Si Cytoscape no está preparado, el inspector muestra las opciones navegables sin grafo; seguir las instrucciones del visor existente para crear `public/vendor/cytoscape.min.js`.
++
++## Pruebas
++
++```powershell
++node public/scripts/check-lab-arquitectura-n1u2.mjs
++node public/scripts/check-visor-lectura-9b.mjs
++```
++
++La primera prueba usa una **fixture reducida** bajo `public/scripts/fixtures` con la estructura, identificadores y articulaciones de la exportación del 19-11-2026, no la base de datos en vivo. Prueba cobertura total, 4 macrounidades, 13 unidades, 175 subunidades, 52 momentos registrados, 14 momentos propuestos, navegación y rechazo de revisión obsoleta / identificadores erróneos / asignación duplicada. No sustituye la prueba visual con MariaDB.
++
++## Prueba manual recomendada
++
++1. Abrir el experimento. Ver las 4 macrounidades y 3 flechas punteadas rotuladas **orden de lectura**.
++2. Seleccionar **I–V**, luego **Proemio: el bien y la política**; los cuatro momentos aparecen con borde punteado (propuesta).
++3. Abrir el momento **Fines de las acciones y pluralidad del bien**, seleccionar `1094a1-3`; inspeccionar movimientos y relación conceptual registrada; abrir lectura griego/castellano y volver.
++4. Abrir **VI–VII → Crítica de la Idea del bien**; comprobar que los seis momentos proceden de la articulación **registrada** en MariaDB.
++5. Mover un nodo y usar **Ajustar grafo**. Las posiciones pueden mantenerse durante la sesión del experimento, pero no se guardan en la disposición del visor principal ni en MariaDB.
++6. Ejecutar las pruebas automatizadas y recorrer de nuevo el visor 9B para descartar regresiones.
++
++## Reversibilidad
++
++Mientras no haya cambios posteriores: `git apply -R agora-lab-arquitectura-n1u2.patch`. Los archivos, rutas y datos del experimento se eliminan sin tocar los checkpoints previos.
++
++## Próxima revisión editorial
++
++Revisar los 14 momentos propuestos de I–V; en particular, los títulos de Proemio y Método y la vinculación de las subunidades. No convertir las flechas del prototipo en aristas canónicas hasta acordar una tipología de relaciones entre unidades y subunidades.

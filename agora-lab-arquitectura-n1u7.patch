@@ -1,0 +1,1149 @@
+diff --git a/docs/LAB_N1U7_RED_FICHAS_PILOTO.md b/docs/LAB_N1U7_RED_FICHAS_PILOTO.md
+new file mode 100644
+index 0000000..6766fa8
+--- /dev/null
++++ b/docs/LAB_N1U7_RED_FICHAS_PILOTO.md
+@@ -0,0 +1,64 @@
++# Ágora · N1-U.7 · Siete fichas filosóficas y red navegable
++
++## Cambio de enfoque
++
++Las **fichas explicativas son la puerta de entrada**; los grafos internos y la infraestructura de unidades/subunidades son evidencias y recorridos de apoyo. No se derivan conexiones de coincidencias de etiquetas ni de pertenencia mecánica. Esta etapa **no modifica** MariaDB, las FAQ existentes, sus trayectos publicados ni el lector bilingüe.
++
++## Siete fichas en el Lab
++
++Fichas anteriores, preservadas:
++
++1. `proemio` — «El Proemio: acción, bienes y política» (cuatro módulos, dos resoluciones).
++2. `faq.etica.intro` — «¿Qué es la ética? ¿Por dónde comienzo?» (trayecto publicado de seis pasos en el dump).
++3. `faq.agathon.pros_hen` — «¿Cómo se dice el bien? Hacia uno y por analogía» (trayecto publicado de **cuatro** pasos en el dump; no se alteró ni se rellenó artificialmente hasta seis).
++
++Cuatro **fichas-FAQ de síntesis nuevas**, únicamente en borrador Lab:
++
++| ID provisional | Pregunta | Seis anclajes Bekker reales | Macrounidades propuestas |
++| --- | --- | --- | --- |
++| `faq.lab.felicidad` | ¿Qué es la felicidad? | `1095a17-20`, `1095a20-26`, `1097a34-b6`, `1097b20-21`, `1098a16-18`, `1100a3-5` | I–V, VI–VII, VIII–XII |
++| `faq.lab.ergon` | ¿En qué consiste el argumento de la función propia (*érgon*)? | `1097b22-25`, `1097b25-28`, `1097b33-1098a3`, `1098a3-5`, `1098a8-12`, `1098a16-18` | VI–VII |
++| `faq.lab.alma` | ¿Cuáles son las partes del alma? | `1102a5-7`, `1102a26-28`, `1102a32-1102b2`, `1102b14-18`, `1102b28-31`, `1103a1-3` | XIII |
++| `faq.lab.virtudes` | ¿Qué tipos de virtudes hay? | `1102a13-18`, `1102b13-14`, `1102b33-1103a1`, `1103a1-3`, `1103a3-7`, `1103a7-10` | XIII |
++
++Cada ficha nueva lleva introducción, lectura del diagrama, referencias iniciales, seis pasos con título y comentario, cinco transiciones explicativas y vínculos editoriales explícitos a macrounidades, unidades y pasajes. **Cada paso es un nodo, sin subgrafos de premisas/objeciones por ahora.** Las transiciones son la secuencia pedagógica propuesta; no se presentan como inferencias probadas.
++
++La base ya contiene otras FAQ específicas (`faq.eudaimonia.definicion`, `faq.eudaimonia.completa`, `faq.ergon.humano`, `faq.psuche.partes`, etc.). Estas fichas son **síntesis introductorias adicionales**, no modificaciones ni nuevos registros persistentes de esas FAQ. Sus identificadores `faq.lab.*` son provisionales. La futura publicación en MariaDB requiere una decisión editorial de identidad, versionado y relación con las FAQ existentes.
++
++## Red piloto de siete fichas
++
++Se muestra de entrada en `/#/lab/arquitectura`. Contiene **siete nodos y ocho aristas dirigidas con nombre y explicación**:
++
++- Ética → Proemio: *sitúa la investigación*.
++- Proemio → Felicidad: *plantea el fin humano*.
++- Ética → Sentidos del bien: *abre el problema del bien*.
++- Sentidos del bien → Felicidad: *distingue planos del bien*, sin deducción semántica.
++- Felicidad → Érgon: *pide una determinación*.
++- Érgon → Alma: *motiva examinar el alma*.
++- Alma → Virtudes: *fundamenta la clasificación*.
++- Virtudes → Felicidad: *precisa la excelencia*.
++
++Estas aristas **no se infieren** de los 175 pasajes, los tags o la mera posición textual. Su dirección y fundamento son hipótesis editoriales revisables. Al seleccionar un nodo o flecha, el inspector permite consultar su explicación y abrir una ficha; desde ella se accede a **Contexto / Diagrama / Pasajes**, conservando las vistas anteriores y el archivo estructural en un acceso secundario.
++
++## Archivos
++
++- `public/lab/n1u7-fichas-red-piloto.json`: ficha-FAQ, seis pasos, puentes, y ocho relaciones curatoriales. Recurso autocontenido, editable sin tocar JS, con `revision` del snapshot.
++- `public/js/lab/architecturePilotNetwork.js`: expansión y validación estricta, grafo/inspector de red; HTML escapado.
++- `public/js/lab/architectureCards.js`: inspector capaz de distinguir propuestas de trayectos publicados, preservando la semántica original de ambas FAQ anteriores.
++- `public/js/views/labArchitectureView.js`: carga del recurso, red inicial navegable y acceso a las siete fichas.
++- `public/css/lab-arquitectura-n1u2.css`: mejora del selector con las siete preguntas.
++- `public/scripts/check-lab-arquitectura-n1u7.mjs`: test sin MariaDB que revisa IDs, cobertura, 4×6 pasos, 4×5 transiciones, 7 nodos/8 aristas, seguridad, versiones y ausencia de mutación de la fuente.
++
++## Instalación (Windows, PowerShell)
++
++Desde la raíz del repositorio, **con N1-U.6 instalado**:
++
++```powershell
++git apply --check "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u7.patch"
++git apply "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u7.patch"
++node public/scripts/check-lab-arquitectura-n1u7.mjs
++```
++
++Abrir `/#/lab/arquitectura`, seleccionar «Red de fichas», elegir «¿Qué es la felicidad?», alternar las tres perspectivas y entrar en su «Diagrama explicativo», luego seleccionar el sexto paso y abrir lectura bilingüe. Repetir con Alma y Virtudes y verificar el retorno a la red.
++
++**Límites:** se validó con el fixture obtenido de la exportación `/api/labo/lectura` (revisión `3e94a2a6…`, dump 2026-11-07). La visualización real con Cytoscape, el navegador y MariaDB de la instalación del usuario debe verificarse allí; cambios de revisión producirán un rechazo antes de combinar versiones incompatibles.
+diff --git a/public/css/lab-arquitectura-n1u2.css b/public/css/lab-arquitectura-n1u2.css
+index 508d767..764578c 100644
+--- a/public/css/lab-arquitectura-n1u2.css
++++ b/public/css/lab-arquitectura-n1u2.css
+@@ -95,3 +95,9 @@
+ .arch-perspectivas button { border: 1px solid var(--border, #b6c8cd); background: var(--bg-elevated, #fff); color: inherit; border-radius: 8px; padding: 9px 13px; cursor: pointer; font: inherit; font-size: .9rem; }
+ .arch-perspectivas button[aria-pressed="true"] { border-color: #2d6968; background: #e5f2ef; color: #20534e; font-weight: 700; }
+ @media (max-width: 650px) { .arch-perspectivas button { flex: 1 1 100%; } }
++
++/* N1-U.7 · Red de siete fichas y acceso progresivo a sus seis pasos. */
++.arch-fichas-nav [data-arch-network] { font-weight: 650; }
++.arch-fichas-nav [data-arch-card] { max-width: 235px; text-align: left; }
++.arch-fichas-nav [data-arch-card]:focus-visible, .arch-fichas-nav [data-arch-network]:focus-visible { outline: 3px solid #368478; outline-offset: 2px; }
++@media (max-width: 650px) { .arch-fichas-nav [data-arch-card] { max-width: none; } }
+diff --git a/public/js/lab/architectureCards.js b/public/js/lab/architectureCards.js
+index e4005f3..f42285f 100644
+--- a/public/js/lab/architectureCards.js
++++ b/public/js/lab/architectureCards.js
+@@ -39,7 +39,7 @@ export function elementosFichaFAQ(ficha, modelo, seleccion = {}) {
+     if (!sub) fail(`pasaje no disponible: ${p.sub_id}`);
+     return { group: 'nodes', data: {
+       id: `ficha:${ficha.id}:${p.id}`, tipo: 'paso_faq', key: p.id,
+-      label: `${i + 1}. ${sub.titulo}\n${p.sub_id}`, seleccionado: seleccion.pasoId === p.id ? 1 : 0,
++      label: `${i + 1}. ${p.titulo || sub.titulo}\n${p.sub_id}`, seleccionado: seleccion.pasoId === p.id ? 1 : 0,
+     }, position: { x: Math.floor(i / 2) % 2 === 0 ? (i % 2 === 0 ? 260 : 680) : (i % 2 === 0 ? 680 : 260), y: 130 + Math.floor(i / 2) * 230 } };
+   });
+   const edges = ficha.transiciones.map((comentario, i) => {
+@@ -71,28 +71,31 @@ export function inspectorFichaFAQHtml(ficha, modelo, pasoId, enlaceId) {
+   const paso = ficha.pasos.find(x => x.id === pasoId);
+   const indice = ficha.pasos.findIndex(p => `${p.id}->p${Number(p.id.slice(1)) + 1}` === enlaceId);
+   const trans = indice >= 0 && indice < ficha.transiciones.length ? ficha.transiciones[indice] : null;
+-  const titulo = p => modelo.subs.get(p.sub_id)?.titulo || p.sub_id;
++  const titulo = p => p.titulo || modelo.subs.get(p.sub_id)?.titulo || p.sub_id;
++  const esBorrador = ficha.fuente_editorial?.origen === 'propuesta_lab';
+   const nav = `<div class="arch-nav-list">${ficha.pasos.map((p, i) =>
+     `<button type="button" data-arch-card-step="${safe(p.id)}">${i + 1}. ${safe(titulo(p))}<small>${safe(p.sub_id)}</small></button>`).join('')}</div>`;
+-  const ident = `<div class="arch-inspector-heading"><span class="arch-chip">Trayecto editorial · publicado en exportación</span><span class="arch-chip arch-chip--propuesto">Comentario en borrador</span></div>`;
++  const ident = `<div class="arch-inspector-heading"><span class="arch-chip">${esBorrador ? 'FAQ de síntesis · seis pasos propuestos' : 'Trayecto editorial · publicado en exportación'}</span><span class="arch-chip arch-chip--propuesto">Comentario en borrador</span></div>`;
+   if (trans) {
+     const a = ficha.pasos[indice], b = ficha.pasos[indice + 1];
+     return `${ident}<h2>Transición ${indice + 1} → ${indice + 2}</h2>
+       <p class="arch-muted">${safe(titulo(a))} → ${safe(titulo(b))}</p><h3>Explicación inicial</h3><p>${safe(trans)}</p>
+-      <p class="arch-muted">Esta flecha registra el orden del trayecto publicado; su comentario explicativo es una propuesta pedagógica y no una inferencia demostrada.</p>
++      <p class="arch-muted">${esBorrador ? 'Esta flecha representa el orden pedagógico propuesto, no un trayecto ya publicado ni una deducción demostrada.' : 'Esta flecha registra el orden del trayecto publicado; su comentario explicativo es una propuesta pedagógica y no una inferencia demostrada.'}</p>
+       <button type="button" class="arch-minor" data-arch-card-step="${safe(a.id)}">Inspeccionar el origen</button>
+       <button type="button" class="arch-minor" data-arch-card-step="${safe(b.id)}">Inspeccionar el destino</button>
+       <button type="button" class="arch-minor" data-arch-card-list>Ver todos los pasos</button>`;
+   }
+   if (paso) {
+-    return `${ident}<h2>${safe(titulo(paso))}</h2><p class="arch-muted">Paso ${safe(paso.id)} · ${safe(paso.sub_id)}</p>
++    return `${ident}<h2>${safe(titulo(paso))}</h2><p class="arch-muted">Paso ${safe(paso.id)} · ${safe(paso.sub_id)} · ${safe(modelo.subs.get(paso.sub_id)?.titulo || '')}</p>
+       <h3>Función de este pasaje</h3><p>${safe(paso.comentario)}</p>
+       <h3>Lectura y conexiones</h3><button type="button" class="arch-primary" data-arch-read="${safe(paso.sub_id)}">Leer el pasaje bilingüe</button>
+       ${ficha.transiciones.map((c, i) => ({ c, i })).filter(x => x.i === ficha.pasos.indexOf(paso) || x.i + 1 === ficha.pasos.indexOf(paso)).map(x => `<button type="button" class="arch-minor" data-arch-card-link="p${x.i + 1}->p${x.i + 2}">Transición ${x.i + 1} → ${x.i + 2}</button>`).join('')}
+       <button type="button" class="arch-minor" data-arch-card-list>Ver todos los pasos</button>`;
+   }
+-  return `${ident}<h2>${safe(ficha.titulo)}</h2><p>Este diagrama reproduce el orden de los ${ficha.pasos.length} pasos del trayecto <code>${safe(ficha.fuente_editorial.trayecto_id)}</code> según la exportación editorial.</p>
++  return `${ident}<h2>${safe(ficha.titulo)}</h2><p>${esBorrador
++    ? `Este diagrama organiza ${ficha.pasos.length} pasos explicativos propuestos. Sus pasajes de apoyo existen en el corpus, pero la FAQ y el trayecto aún no están publicados en MariaDB.`
++    : `Este diagrama reproduce el orden de los ${ficha.pasos.length} pasos del trayecto <code>${safe(ficha.fuente_editorial.trayecto_id)}</code> según la exportación editorial.`}</p>
+     <h3>Componentes del grafo</h3>${nav}
+     <h3>Relaciones entre los pasos</h3><p class="arch-muted">${ficha.transiciones.length} aristas de secuencia (no deducciones). Seleccioná una flecha para examinar su explicación preliminar.</p>
+-    <div class="arch-nav-list">${ficha.transiciones.map((_, i) => `<button type="button" data-arch-card-link="p${i + 1}->p${i + 2}">Paso ${i + 1} → ${i + 2}<small>Orden editorial publicado</small></button>`).join('')}</div>`;
++    <div class="arch-nav-list">${ficha.transiciones.map((_, i) => `<button type="button" data-arch-card-link="p${i + 1}->p${i + 2}">Paso ${i + 1} → ${i + 2}<small>${esBorrador ? 'Orden explicativo propuesto' : 'Orden editorial publicado'}</small></button>`).join('')}</div>`;
+ }
+diff --git a/public/js/lab/architecturePilotNetwork.js b/public/js/lab/architecturePilotNetwork.js
+new file mode 100644
+index 0000000..a1e84ec
+--- /dev/null
++++ b/public/js/lab/architecturePilotNetwork.js
+@@ -0,0 +1,112 @@
++// Ágora · N1-U.7 · Cuatro fichas de síntesis y red curatorial de siete fichas.
++// Extiende N1-U.5/N1-U.6 sin modificar FAQ, trayectos, tagueo ni MariaDB.
++const html = value => String(value ?? '').replace(/[&<>"']/g, c => ({
++  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
++})[c]);
++const fail = msg => { throw new Error(`Red de fichas N1-U.7: ${msg}`); };
++const txt = v => typeof v === 'string' && !!v.trim();
++const NUEVAS = ['faq.lab.felicidad','faq.lab.ergon','faq.lab.alma','faq.lab.virtudes'];
++const EXISTENTES = ['proemio','faq.etica.intro','faq.agathon.pros_hen'];
++
++export function construirAmpliacionFichas(modelo, fichasBase, puentesBase, recurso) {
++  if (recurso?.schema !== 'agora.lab.n1u7.fichas-red.v1' || recurso?.estado !== 'borrador_pedagogico_pendiente_curaduria') fail('schema o estado inesperado');
++  if (!modelo?.revision || modelo.revision !== fichasBase?.revision || modelo.revision !== puentesBase?.revision ||
++      modelo.revision !== recurso.fuente?.revision || recurso.fuente?.fichas_previas !== 'agora.lab.n1u5.fichas.v1' ||
++      recurso.fuente?.puentes_previos !== 'agora.lab.n1u6.puentes.v1') fail('revisión/antecedente no coincidente');
++  if (fichasBase.fichas.length !== 3 || puentesBase.porFicha.size !== 3 ||
++      !EXISTENTES.every(id => fichasBase.porId.has(id) && puentesBase.porFicha.has(id))) fail('faltan fichas de partida');
++  if (!Array.isArray(recurso.fichas) || recurso.fichas.length !== 4) fail('se esperaban cuatro fichas nuevas');
++  const porId = new Map(fichasBase.porId), puentesPorFicha = new Map(puentesBase.porFicha);
++  const macros = new Map(modelo.macros.map(m => [m.id, m]));
++  for (const f of recurso.fichas) {
++    if (!NUEVAS.includes(f?.id) || porId.has(f.id) || f.tipo !== 'faq' || !txt(f.titulo) ||
++        f.fuente_editorial?.faq_id !== f.id || f.fuente_editorial?.origen !== 'propuesta_lab' ||
++        f.fuente_editorial?.estado !== 'borrador_no_publicado' || f.fuente_editorial?.trayecto_id !== null ||
++        f.fuente_editorial?.pasos_propuestos !== 6) fail('identidad de ficha/FAQ borrador incorrecta');
++    for (const field of ['introduccion','lectura_grafo','referencias']) {
++      if (!Array.isArray(f[field]) || !f[field].length || !f[field].every(txt)) fail(`campo explicativo inválido: ${field}`);
++    }
++    if (!txt(f.nota) || !Array.isArray(f.pasos) || f.pasos.length !== 6 || !Array.isArray(f.transiciones) ||
++        f.transiciones.length !== 5 || !f.transiciones.every(txt)) fail('trayecto de seis pasos incompleto');
++    const subs = new Set();
++    for (const [i,p] of f.pasos.entries()) {
++      if (p?.id !== `p${i+1}` || !txt(p.titulo) || !txt(p.comentario) || !modelo.subs.has(p.sub_id) || subs.has(p.sub_id))
++        fail(`paso o pasaje inválido: ${f.id}/${p?.id}`);
++      subs.add(p.sub_id);
++    }
++    const c = f.contextos;
++    if (!Array.isArray(c?.macros) || !c.macros.length || !Array.isArray(c?.unidades) || !c.unidades.length ||
++        !Array.isArray(f.apoyos) || f.apoyos.length !== 6) fail('puentes incompletos');
++    const macroIds = new Set(), unidadIds = new Set(), apoyoIds = new Set();
++    for (const m of c.macros) {
++      if (!macros.has(m.id) || macroIds.has(m.id) || !txt(m.rol) || !txt(m.explicacion)) fail(`macrounidad inválida: ${f.id}`);
++      macroIds.add(m.id);
++    }
++    for (const u of c.unidades) {
++      if (!modelo.unidades.has(u.id) || unidadIds.has(u.id) || !txt(u.rol) || !txt(u.explicacion) ||
++          !c.macros.some(m => macros.get(m.id).unidades.some(x => x.id === u.id))) fail(`unidad de contexto inválida: ${f.id}/${u.id}`);
++      unidadIds.add(u.id);
++    }
++    for (const [i,a] of f.apoyos.entries()) {
++      const paso=f.pasos[i], sub=modelo.subs.get(a?.sub_id);
++      if (!sub || apoyoIds.has(a.sub_id) || a.paso_id !== paso.id || a.sub_id !== paso.sub_id ||
++          !unidadIds.has(sub.unidad) || !txt(a.rol) || !txt(a.explicacion)) fail(`pasaje de apoyo sin anclaje explícito: ${f.id}/${a?.sub_id}`);
++      apoyoIds.add(a.sub_id);
++    }
++    const related = f.fuente_editorial?.faqs_canonicas_relacionadas;
++    if (!Array.isArray(related) || !related.every(txt)) fail('lista editorial de FAQ relacionadas inválida');
++    porId.set(f.id, Object.freeze(f));
++    puentesPorFicha.set(f.id, Object.freeze({ ficha_id:f.id, contextos:c, apoyos:f.apoyos }));
++  }
++  if (porId.size !== 7 || NUEVAS.some(id => !porId.has(id))) fail('red incompleta');
++  const redes = recurso.red;
++  if (redes?.estado !== 'relaciones_editoriales_propuestas' || !txt(redes.nota) || !Array.isArray(redes.relaciones) || !redes.relaciones.length) fail('red ausente');
++  const enlacesPorId = new Map(), pares = new Set();
++  for (const r of redes.relaciones) {
++    const par = `${r.desde}->${r.hacia}`;
++    if (!txt(r.id) || enlacesPorId.has(r.id) || pares.has(par) || r.desde === r.hacia ||
++        !porId.has(r.desde) || !porId.has(r.hacia) || !txt(r.nombre) || !txt(r.explicacion)) fail('arista editorial inválida o duplicada');
++    enlacesPorId.set(r.id, Object.freeze(r)); pares.add(par);
++  }
++  const fichas = Object.freeze({ revision: modelo.revision, porId, fichas: Object.freeze([...porId.values()]) });
++  const puentes = Object.freeze({ revision: modelo.revision, porFicha: puentesPorFicha, fichas });
++  const red = Object.freeze({ revision: modelo.revision, relaciones: redes.relaciones, porId: enlacesPorId, nota: redes.nota });
++  return Object.freeze({ fichas, puentes, red });
++}
++
++export function elementosRedFichas(fichas, red, seleccion = {}) {
++  if (fichas.revision !== red.revision) fail('revisión de la red incompatible');
++  const posiciones = [
++    [100,80], [520,80], [940,80],
++    [100,330], [520,330], [940,330], [520,570],
++  ];
++  const ids = ['faq.etica.intro','proemio','faq.agathon.pros_hen',
++    'faq.lab.felicidad','faq.lab.ergon','faq.lab.alma','faq.lab.virtudes'];
++  const nodes = ids.map((id,i) => {
++    const f = fichas.porId.get(id); if (!f) fail(`ficha ausente: ${id}`);
++    const titulo = f.titulo.replace(/^¿/, '').replace(/\?$/, '');
++    return { group:'nodes', data:{id:`red:ficha:${id}`,tipo:'ficha_red',key:id,label:titulo,
++      seleccionado:seleccion.fichaId===id ? 1:0,procedencia:id.startsWith('faq.lab.')?'propuesta_lab':'piloto_anterior'},
++      position:{x:posiciones[i][0],y:posiciones[i][1]} };
++  });
++  const edges = red.relaciones.map(r => ({group:'edges',data:{id:`red:enlace:${r.id}`,tipo:'relacion_entre_fichas',key:r.id,
++    source:`red:ficha:${r.desde}`,target:`red:ficha:${r.hacia}`,label:r.nombre,seleccionado:seleccion.enlaceId===r.id?1:0}}));
++  return [...nodes,...edges];
++}
++
++export function inspectorRedFichasHtml(fichas, red, fichaId=null, enlaceId=null) {
++  if (fichas.revision !== red.revision) fail('revisión distinta');
++  const f = fichas.porId.get(fichaId), r = red.porId.get(enlaceId);
++  const nav = `<div class="arch-nav-list">${fichas.fichas.map(x=>`<button type="button" data-arch-card="${html(x.id)}">${html(x.titulo)}<small>${x.id.startsWith('faq.lab.')?'FAQ de síntesis · borrador':'Ficha piloto existente'}</small></button>`).join('')}</div>`;
++  if (r) return `<div class="arch-inspector-heading"><span class="arch-chip arch-chip--propuesto">Relación propuesta</span></div>
++    <h2>${html(r.nombre)}</h2><p>${html(fichas.porId.get(r.desde).titulo)} → ${html(fichas.porId.get(r.hacia).titulo)}</p>
++    <h3>Fundamento editorial</h3><p>${html(r.explicacion)}</p>
++    <button class="arch-primary" type="button" data-arch-card="${html(r.hacia)}">Abrir ficha de destino</button>
++    <button class="arch-minor" type="button" data-arch-card="${html(r.desde)}">Abrir ficha de origen</button>
++    <button class="arch-minor" type="button" data-arch-red-list>Ver todas las fichas</button>`;
++  if (f) return `<div class="arch-inspector-heading"><span class="arch-chip">Ficha filosófica</span></div><h2>${html(f.titulo)}</h2>
++    <p>${html(f.introduccion[0])}</p><button class="arch-primary" type="button" data-arch-card="${html(f.id)}">Abrir explicación y diagrama</button>
++    <h3>Relaciones seleccionadas</h3><div class="arch-nav-list">${red.relaciones.filter(x=>x.desde===f.id||x.hacia===f.id).map(x=>`<button type="button" data-arch-red-link="${html(x.id)}">${html(x.nombre)}<small>${html(fichas.porId.get(x.desde===f.id?x.hacia:x.desde).titulo)}</small></button>`).join('')}</div>`;
++  return `<div class="arch-inspector-heading"><span class="arch-chip arch-chip--propuesto">Grafo de orientación · propuesta editorial</span></div>
++    <h2>Siete puertas de entrada al Libro I</h2><p>${html(red.nota)}</p><p>Seleccioná una ficha o una flecha para examinarla y entrar en su explicación.</p>${nav}`;
++}
+diff --git a/public/js/views/labArchitectureView.js b/public/js/views/labArchitectureView.js
+index 9f38d33..a8fd06c 100644
+--- a/public/js/views/labArchitectureView.js
++++ b/public/js/views/labArchitectureView.js
+@@ -6,6 +6,7 @@ import { construirRelacionesProemio, elementosRelacionesProemio } from '../lab/a
+ import { construirCapasProemio, elementosCapaBasica, elementosCapaDetallada } from '../lab/architectureLayers.js';
+ import { construirFichasArquitectura, elementosFichaFAQ, fichaIntroHtml, inspectorFichaFAQHtml } from '../lab/architectureCards.js';
+ import { construirPuentesExplicativos, elementosPuentes, inspectorPuentesHtml } from '../lab/architectureBridges.js';
++import { construirAmpliacionFichas, elementosRedFichas, inspectorRedFichasHtml } from '../lab/architecturePilotNetwork.js';
+ import { localizarSubunidadEnBiblioteca, representarLecturaContextual } from '../lab/graphPassageReader.js';
+ 
+ const safe = x => esc(String(x ?? ''));
+@@ -167,6 +168,9 @@ function graphStyle() {
+     { selector: 'node[tipo = "unidad"]', style: { 'background-color': '#e5ebff', 'border-color': '#627bb2', 'width': 232 } },
+     { selector: 'node[tipo = "momento"]', style: { 'background-color': '#f6eedb', 'border-color': '#b08f46', 'width': 242, 'height': 76 } },
+     { selector: 'node[tipo = "subunidad"]', style: { 'background-color': '#f4f0ff', 'border-color': '#9c85b6', 'width': 230, 'height': 78, 'font-size': 12 } },
++    { selector: 'node[tipo = "ficha_red"]', style: { 'background-color': '#dcece8', 'border-color': '#447d76', 'width': 270, 'height': 114, 'font-size': 13, 'font-weight': 650 } },
++    { selector: 'node[tipo = "ficha_red"][procedencia = "propuesta_lab"]', style: { 'border-style': 'dashed', 'border-color': '#6a9d95' } },
++    { selector: 'node[tipo = "ficha_red"][seleccionado = 1]', style: { 'border-width': 5, 'border-color': '#265c56' } },
+     { selector: 'node[tipo = "ficha_central"]', style: { 'background-color': '#d6eae7', 'border-color': '#31736c', 'width': 330, 'height': 112, 'font-size': 16, 'font-weight': 700 } },
+     { selector: 'node[tipo = "macro_referida"]', style: { 'background-color': '#e7ecee', 'border-color': '#7d9a9b', 'width': 285, 'height': 100, 'font-size': 12 } },
+     { selector: 'node[tipo = "unidad_referida"]', style: { 'background-color': '#ebeffa', 'border-color': '#8295ba', 'width': 285, 'height': 100, 'font-size': 12 } },
+@@ -186,6 +190,8 @@ function graphStyle() {
+     { selector: 'edge[tipo = "orden_textual"]', style: { 'line-style': 'dashed', 'line-color': '#aaa', 'target-arrow-color': '#aaa' } },
+     { selector: 'edge[tipo = "articula"]', style: { 'line-style': 'dashed', 'line-color': '#b99d54', 'target-arrow-color': '#b99d54' } },
+     { selector: 'edge[tipo = "argumentativa_propuesta"]', style: { 'width': 3, 'line-style': 'dashed', 'line-color': '#bc7548', 'target-arrow-color': '#bc7548', 'font-size': 12, 'text-rotation': 'none' } },
++    { selector: 'edge[tipo = "relacion_entre_fichas"]', style: { 'width': 2.5, 'line-style': 'dashed', 'line-color': '#5e8682', 'target-arrow-color': '#5e8682', 'font-size': 10, 'text-rotation': 'none' } },
++    { selector: 'edge[tipo = "relacion_entre_fichas"][seleccionado = 1]', style: { 'width': 5, 'line-color': '#255f59', 'target-arrow-color': '#255f59' } },
+     { selector: 'edge[tipo = "contexto_ficha"]', style: { 'width': 2.5, 'line-style': 'dashed', 'line-color': '#6c9692', 'target-arrow-color': '#6c9692', 'font-size': 10, 'text-rotation': 'none' } },
+     { selector: 'edge[tipo = "respaldo_textual"]', style: { 'width': 2.5, 'line-style': 'solid', 'line-color': '#94774b', 'target-arrow-color': '#94774b', 'font-size': 11, 'text-rotation': 'none' } },
+     { selector: 'edge[tipo = "contexto_ficha"][seleccionado = 1], edge[tipo = "respaldo_textual"][seleccionado = 1]', style: { 'width': 5, 'line-color': '#27655e', 'target-arrow-color': '#27655e' } },
+@@ -205,16 +211,14 @@ export async function createLabArchitectureView(App) {
+   css.rel = 'stylesheet'; css.href = '/css/lab-arquitectura-n1u2.css'; css.dataset.agoraLabArquitectura = '1';
+   document.head.append(css);
+   el.innerHTML = `<div class="arch-page">
+-    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.6 · Lectura guiada · Solo consulta</span></nav>
++    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.7 · Red de siete fichas · Solo consulta</span></nav>
+     <h1>Fichas explicativas del Libro I</h1>
+-    <p class="arch-intro">Comenzá por un problema filosófico. Después explorá su contexto, sus argumentos y los pasajes que lo respaldan. La virtud completa en una vida entera.</p>
++    <p class="arch-intro">Comenzá por una red de preguntas filosóficas y explorá los pasajes que fundamentan cada explicación. La virtud completa en una vida entera.</p>
+     <p class="arch-status" role="status" aria-live="polite">Cargando la revisión editorial…</p>
+     <div class="arch-main" hidden>
+-      <div class="arch-fichas-nav" role="group" aria-label="Fichas explicativas">
+-        <span>Elegí una explicación:</span>
+-        <button type="button" data-arch-card="proemio" aria-pressed="false">Proemio</button>
+-        <button type="button" data-arch-card="faq.etica.intro" aria-pressed="false">¿Qué es la ética?</button>
+-        <button type="button" data-arch-card="faq.agathon.pros_hen" aria-pressed="false">¿Cómo se dice el bien?</button>
++      <div class="arch-fichas-nav" role="group" aria-label="Red y fichas explicativas">
++        <span>Fichas y problemas:</span>
++        <button type="button" data-arch-network aria-pressed="true">Red de fichas</button>
+       </div>
+       <section class="arch-ficha-panel" aria-label="Marco explicativo del diagrama" hidden></section>
+       <div class="arch-perspectivas" role="group" aria-label="Enfoque de la ficha" hidden>
+@@ -242,7 +246,7 @@ export async function createLabArchitectureView(App) {
+         </section>
+         <aside class="arch-inspector" aria-label="Ficha editorial"><div class="arch-inspector-content"></div></aside>
+       </div>
+-      <p class="arch-footer">N1-U.6 comienza por las fichas y separa contexto, diagrama y apoyo textual. El archivo estructural sigue disponible como herramienta documental; los puentes explicativos y las aristas argumentativas hipotéticas no sustituyen ni modifican MariaDB.</p>
++      <p class="arch-footer">N1-U.7 reúne siete fichas y propone una primera red curatorial navegable. Las cuatro nuevas FAQ y sus seis pasos son borradores, no trayectos publicados. Cada ficha separa contexto, diagrama y apoyo textual. El archivo estructural sigue disponible como herramienta documental; los puentes explicativos y las aristas argumentativas hipotéticas no sustituyen ni modifican MariaDB.</p>
+     </div>
+     <section class="arch-reader" hidden>
+       <div class="arch-reader-head"><button type="button" data-arch-reader-back>← Volver al grafo</button><div><h2 data-arch-reader-title>Lectura</h2><p class="arch-muted" data-arch-reader-ref></p></div></div>
+@@ -255,7 +259,8 @@ export async function createLabArchitectureView(App) {
+   const main = $('.arch-main'), inspector = $('.arch-inspector-content'), reader = $('.arch-reader');
+   const graph = $('.arch-graph');
+   const state = { macroId: null, unidadId: null, momentoId: null, subId: null };
+-  let model = null, rels = null, capas = null, fichas = null, puentes = null, fichaActiva = 'proemio', fichaPasoId = null, fichaEnlaceId = null;
++  let model = null, rels = null, capas = null, fichas = null, puentes = null, redFichas = null, fichaActiva = null, fichaPasoId = null, fichaEnlaceId = null;
++  let redVisible = true, redFichaSeleccionada = null, redEnlaceSeleccionado = null;
+   let perspectiva = 'orientacion', puenteSeleccionado = null;
+   let modo = 'momentos', relacionId = null, relacionSubId = null;
+   let moduloId = null, enlaceId = null;
+@@ -265,7 +270,7 @@ export async function createLabArchitectureView(App) {
+   const selected = () => obtenerContexto(model, state);
+   function navegar(kind, id = null) {
+     if (!model) return;
+-    fichaActiva = null; fichaPasoId = null; fichaEnlaceId = null; puenteSeleccionado = null;
++    redVisible = false; fichaActiva = null; fichaPasoId = null; fichaEnlaceId = null; puenteSeleccionado = null;
+     if (kind === 'libro') Object.assign(state, { macroId: null, unidadId: null, momentoId: null, subId: null });
+     if (kind === 'macro') {
+       if (!model.macros.some(x => x.id === id)) return;
+@@ -293,38 +298,41 @@ export async function createLabArchitectureView(App) {
+     const ctx = selected();
+     const ficha = fichas?.porId.get(fichaActiva) || null;
+     const faq = ficha?.tipo === 'faq' ? ficha : null;
+-    const puenteVisible = !!ficha && !!puentes && perspectiva !== 'diagrama';
+-    const disponible = !puenteVisible && !faq && ctx.unidad?.id === 'proemio' && !!rels && !!capas;
++    const puenteVisible = !redVisible && !!ficha && !!puentes && perspectiva !== 'diagrama';
++    const disponible = !redVisible && !puenteVisible && !faq && ctx.unidad?.id === 'proemio' && !!rels && !!capas;
+     const sintetico = disponible && modo === 'modulos';
+     const argumentativo = disponible && modo === 'relaciones';
+-    $('.arch-perspectivas').hidden = !ficha;
++    $('.arch-perspectivas').hidden = redVisible || !ficha;
++    $('[data-arch-network]').setAttribute('aria-pressed', String(redVisible));
+     for (const b of el.querySelectorAll('[data-arch-perspectiva]')) b.setAttribute('aria-pressed', String(b.dataset.archPerspectiva === perspectiva));
+     $('.arch-modes').hidden = !(disponible && !!ficha);
+-    $('[data-arch-back="libro"]').hidden = !!ficha;
+-    $('[data-arch-legacy]').hidden = !ficha;
+-    $('[data-arch-legend]').textContent = puenteVisible ? (perspectiva === 'orientacion' ? 'Vínculos editoriales con macrounidades y unidades; no son inferencias a partir de tags.' : 'Pasajes vinculados directamente con la explicación; consulta bilingüe disponible.') : faq ? 'Las flechas punteadas indican el orden del trayecto publicado, no demostraciones.' : 'Las relaciones argumentativas del Proemio son hipótesis todavía no validadas.';
++    $('[data-arch-back="libro"]').hidden = redVisible || !!ficha;
++    $('[data-arch-legacy]').hidden = redVisible || !ficha;
++    $('[data-arch-legend]').textContent = redVisible ? 'Las flechas representan relaciones propuestas entre fichas, no conexiones automáticas derivadas del tagueo.' : puenteVisible ? (perspectiva === 'orientacion' ? 'Vínculos editoriales con macrounidades y unidades; no son inferencias a partir de tags.' : 'Pasajes vinculados directamente con la explicación; consulta bilingüe disponible.') : faq ? (faq.fuente_editorial?.origen === 'propuesta_lab' ? 'Las flechas punteadas muestran un orden explicativo propuesto, todavía no publicado.' : 'Las flechas punteadas indican el orden del trayecto publicado, no demostraciones.') : 'Las relaciones argumentativas del Proemio son hipótesis todavía no validadas.';
+     const descripcion = $('.arch-ficha-panel');
+     descripcion.hidden = !ficha;
+     descripcion.innerHTML = ficha ? fichaIntroHtml(ficha) : '';
+     for (const b of el.querySelectorAll('[data-arch-card]')) b.setAttribute('aria-pressed', String(b.dataset.archCard === fichaActiva));
+     const vistaActiva = sintetico ? 'modulos' : argumentativo ? 'relaciones' : 'momentos';
+     for (const b of el.querySelectorAll('[data-arch-mode]')) b.setAttribute('aria-pressed', String(b.dataset.archMode === vistaActiva));
+-    inspector.innerHTML = puenteVisible ? inspectorPuentesHtml(model, fichas, puentes, ficha.id, perspectiva, puenteSeleccionado)
++    inspector.innerHTML = redVisible ? inspectorRedFichasHtml(fichas, redFichas, redFichaSeleccionada, redEnlaceSeleccionado)
++      : puenteVisible ? inspectorPuentesHtml(model, fichas, puentes, ficha.id, perspectiva, puenteSeleccionado)
+       : faq ? inspectorFichaFAQHtml(faq, model, fichaPasoId, fichaEnlaceId)
+       : sintetico ? inspectorModulosHtml(model, capas, moduloId, enlaceId)
+       : argumentativo ? inspectorRelacionesHtml(model, rels, relacionId, relacionSubId) : inspectorHtml(model, state);
+     $('[data-arch-back="macro"]').hidden = !!ficha || !ctx.macro;
+     $('[data-arch-back="unidad"]').hidden = !!ficha || !ctx.unidad;
+     $('[data-arch-back="momento"]').hidden = !!ficha || !ctx.momento;
+-    graph.setAttribute('aria-label', puenteVisible ? `Ficha ${ficha.titulo}: ${perspectiva === 'orientacion' ? 'contexto editorial' : 'pasajes de apoyo'}` : faq ? `Trayecto editorial de la FAQ: ${faq.titulo}` : 'Grafo de arquitectura del Libro I');
++    graph.setAttribute('aria-label', redVisible ? 'Red de siete fichas filosóficas y relaciones editoriales propuestas' : puenteVisible ? `Ficha ${ficha.titulo}: ${perspectiva === 'orientacion' ? 'contexto editorial' : 'pasajes de apoyo'}` : faq ? `Trayecto editorial de la FAQ: ${faq.titulo}` : 'Grafo de arquitectura del Libro I');
+     if (cy) {
+-      const elements = puenteVisible ? elementosPuentes(model, fichas, puentes, ficha.id, perspectiva, { id: puenteSeleccionado })
++      const elements = redVisible ? elementosRedFichas(fichas, redFichas, { fichaId:redFichaSeleccionada, enlaceId:redEnlaceSeleccionado })
++        : puenteVisible ? elementosPuentes(model, fichas, puentes, ficha.id, perspectiva, { id: puenteSeleccionado })
+         : faq ? elementosFichaFAQ(faq, model, { pasoId: fichaPasoId, enlaceId: fichaEnlaceId })
+         : sintetico ? elementosCapaBasica(capas, { moduloId, enlaceId })
+         : argumentativo ? elementosCapaDetallada(model, capas, { relacionId, subId: relacionSubId, moduloId })
+         : elementosArquitectura(model, state);
+       // Posiciones independientes para cada ficha y resolución.
+-      const posGroup = puenteVisible ? `puente:${ficha.id}:${perspectiva}:` : faq ? `ficha:${faq.id}:` : sintetico ? 'modulos:' : argumentativo ? 'relaciones:' : 'estructura:';
++      const posGroup = redVisible ? 'red-fichas:' : puenteVisible ? `puente:${ficha.id}:${perspectiva}:` : faq ? `ficha:${faq.id}:` : sintetico ? 'modulos:' : argumentativo ? 'relaciones:' : 'estructura:';
+       for (const e of elements) if (e.group === 'nodes' && e.data.tipo !== 'modulo_contenedor' && positions.has(posGroup + e.data.id)) e.position = positions.get(posGroup + e.data.id);
+       cy.batch(() => { cy.elements().remove(); cy.add(elements); });
+       cy.resize(); cy.fit(cy.elements(), 38);
+@@ -383,10 +391,14 @@ export async function createLabArchitectureView(App) {
+     }
+   }
+   el.addEventListener('click', event => {
++    if (event.target.closest('[data-arch-network]')) { redVisible = true; fichaActiva = null; redFichaSeleccionada = null; redEnlaceSeleccionado = null; dibujar(); return; }
++    if (event.target.closest('[data-arch-red-list]')) { redFichaSeleccionada = null; redEnlaceSeleccionado = null; dibujar(); return; }
++    const redLink = event.target.closest('[data-arch-red-link]');
++    if (redLink && redFichas?.porId.has(redLink.dataset.archRedLink)) { redEnlaceSeleccionado = redLink.dataset.archRedLink; redFichaSeleccionada = null; redVisible = true; fichaActiva = null; dibujar(); return; }
+     const cardButton = event.target.closest('[data-arch-card]');
+     if (cardButton && fichas?.porId.has(cardButton.dataset.archCard)) {
+       const id = cardButton.dataset.archCard;
+-      fichaActiva = id; fichaPasoId = null; fichaEnlaceId = null; puenteSeleccionado = null; perspectiva = 'orientacion';
++      redVisible = false; fichaActiva = id; fichaPasoId = null; fichaEnlaceId = null; puenteSeleccionado = null; perspectiva = 'orientacion';
+       if (id === 'proemio') {
+         const macro = model.macros.find(m => m.unidades.some(u => u.id === 'proemio'));
+         if (!macro) return;
+@@ -499,20 +511,25 @@ export async function createLabArchitectureView(App) {
+     if (next) { chapterNumber = next.number; pintarLectura(); }
+   });
+   try {
+-    const [r, p, a, m, f, v] = await Promise.all([
++    const [r, p, a, m, f, v, z] = await Promise.all([
+       fetch('/api/labo/lectura', { cache: 'no-store', signal: abort.signal }),
+       fetch('/lab/n1u1-propuestas-libro-i.json', { cache: 'no-store', signal: abort.signal }),
+       fetch('/lab/n1u3-relaciones-proemio.json', { cache: 'no-store', signal: abort.signal }),
+       fetch('/lab/n1u4-modulos-proemio.json', { cache: 'no-store', signal: abort.signal }),
+       fetch('/lab/n1u5-fichas-explicativas.json', { cache: 'no-store', signal: abort.signal }),
+       fetch('/lab/n1u6-puentes-explicativos.json', { cache: 'no-store', signal: abort.signal }),
++      fetch('/lab/n1u7-fichas-red-piloto.json', { cache: 'no-store', signal: abort.signal }),
+     ]);
+-    if (!r.ok || !p.ok || !a.ok || !m.ok || !f.ok || !v.ok) throw new Error(`No se pudieron cargar las fuentes (MariaDB: ${r.status}; momentos: ${p.status}; relaciones: ${a.status}; módulos: ${m.status}; fichas: ${f.status}; puentes: ${v.status}).`);
++    if (!r.ok || !p.ok || !a.ok || !m.ok || !f.ok || !v.ok || !z.ok) throw new Error(`No se pudieron cargar las fuentes (MariaDB: ${r.status}; momentos: ${p.status}; relaciones: ${a.status}; módulos: ${m.status}; fichas: ${f.status}; puentes: ${v.status}; ampliación: ${z.status}).`);
+     model = construirModeloArquitectura(await r.json(), await p.json());
+     rels = construirRelacionesProemio(model, await a.json());
+     capas = construirCapasProemio(model, rels, await m.json());
+     fichas = construirFichasArquitectura(model, capas, await f.json());
+     puentes = construirPuentesExplicativos(model, fichas, await v.json());
++    ({ fichas, puentes, red: redFichas } = construirAmpliacionFichas(model, fichas, puentes, await z.json()));
++    const nav = $('.arch-fichas-nav');
++    nav.innerHTML = `<span>Fichas y problemas:</span><button type="button" data-arch-network aria-pressed="true">Red de fichas</button>` +
++      fichas.fichas.map(c => `<button type="button" data-arch-card="${safe(c.id)}" aria-pressed="false">${safe(c.titulo)}</button>`).join('');
+     const macroProemio = model.macros.find(m => m.unidades.some(u => u.id === 'proemio'));
+     if (!macroProemio) throw new Error('No se encuentra el Proemio en el mapa de macrounidades.');
+     Object.assign(state, { macroId: macroProemio.id, unidadId: 'proemio', momentoId: null, subId: null });
+@@ -528,6 +545,7 @@ export async function createLabArchitectureView(App) {
+         minZoom: 0.22, maxZoom: 2.5, wheelSensitivity: 0.16, boxSelectionEnabled: false });
+       cy.on('tap', 'node', event => {
+         const n = event.target;
++        if (redVisible && n.data('tipo') === 'ficha_red') { redFichaSeleccionada = n.data('key'); redEnlaceSeleccionado = null; dibujar(); return; }
+         if (fichaActiva && perspectiva !== 'diagrama' && puentes?.porFicha.has(fichaActiva)) {
+           const key = n.data('key');
+           if (['macro_referida', 'unidad_referida', 'subunidad_referida'].includes(n.data('tipo'))) {
+@@ -558,6 +576,10 @@ export async function createLabArchitectureView(App) {
+         const kind = ({ macro: 'macro', unidad: 'unidad', momento: 'momento', subunidad: 'subunidad' })[n.data('tipo')];
+         if (kind) navegar(kind, n.data('key'));
+       });
++      cy.on('tap', 'edge[tipo = "relacion_entre_fichas"]', event => {
++        if (!redVisible) return;
++        redEnlaceSeleccionado = event.target.data('key'); redFichaSeleccionada = null; dibujar();
++      });
+       cy.on('tap', 'edge[tipo = "contexto_ficha"], edge[tipo = "respaldo_textual"]', event => {
+         if (!fichaActiva || perspectiva === 'diagrama') return;
+         puenteSeleccionado = event.target.data('key'); dibujar();
+@@ -578,7 +600,7 @@ export async function createLabArchitectureView(App) {
+         if (event.target.data('tipo') === 'modulo_contenedor') return;
+         const proemio = selected().unidad?.id === 'proemio';
+         const faq = fichas?.porId.get(fichaActiva);
+-        const group = fichaActiva && perspectiva !== 'diagrama' ? `puente:${fichaActiva}:${perspectiva}:` : faq?.tipo === 'faq' ? `ficha:${faq.id}:` : proemio && modo === 'modulos' ? 'modulos:' : proemio && modo === 'relaciones' ? 'relaciones:' : 'estructura:';
++        const group = redVisible ? 'red-fichas:' : fichaActiva && perspectiva !== 'diagrama' ? `puente:${fichaActiva}:${perspectiva}:` : faq?.tipo === 'faq' ? `ficha:${faq.id}:` : proemio && modo === 'modulos' ? 'modulos:' : proemio && modo === 'relaciones' ? 'relaciones:' : 'estructura:';
+         positions.set(group + event.target.id(), { ...event.target.position() });
+       });
+       dibujar();
+diff --git a/public/lab/n1u7-fichas-red-piloto.json b/public/lab/n1u7-fichas-red-piloto.json
+new file mode 100644
+index 0000000..022dd6c
+--- /dev/null
++++ b/public/lab/n1u7-fichas-red-piloto.json
+@@ -0,0 +1,610 @@
++{
++  "schema": "agora.lab.n1u7.fichas-red.v1",
++  "estado": "borrador_pedagogico_pendiente_curaduria",
++  "fuente": {
++    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
++    "dump_editorial": "2026-11-07",
++    "fichas_previas": "agora.lab.n1u5.fichas.v1",
++    "puentes_previos": "agora.lab.n1u6.puentes.v1",
++    "criterio": "Cuatro fichas-FAQ de síntesis nuevas; no crean/modifican FAQs ni trayectos de MariaDB. Todas las referencias de subunidad son identidades canónicas verificadas por la revisión."
++  },
++  "fichas": [
++    {
++      "id": "faq.lab.felicidad",
++      "tipo": "faq",
++      "titulo": "¿Qué es la felicidad?",
++      "fuente_editorial": {
++        "faq_id": "faq.lab.felicidad",
++        "origen": "propuesta_lab",
++        "estado": "borrador_no_publicado",
++        "trayecto_id": null,
++        "pasos_propuestos": 6,
++        "faqs_canonicas_relacionadas": [
++          "faq.eudaimonia.definicion",
++          "faq.eudaimonia.completa"
++        ]
++      },
++      "introduccion": [
++        "El nombre eudaimonía suele traducirse como felicidad o vida lograda. En el Libro I Aristóteles parte del acuerdo general sobre el nombre, pero enseguida advierte que las opiniones divergen acerca de aquello en lo que consiste. La pregunta no se resuelve por una impresión momentánea de bienestar.",
++        "El examen pregunta qué fin es elegido por sí mismo, qué significa que sea completo y autosuficiente y qué actividad propia realiza bien el ser humano. La formulación ligada a la virtud debe considerarse en el horizonte de una vida entera; posteriormente Aristóteles examina las circunstancias y los bienes exteriores."
++      ],
++      "lectura_grafo": [
++        "Los seis nodos son momentos pedagógicos propuestos, no pasos de un trayecto publicado. Su selección reúne pasajes de distintas unidades del Libro I.",
++        "Las cinco flechas indican orden explicativo diseñado para esta ficha. Cada transición requiere justificación; no afirma que las conclusiones se deduzcan de los pasajes anteriores.",
++        "Podés abrir cada pasaje en el lector bilingüe y regresar a su contexto editorial."
++      ],
++      "referencias": [
++        "EN I.4, 1095a17–26",
++        "EN I.7, 1097a34–1098a18",
++        "EN I.10, 1100a3–5"
++      ],
++      "nota": "Ficha introductoria y FAQ de síntesis todavía no registrada como FAQ publicada en MariaDB. Conservar la formulación «virtud completa en una vida entera».",
++      "pasos": [
++        {
++          "id": "p1",
++          "titulo": "El nombre de la felicidad",
++          "sub_id": "1095a17-20",
++          "comentario": "Existe acuerdo en llamar felicidad al bien humano más alto; se trata todavía de un acuerdo nominal."
++        },
++        {
++          "id": "p2",
++          "titulo": "Las opiniones divergen",
++          "sub_id": "1095a20-26",
++          "comentario": "El mismo nombre no determina una respuesta unívoca: riqueza, placer u honores son candidatos discutidos en la investigación."
++        },
++        {
++          "id": "p3",
++          "titulo": "Un fin elegido por sí mismo",
++          "sub_id": "1097a34-b6",
++          "comentario": "La felicidad aparece como aquello que se quiere por sí mismo y no en vista de algo distinto."
++        },
++        {
++          "id": "p4",
++          "titulo": "Completitud y autosuficiencia",
++          "sub_id": "1097b20-21",
++          "comentario": "La caracterización del fin más alto se resume mediante las nociones de completitud y autosuficiencia."
++        },
++        {
++          "id": "p5",
++          "titulo": "Una actividad conforme a la virtud",
++          "sub_id": "1098a16-18",
++          "comentario": "El argumento del érgon permite formular el bien humano en términos de actividad del alma según la virtud, no como mera posesión pasiva."
++        },
++        {
++          "id": "p6",
++          "titulo": "El horizonte de una vida entera",
++          "sub_id": "1100a3-5",
++          "comentario": "La determinación de la felicidad incorpora la exigencia de virtud completa en una vida entera; el tiempo importa para juzgar la vida lograda."
++        }
++      ],
++      "transiciones": [
++        "Del consenso sobre la palabra pasamos a las diferencias acerca de aquello que designa.",
++        "Las disputas exigen precisar qué rasgo caracteriza al fin superior.",
++        "La elección por sí misma se complementa con el criterio de autosuficiencia.",
++        "La caracterización formal requiere determinar qué actividad constituye el bien humano.",
++        "La formulación por la actividad virtuosa necesita el horizonte temporal de una vida entera."
++      ],
++      "contextos": {
++        "macros": [
++          {
++            "id": "macro:I-V",
++            "rol": "Pregunta inicial",
++            "explicacion": "Acuerdo sobre el nombre y desacuerdo acerca de su contenido."
++          },
++          {
++            "id": "macro:VI-VII",
++            "rol": "Determinación",
++            "explicacion": "Criterios formales de fin y formulación desde la función humana."
++          },
++          {
++            "id": "macro:VIII-XII",
++            "rol": "Examen de la vida",
++            "explicacion": "La felicidad se reconsidera frente al tiempo y las circunstancias."
++          }
++        ],
++        "unidades": [
++          {
++            "id": "felicidad_opiniones",
++            "rol": "Acuerdo y discusión",
++            "explicacion": "Se identifica el nombre eudaimonía y se presenta la pluralidad de opiniones."
++          },
++          {
++            "id": "forma_fin",
++            "rol": "Criterios formales",
++            "explicacion": "Carácter completo y autosuficiente del fin buscado."
++          },
++          {
++            "id": "ergon",
++            "rol": "Actividad y virtud",
++            "explicacion": "La función humana aporta la determinación de la actividad excelente."
++          },
++          {
++            "id": "adquisicion",
++            "rol": "Tiempo de la vida",
++            "explicacion": "La condición de la vida entera se introduce en el examen de cómo se adquiere la felicidad."
++          }
++        ]
++      },
++      "apoyos": [
++        {
++          "sub_id": "1095a17-20",
++          "paso_id": "p1",
++          "rol": "Acuerdo nominal",
++          "explicacion": "Existe acuerdo en llamar felicidad al bien humano más alto; se trata todavía de un acuerdo nominal."
++        },
++        {
++          "sub_id": "1095a20-26",
++          "paso_id": "p2",
++          "rol": "Divergencia",
++          "explicacion": "El mismo nombre no determina una respuesta unívoca: riqueza, placer u honores son candidatos discutidos en la investigación."
++        },
++        {
++          "sub_id": "1097a34-b6",
++          "paso_id": "p3",
++          "rol": "Fin por sí mismo",
++          "explicacion": "La felicidad aparece como aquello que se quiere por sí mismo y no en vista de algo distinto."
++        },
++        {
++          "sub_id": "1097b20-21",
++          "paso_id": "p4",
++          "rol": "Autosuficiencia",
++          "explicacion": "La caracterización del fin más alto se resume mediante las nociones de completitud y autosuficiencia."
++        },
++        {
++          "sub_id": "1098a16-18",
++          "paso_id": "p5",
++          "rol": "Actividad excelente",
++          "explicacion": "El argumento del érgon permite formular el bien humano en términos de actividad del alma según la virtud, no como mera posesión pasiva."
++        },
++        {
++          "sub_id": "1100a3-5",
++          "paso_id": "p6",
++          "rol": "Vida entera",
++          "explicacion": "La determinación de la felicidad incorpora la exigencia de virtud completa en una vida entera; el tiempo importa para juzgar la vida lograda."
++        }
++      ]
++    },
++    {
++      "id": "faq.lab.ergon",
++      "tipo": "faq",
++      "titulo": "¿En qué consiste el argumento de la función propia (érgon)?",
++      "fuente_editorial": {
++        "faq_id": "faq.lab.ergon",
++        "origen": "propuesta_lab",
++        "estado": "borrador_no_publicado",
++        "trayecto_id": null,
++        "pasos_propuestos": 6,
++        "faqs_canonicas_relacionadas": [
++          "faq.ergon.humano"
++        ]
++      },
++      "introduccion": [
++        "En EN I.7 Aristóteles considera que calificar la felicidad como el bien más alto es todavía insuficiente: hay que determinar en qué consiste. Para ello introduce una investigación sobre la función propia (érgon) del ser humano, ayudándose con comparaciones con oficios y órganos.",
++        "El argumento distingue actividades compartidas con plantas y animales de una forma de vida vinculada con la razón. La analogía entre un ejecutante y un buen ejecutante permite introducir la excelencia de la actividad. Es una reconstrucción filosófica que debe examinarse paso a paso, no un simple listado de capacidades."
++      ],
++      "lectura_grafo": [
++        "Los seis nodos siguen la pregunta, las analogías y el resultado del argumento en EN I.7.",
++        "Las conexiones son transiciones explicativas propuestas y no prueban automáticamente la validez de cada premisa.",
++        "No se introducen todavía subgrafos de premisas ni objeciones para cada paso."
++      ],
++      "referencias": [
++        "EN I.7, 1097b22–1098a20"
++      ],
++      "nota": "Trayecto propuesto de seis pasos, todavía no publicado; relación posible con FAQ canónica existente sobre érgon humano.",
++      "pasos": [
++        {
++          "id": "p1",
++          "titulo": "Del bien al contenido de la felicidad",
++          "sub_id": "1097b22-25",
++          "comentario": "Aristóteles reconoce que la caracterización de la felicidad como bien supremo exige una determinación más precisa."
++        },
++        {
++          "id": "p2",
++          "titulo": "La comparación con oficios",
++          "sub_id": "1097b25-28",
++          "comentario": "En las artes y ocupaciones parece posible reconocer un bien relativo a la función que se realiza."
++        },
++        {
++          "id": "p3",
++          "titulo": "Lo común a otros vivientes",
++          "sub_id": "1097b33-1098a3",
++          "comentario": "Nutrición y sensación no bastan para aislar lo propio del ser humano porque también corresponden a otros vivientes."
++        },
++        {
++          "id": "p4",
++          "titulo": "La vida de quien tiene razón",
++          "sub_id": "1098a3-5",
++          "comentario": "El argumento introduce una forma de vida vinculada al lógos; habrá que distinguir sus distintas modalidades."
++        },
++        {
++          "id": "p5",
++          "titulo": "Realizar bien una función",
++          "sub_id": "1098a8-12",
++          "comentario": "El ejemplo del citarista muestra que realizar una actividad y realizarla excelentemente no son lo mismo."
++        },
++        {
++          "id": "p6",
++          "titulo": "La determinación del bien humano",
++          "sub_id": "1098a16-18",
++          "comentario": "La conclusión provisional articula actividad del alma, razón y virtud en la definición del bien humano."
++        }
++      ],
++      "transiciones": [
++        "La exigencia de precisión motiva el examen de una función propia.",
++        "La analogía productiva abre la investigación, pero no establece por sí sola la función humana.",
++        "Al descartar lo compartido con otros vivientes, se busca una actividad característica.",
++        "Identificar la vida racional permite preguntar por su ejercicio bueno o excelente.",
++        "La excelencia funcional conduce a la formulación del bien humano."
++      ],
++      "contextos": {
++        "macros": [
++          {
++            "id": "macro:VI-VII",
++            "rol": "Determinación del bien humano",
++            "explicacion": "El argumento de la función se sitúa en la articulación del fin completo y el bien humano."
++          }
++        ],
++        "unidades": [
++          {
++            "id": "ergon",
++            "rol": "Núcleo argumentativo",
++            "explicacion": "Los seis pasos se anclan exclusivamente en el argumento de EN I.7."
++          }
++        ]
++      },
++      "apoyos": [
++        {
++          "sub_id": "1097b22-25",
++          "paso_id": "p1",
++          "rol": "Pregunta central",
++          "explicacion": "Aristóteles reconoce que la caracterización de la felicidad como bien supremo exige una determinación más precisa."
++        },
++        {
++          "sub_id": "1097b25-28",
++          "paso_id": "p2",
++          "rol": "Analogía con oficios",
++          "explicacion": "En las artes y ocupaciones parece posible reconocer un bien relativo a la función que se realiza."
++        },
++        {
++          "sub_id": "1097b33-1098a3",
++          "paso_id": "p3",
++          "rol": "Distinción de lo compartido",
++          "explicacion": "Nutrición y sensación no bastan para aislar lo propio del ser humano porque también corresponden a otros vivientes."
++        },
++        {
++          "sub_id": "1098a3-5",
++          "paso_id": "p4",
++          "rol": "Actividad racional",
++          "explicacion": "El argumento introduce una forma de vida vinculada al lógos; habrá que distinguir sus distintas modalidades."
++        },
++        {
++          "sub_id": "1098a8-12",
++          "paso_id": "p5",
++          "rol": "Criterio de excelencia",
++          "explicacion": "El ejemplo del citarista muestra que realizar una actividad y realizarla excelentemente no son lo mismo."
++        },
++        {
++          "sub_id": "1098a16-18",
++          "paso_id": "p6",
++          "rol": "Conclusión provisional",
++          "explicacion": "La conclusión provisional articula actividad del alma, razón y virtud en la definición del bien humano."
++        }
++      ]
++    },
++    {
++      "id": "faq.lab.alma",
++      "tipo": "faq",
++      "titulo": "¿Cuáles son las partes del alma?",
++      "fuente_editorial": {
++        "faq_id": "faq.lab.alma",
++        "origen": "propuesta_lab",
++        "estado": "borrador_no_publicado",
++        "trayecto_id": null,
++        "pasos_propuestos": 6,
++        "faqs_canonicas_relacionadas": [
++          "faq.psuche.partes"
++        ]
++      },
++      "introduccion": [
++        "La investigación del bien humano conduce al estudio de la virtud y, con ella, al examen del alma. En EN I.13 Aristóteles propone distinciones suficientes para el propósito práctico de la Ética; no pretende desarrollar allí una psicología exhaustiva.",
++        "Se diferencia lo que posee razón de lo que carece de ella, pero la parte desiderativa puede escuchar y obedecer razones. Esta participación permite comprender por qué el carácter se forma y por qué no toda excelencia del alma es de la misma clase."
++      ],
++      "lectura_grafo": [
++        "Los nodos muestran distinciones funcionales del alma relevantes para comprender la virtud, no un esquema anatómico de partes separadas.",
++        "Las flechas siguen la secuencia de aclaración: propósito del examen, distinciones y formas de participación en la razón.",
++        "La cuestión de si las partes están separadas realmente o solo en la definición queda abierta en este recorrido introductorio."
++      ],
++      "referencias": [
++        "EN I.13, 1102a5–1103a3"
++      ],
++      "nota": "Síntesis pedagógica provisional, sin confundir la distinción explicativa con una tesis acerca de separación física de partes.",
++      "pasos": [
++        {
++          "id": "p1",
++          "titulo": "Por qué estudiar el alma",
++          "sub_id": "1102a5-7",
++          "comentario": "El paso a la virtud requiere examinar el alma en la medida necesaria para la investigación ética."
++        },
++        {
++          "id": "p2",
++          "titulo": "Lo racional y lo irracional",
++          "sub_id": "1102a26-28",
++          "comentario": "Se introduce una distinción inicial entre lo que tiene razón y aquello que carece de ella."
++        },
++        {
++          "id": "p3",
++          "titulo": "La función nutritiva",
++          "sub_id": "1102a32-1102b2",
++          "comentario": "La nutrición y el crecimiento pertenecen a una dimensión común de la vida, que no define la virtud humana."
++        },
++        {
++          "id": "p4",
++          "titulo": "Los deseos pueden entrar en conflicto",
++          "sub_id": "1102b14-18",
++          "comentario": "La continencia y la incontinencia muestran tensiones entre deseos y juicio racional."
++        },
++        {
++          "id": "p5",
++          "titulo": "Dos aspectos de lo irracional",
++          "sub_id": "1102b28-31",
++          "comentario": "No todo lo irracional es igual: una dimensión no participa de la razón y otra puede escucharla."
++        },
++        {
++          "id": "p6",
++          "titulo": "Dos modos de participar en la razón",
++          "sub_id": "1103a1-3",
++          "comentario": "La razón puede poseerse propiamente o participar de ella por obediencia y escucha; esto prepara la clasificación de virtudes."
++        }
++      ],
++      "transiciones": [
++        "El objetivo práctico del examen determina el alcance de la distinción.",
++        "La categoría de lo irracional necesita dividirse según sus funciones.",
++        "La atención al deseo revela un componente no racional relevante para la vida moral.",
++        "La presencia de conflictos ayuda a distinguir las maneras de participación en la razón.",
++        "La distinción funcional permite formular dos modalidades de relación con el lógos."
++      ],
++      "contextos": {
++        "macros": [
++          {
++            "id": "macro:XIII",
++            "rol": "Análisis del alma",
++            "explicacion": "EN I.13 propone distinciones funcionales del alma para estudiar la virtud."
++          }
++        ],
++        "unidades": [
++          {
++            "id": "alma_virtudes",
++            "rol": "Unidad textual central",
++            "explicacion": "Los seis pasajes se hallan en el capítulo XIII."
++          }
++        ]
++      },
++      "apoyos": [
++        {
++          "sub_id": "1102a5-7",
++          "paso_id": "p1",
++          "rol": "Pregunta por el alma",
++          "explicacion": "El paso a la virtud requiere examinar el alma en la medida necesaria para la investigación ética."
++        },
++        {
++          "sub_id": "1102a26-28",
++          "paso_id": "p2",
++          "rol": "Distinción de facultades",
++          "explicacion": "Se introduce una distinción inicial entre lo que tiene razón y aquello que carece de ella."
++        },
++        {
++          "sub_id": "1102a32-1102b2",
++          "paso_id": "p3",
++          "rol": "Nutrición",
++          "explicacion": "La nutrición y el crecimiento pertenecen a una dimensión común de la vida, que no define la virtud humana."
++        },
++        {
++          "sub_id": "1102b14-18",
++          "paso_id": "p4",
++          "rol": "Conflicto psíquico",
++          "explicacion": "La continencia y la incontinencia muestran tensiones entre deseos y juicio racional."
++        },
++        {
++          "sub_id": "1102b28-31",
++          "paso_id": "p5",
++          "rol": "Dimensiones irracionales",
++          "explicacion": "No todo lo irracional es igual: una dimensión no participa de la razón y otra puede escucharla."
++        },
++        {
++          "sub_id": "1103a1-3",
++          "paso_id": "p6",
++          "rol": "Participación en lógos",
++          "explicacion": "La razón puede poseerse propiamente o participar de ella por obediencia y escucha; esto prepara la clasificación de virtudes."
++        }
++      ]
++    },
++    {
++      "id": "faq.lab.virtudes",
++      "tipo": "faq",
++      "titulo": "¿Qué tipos de virtudes hay?",
++      "fuente_editorial": {
++        "faq_id": "faq.lab.virtudes",
++        "origen": "propuesta_lab",
++        "estado": "borrador_no_publicado",
++        "trayecto_id": null,
++        "pasos_propuestos": 6,
++        "faqs_canonicas_relacionadas": []
++      },
++      "introduccion": [
++        "Al final del Libro I, Aristóteles distingue virtudes éticas y dianoéticas tomando como orientación los diferentes modos en que el alma se relaciona con la razón. La distinción prepara la investigación posterior de las virtudes en la Ética nicomáquea.",
++        "Las virtudes dianoéticas corresponden al ejercicio de la razón; las éticas se relacionan con el carácter y con la capacidad de los deseos de escucharla. Conviene no reducir esta división a una lista cerrada ni presentar las discusiones posteriores como si ya estuvieran desarrolladas en I.13."
++      ],
++      "lectura_grafo": [
++        "Los seis nodos reconstruyen las condiciones que permiten distinguir los dos tipos de virtud al cierre del Libro I.",
++        "El vínculo entre alma y virtud es explicativo; no afirmamos que cada paso constituya una inferencia formal autosuficiente.",
++        "Los ejemplos detallados y subgrafos de cada virtud quedan para otra fase."
++      ],
++      "referencias": [
++        "EN I.13, 1102a13–1103a10",
++        "EN II.1, 1103a14–b25 (desarrollo posterior; no cubierto aquí)"
++      ],
++      "nota": "Ficha-FAQ de síntesis propuesta; enlaza el final del Libro I con el examen ulterior de la virtud, sin atribuir a I.13 el desarrollo posterior.",
++      "pasos": [
++        {
++          "id": "p1",
++          "titulo": "La virtud humana concierne al alma",
++          "sub_id": "1102a13-18",
++          "comentario": "El objetivo no es cualquier excelencia corporal, sino aquella que corresponde a la actividad humana del alma."
++        },
++        {
++          "id": "p2",
++          "titulo": "Una dimensión desiderativa",
++          "sub_id": "1102b13-14",
++          "comentario": "Se identifica una dimensión irracional distinta de la nutrición, relevante para la conducta."
++        },
++        {
++          "id": "p3",
++          "titulo": "Escuchar la razón",
++          "sub_id": "1102b33-1103a1",
++          "comentario": "La persuasión y la exhortación muestran que cierta dimensión del alma puede ser conducida por el lógos."
++        },
++        {
++          "id": "p4",
++          "titulo": "Dos modos de tener lógos",
++          "sub_id": "1103a1-3",
++          "comentario": "Se distingue la posesión de razón en sentido propio y la participación por escucha y obediencia."
++        },
++        {
++          "id": "p5",
++          "titulo": "Virtudes dianoéticas y éticas",
++          "sub_id": "1103a3-7",
++          "comentario": "La distinción de los modos del alma prepara las dos grandes clases de virtudes."
++        },
++        {
++          "id": "p6",
++          "titulo": "Carácter, modos de ser y elogio",
++          "sub_id": "1103a7-10",
++          "comentario": "El cierre introduce ejemplos y el lenguaje del carácter, sin desplegar todavía una teoría completa de cada virtud."
++        }
++      ],
++      "transiciones": [
++        "La delimitación de virtud humana conduce del cuerpo al alma.",
++        "La vida moral exige atender a los deseos y disposiciones que no son exclusivamente racionales.",
++        "La capacidad de escuchar razones permite distinguir distintas formas de relación con el lógos.",
++        "La distinción de esos modos fundamenta la clasificación general de virtudes.",
++        "La clasificación abre la exposición posterior de las virtudes y sus formas de adquisición."
++      ],
++      "contextos": {
++        "macros": [
++          {
++            "id": "macro:XIII",
++            "rol": "División de las virtudes",
++            "explicacion": "La unidad final del Libro I prepara la clasificación de las excelencias humanas."
++          }
++        ],
++        "unidades": [
++          {
++            "id": "alma_virtudes",
++            "rol": "Fundamento de la clasificación",
++            "explicacion": "El final del capítulo XIII distingue los modos del alma y las clases de virtud."
++          }
++        ]
++      },
++      "apoyos": [
++        {
++          "sub_id": "1102a13-18",
++          "paso_id": "p1",
++          "rol": "Virtud del alma",
++          "explicacion": "El objetivo no es cualquier excelencia corporal, sino aquella que corresponde a la actividad humana del alma."
++        },
++        {
++          "sub_id": "1102b13-14",
++          "paso_id": "p2",
++          "rol": "Dimensión desiderativa",
++          "explicacion": "Se identifica una dimensión irracional distinta de la nutrición, relevante para la conducta."
++        },
++        {
++          "sub_id": "1102b33-1103a1",
++          "paso_id": "p3",
++          "rol": "Formación mediante razón",
++          "explicacion": "La persuasión y la exhortación muestran que cierta dimensión del alma puede ser conducida por el lógos."
++        },
++        {
++          "sub_id": "1103a1-3",
++          "paso_id": "p4",
++          "rol": "Doble modalidad",
++          "explicacion": "Se distingue la posesión de razón en sentido propio y la participación por escucha y obediencia."
++        },
++        {
++          "sub_id": "1103a3-7",
++          "paso_id": "p5",
++          "rol": "Clasificación general",
++          "explicacion": "La distinción de los modos del alma prepara las dos grandes clases de virtudes."
++        },
++        {
++          "sub_id": "1103a7-10",
++          "paso_id": "p6",
++          "rol": "Proyección al carácter",
++          "explicacion": "El cierre introduce ejemplos y el lenguaje del carácter, sin desplegar todavía una teoría completa de cada virtud."
++        }
++      ]
++    }
++  ],
++  "red": {
++    "estado": "relaciones_editoriales_propuestas",
++    "nota": "Vínculos seleccionados manualmente entre fichas. No inferirlos de coincidencias de etiquetas, referencias o pertenencia a unidades.",
++    "relaciones": [
++      {
++        "id": "red:r01",
++        "desde": "faq.etica.intro",
++        "hacia": "proemio",
++        "nombre": "sitúa la investigación",
++        "explicacion": "La ficha introductoria encuentra en el Proemio la relación inicial entre actividades, fines y política."
++      },
++      {
++        "id": "red:r02",
++        "desde": "proemio",
++        "hacia": "faq.lab.felicidad",
++        "nombre": "plantea el fin humano",
++        "explicacion": "La pregunta por el fin de la acción conduce a investigar el bien humano y su denominación como felicidad."
++      },
++      {
++        "id": "red:r03",
++        "desde": "faq.etica.intro",
++        "hacia": "faq.agathon.pros_hen",
++        "nombre": "abre el problema del bien",
++        "explicacion": "La orientación inicial permite plantear por qué el bien se dice de diversas maneras."
++      },
++      {
++        "id": "red:r04",
++        "desde": "faq.agathon.pros_hen",
++        "hacia": "faq.lab.felicidad",
++        "nombre": "distingue planos del bien",
++        "explicacion": "La crítica de un bien universal sirve para precisar la diferencia entre hablar del bien en general y buscar el bien humano realizable; no se infiere una solución semántica."
++      },
++      {
++        "id": "red:r05",
++        "desde": "faq.lab.felicidad",
++        "hacia": "faq.lab.ergon",
++        "nombre": "pide una determinación",
++        "explicacion": "La caracterización formal de la felicidad deja pendiente qué actividad constituye la vida humana lograda."
++      },
++      {
++        "id": "red:r06",
++        "desde": "faq.lab.ergon",
++        "hacia": "faq.lab.alma",
++        "nombre": "motiva examinar el alma",
++        "explicacion": "La formulación del bien humano en términos de actividad del alma motiva investigar sus capacidades relevantes para la virtud."
++      },
++      {
++        "id": "red:r07",
++        "desde": "faq.lab.alma",
++        "hacia": "faq.lab.virtudes",
++        "nombre": "fundamenta la clasificación",
++        "explicacion": "La distinción entre modos de participación en la razón prepara la clasificación de virtudes."
++      },
++      {
++        "id": "red:r08",
++        "desde": "faq.lab.virtudes",
++        "hacia": "faq.lab.felicidad",
++        "nombre": "precisa la excelencia",
++        "explicacion": "La clasificación de las virtudes ayuda a profundizar qué significa actividad según virtud en la caracterización de la felicidad."
++      }
++    ]
++  }
++}
+diff --git a/public/scripts/check-lab-arquitectura-n1u7.mjs b/public/scripts/check-lab-arquitectura-n1u7.mjs
+new file mode 100644
+index 0000000..658344e
+--- /dev/null
++++ b/public/scripts/check-lab-arquitectura-n1u7.mjs
+@@ -0,0 +1,69 @@
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import { construirModeloArquitectura } from '../js/lab/architectureModel.js';
++import { construirRelacionesProemio } from '../js/lab/architectureRelations.js';
++import { construirCapasProemio } from '../js/lab/architectureLayers.js';
++import { construirFichasArquitectura, elementosFichaFAQ, fichaIntroHtml, inspectorFichaFAQHtml } from '../js/lab/architectureCards.js';
++import { construirPuentesExplicativos, elementosPuentes, inspectorPuentesHtml } from '../js/lab/architectureBridges.js';
++import { construirAmpliacionFichas, elementosRedFichas, inspectorRedFichasHtml } from '../js/lab/architecturePilotNetwork.js';
++const read = p => JSON.parse(fs.readFileSync(new URL(p, import.meta.url),'utf8'));
++const fuente = read('./fixtures/n1u2-unidades.json');
++const original = JSON.stringify(fuente);
++const model = construirModeloArquitectura(fuente, read('../lab/n1u1-propuestas-libro-i.json'));
++const rels = construirRelacionesProemio(model,read('../lab/n1u3-relaciones-proemio.json'));
++const capas = construirCapasProemio(model,rels,read('../lab/n1u4-modulos-proemio.json'));
++const fichasBase = construirFichasArquitectura(model,capas,read('../lab/n1u5-fichas-explicativas.json'));
++const puentesBase = construirPuentesExplicativos(model,fichasBase,read('../lab/n1u6-puentes-explicativos.json'));
++const resource = read('../lab/n1u7-fichas-red-piloto.json');
++const {fichas,puentes,red} = construirAmpliacionFichas(model,fichasBase,puentesBase,resource);
++assert.equal(fichas.fichas.length,7); assert.equal(puentes.porFicha.size,7);
++assert.equal(red.relaciones.length,8); assert.equal(red.porId.size,8);
++const drafts=fichas.fichas.filter(f=>f.fuente_editorial?.origen==='propuesta_lab');
++assert.equal(drafts.length,4);
++for(const f of drafts){
++ assert.equal(f.fuente_editorial.trayecto_id,null);
++ assert.equal(f.fuente_editorial.estado,'borrador_no_publicado');
++ assert.equal(f.pasos.length,6); assert.equal(f.transiciones.length,5);
++ assert.deepEqual(f.pasos.map(x=>x.sub_id),puentes.porFicha.get(f.id).apoyos.map(x=>x.sub_id));
++ const parts=elementosFichaFAQ(f,model);
++ assert.equal(parts.filter(e=>e.group==='nodes').length,6);
++ assert.equal(parts.filter(e=>e.group==='edges').length,5);
++ assert(parts.filter(e=>e.group==='nodes').every(e=>e.data.label.includes('\n')));
++ const intro=fichaIntroHtml(f);
++ assert(intro.includes('borrador para curaduría'));
++ assert(!inspectorFichaFAQHtml(f,model,null,null).includes('trayecto <code>null</code>'));
++ assert(inspectorFichaFAQHtml(f,model,'p1',null).includes('data-arch-read'));
++ assert(inspectorFichaFAQHtml(f,model,null,'p1->p2').includes('propuesto'));
++ const p=puentes.porFicha.get(f.id);
++ for(const v of ['orientacion','apoyos']) {
++   const els=elementosPuentes(model,fichas,puentes,f.id,v);
++   assert(els.filter(x=>x.group==='nodes').length>0);
++   assert(els.filter(x=>x.group==='edges').every(x=>x.data.source===`puente:ficha:${f.id}`));
++   assert(!els.some(x=>x.data.tipo==='contiene'));
++   assert(inspectorPuentesHtml(model,fichas,puentes,f.id,v));
++ }
++}
++const elements=elementosRedFichas(fichas,red);
++assert.equal(elements.filter(e=>e.group==='nodes').length,7);
++assert.equal(elements.filter(e=>e.group==='edges').length,8);
++const ids=new Set(elements.filter(e=>e.group==='nodes').map(e=>e.data.id));
++assert(elements.filter(e=>e.group==='edges').every(e=>ids.has(e.data.source)&&ids.has(e.data.target)&&e.data.tipo==='relacion_entre_fichas'));
++const first=red.relaciones[0];
++assert(inspectorRedFichasHtml(fichas,red,null,first.id).includes('data-arch-card'));
++assert(inspectorRedFichasHtml(fichas,red,'faq.lab.felicidad').includes('Abrir explicación'));
++assert(inspectorRedFichasHtml(fichas,red).includes('data-arch-card="faq.lab.virtudes"'));
++const variant=fn=>{ const v=structuredClone(resource);fn(v);return v;};
++const build=v=>construirAmpliacionFichas(model,fichasBase,puentesBase,v);
++assert.throws(()=>build(variant(v=>v.fuente.revision='otra')),/revisión/);
++assert.throws(()=>build(variant(v=>v.fichas[0].pasos.pop())),/seis pasos/);
++assert.throws(()=>build(variant(v=>v.fichas[0].pasos[0].sub_id='inventado')),/paso/);
++assert.throws(()=>build(variant(v=>v.fichas[0].apoyos[0].sub_id='inventado')),/pasaje/);
++assert.throws(()=>build(variant(v=>v.fichas[0].contextos.unidades[0].id='idea_bien')),/pasaje|unidad/);
++assert.throws(()=>build(variant(v=>v.red.relaciones[0].hacia='desconocido')),/arista/);
++assert.throws(()=>build(variant(v=>v.red.relaciones[1].id=v.red.relaciones[0].id)),/arista/);
++const x=build(variant(v=>v.fichas[0].pasos[0].titulo='<img src=x onerror=alert(1)>'));
++assert(!inspectorFichaFAQHtml(x.fichas.porId.get('faq.lab.felicidad'),model,'p1',null).includes('<img'));
++const y=build(variant(v=>v.red.relaciones[0].nombre='<svg onload=alert(1)>'));
++assert(!inspectorRedFichasHtml(y.fichas,y.red,null,'red:r01').includes('<svg'));
++assert.equal(JSON.stringify(fuente),original,'el contenido de la exportación no debe mutar');
++console.log('N1-U.7 OK: 7 fichas (4 nuevas), 4×6 pasos, 4×5 transiciones, 8 aristas curatoriales; 7 puentes; integridad, revisión, HTML seguro y solo lectura.');

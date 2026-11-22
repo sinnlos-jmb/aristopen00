@@ -1,0 +1,406 @@
+diff --git a/docs/EXPERIMENTO_ORIENTADOR_V1.md b/docs/EXPERIMENTO_ORIENTADOR_V1.md
+new file mode 100644
+index 0000000..f65c82e
+--- /dev/null
++++ b/docs/EXPERIMENTO_ORIENTADOR_V1.md
+@@ -0,0 +1,29 @@
++# Laboratorio · Experimento 4: Orientador de consultas V1
++
++## Propósito
++
++Registrar cómo una inquietud inicial se convierte en consulta estructurada mediante aclaraciones sucesivas. La V1 no promete trayectos, no puntúa relaciones y no modifica el corpus.
++
++## Ruta
++
++`/#/lab/orientador`. El experimento tiene una vista independiente. Se mantiene dentro del proceso de navegación actual del Laboratorio sin modificar el Chat.
++
++## Contrato
++
++`iniciarOrientacion(texto)` reconoce términos léxicos con `analyze()` y ofrece una **hipótesis** de tema únicamente si encuentra exactamente un concepto. La intención detectada se conserva como dato de diagnóstico, pero no se atribuye automáticamente como deseo confirmado del usuario.
++
++`siguientePregunta(sesion)` propone tema, intención, destino si se desea relacionar, nivel, extensión y origen. `responderOrientacion(sesion, valor)` valida la opción y produce una copia inmutable con su bitácora; no hay respuestas inventadas. `cerrarOrientacion(sesion, motivo)` acepta `conforme` o `abandonado`, incluso antes de completar todas las dimensiones. La conformidad se refiere **solo a la consulta**, no a un trayecto.
++
++Las opciones `sin_preferencia` son elecciones explícitas; `null` significa no precisado. Cada evento registra un número de secuencia, datos de respuesta, consulta resultante y estado. La bitácora se exporta a JSON para analizar la génesis de las decisiones. Reiniciar inicia otra orientación; no hay persistencia automática deliberadamente en V1.
++
++## Alcance y límites
++
++- **No** se generan rutas, rankings ni scores. `candidatos` permanece vacío y `evaluacion` es `no_disponible_v1`.
++- **No** se infieren preferencias a partir del vocabulario; una correspondencia léxica es una hipótesis, no un sentido confirmado.
++- No se cambian `analyze()`, `detect()`, `planPath()`, las FAQ ni la base de datos.
++- V2 conectará candidatos del grafo y FAQ; V3 añadirá priorización justificada, filtros y recuperación de alternativas.
++- Las preguntas son deterministas en esta V1, no adaptativas de modo avanzado; se comprueba primero que la conversación sea auditable.
++
++## Pruebas
++
++Desde `public/`: `npm run test:views` o `npm run test:orientador`. En el CI de navegador, `e2e/tests/orientador.spec.mjs` cubre orientación, conformidad y abandono con datos simulados.
+diff --git a/e2e/tests/orientador.spec.mjs b/e2e/tests/orientador.spec.mjs
+new file mode 100644
+index 0000000..4ff5802
+--- /dev/null
++++ b/e2e/tests/orientador.spec.mjs
+@@ -0,0 +1,32 @@
++import { test, expect } from '@playwright/test';
++
++test('Orientador V1 aclara una inquietud y conserva la bitácora al cerrarla', async ({ page }) => {
++  const errors = [];
++  page.on('pageerror', error => errors.push(error.message));
++  await page.goto('/#/lab/orientador', { waitUntil: 'domcontentloaded' });
++  await expect(page.locator('#lab-orientador')).toBeVisible();
++  await page.locator('#orientador-texto').fill('Quiero comprender la naturaleza');
++  await page.getByRole('button', { name: 'Comenzar orientación' }).click();
++  await expect(page.locator('#lab-orientador')).toContainText('¿Qué te gustaría hacer con ese tema?');
++  await page.locator('[data-opcion="relacionar"]').click();
++  await page.locator('[data-opcion="eudaimonia"]').click();
++  await page.locator('[data-opcion="principiante"]').click();
++  await page.locator('[data-opcion="extensa"]').click();
++  await page.locator('[data-opcion="phusis"]').click();
++  await expect(page.locator('#lab-orientador')).toContainText('La consulta está especificada');
++  await page.locator('#orientador-conforme').click();
++  await expect(page.locator('#lab-orientador')).toContainText('conforme');
++  await expect(page.locator('#orientador-bitacora li')).toHaveCount(7);
++  await expect(page.locator('#orientador-json')).toContainText('\"estado\": \"conforme\"');
++  expect(errors).toEqual([]);
++});
++
++test('Orientador V1 permite abandonar sin inventar preferencias', async ({ page }) => {
++  await page.goto('/#/lab/orientador', { waitUntil: 'domcontentloaded' });
++  await page.locator('#orientador-texto').fill('Algo que no figura en el léxico');
++  await page.getByRole('button', { name: 'Comenzar orientación' }).click();
++  await expect(page.locator('#lab-orientador')).toContainText('¿Qué tema querés explorar?');
++  await page.locator('#orientador-abandonar').click();
++  await expect(page.locator('#lab-orientador')).toContainText('abandonado');
++  await expect(page.locator('#lab-orientador')).toContainText('No precisado');
++});
+diff --git a/public/js/lab/orientador.js b/public/js/lab/orientador.js
+new file mode 100644
+index 0000000..7f6da25
+--- /dev/null
++++ b/public/js/lab/orientador.js
+@@ -0,0 +1,141 @@
++import { analyze } from './analyze.js';
++
++// V1: contrato de consulta y bitácora; NO calcula trayectos ni interpreta tags.
++// Todas las transiciones devuelven una sesión nueva, sin mutar las anteriores.
++export const ORIENTADOR_VERSION = 1;
++
++const PREGUNTAS = Object.freeze({
++  tema: {
++    texto: '¿Qué tema querés explorar?',
++    opciones: [['phusis', 'Naturaleza (phýsis)'], ['eudaimonia', 'Felicidad (eudaimonía)'], ['arete', 'Excelencia (areté)']],
++  },
++  intencion: {
++    texto: '¿Qué te gustaría hacer con ese tema?',
++    opciones: [['definir', 'Precisar su significado'], ['explorar', 'Explorarlo paso a paso'], ['relacionar', 'Relacionarlo con otro concepto']],
++  },
++  destino: {
++    texto: '¿Con qué concepto querés relacionarlo?',
++    opciones: [['eudaimonia', 'Felicidad (eudaimonía)'], ['arete', 'Excelencia (areté)'], ['phusis', 'Naturaleza (phýsis)']],
++  },
++  nivel: {
++    texto: '¿Desde qué punto partimos?',
++    opciones: [['principiante', 'Desde cero'], ['intermedio', 'Con algunas nociones'], ['sin_preferencia', 'Prefiero no precisarlo']],
++  },
++  extension: {
++    texto: '¿Qué extensión preferís?',
++    opciones: [['breve', 'Un trayecto conciso'], ['extensa', 'Un recorrido extenso'], ['sin_preferencia', 'Sin preferencia']],
++  },
++  origen: {
++    texto: '¿Querés fijar un punto de partida pedagógico?',
++    opciones: [['phusis', 'Comenzar por phýsis'], ['tema', 'Comenzar por el tema elegido'], ['sin_preferencia', 'Dejarlo abierto']],
++  },
++});
++
++const hasValue = value => value !== null && value !== undefined;
++const clone = value => JSON.parse(JSON.stringify(value));
++
++function bitacora(sesion, tipo, datos) {
++  return [...sesion.bitacora, {
++    numero: sesion.bitacora.length + 1,
++    tipo,
++    datos: clone(datos),
++    consulta: clone(sesion.consulta),
++    estado: sesion.estado,
++  }];
++}
++
++export function iniciarOrientacion(texto) {
++  const pregunta = String(texto || '').trim();
++  if (!pregunta) throw new Error('Escribí primero tu inquietud.');
++  const analisis = analyze(pregunta);
++  // Una detección léxica es una hipótesis inicial, no una interpretación confirmada.
++  const conceptos = [...new Set(analisis.conceptos.map(c => c.id))];
++  const sesion = {
++    version: ORIENTADOR_VERSION,
++    estado: 'en_refinamiento',
++    textoInicial: pregunta,
++    analisis: {
++      normalizado: analisis.normalized,
++      conceptosDetectados: conceptos,
++      intencionDetectada: analisis.primaryMode?.id || null,
++    },
++    consulta: {
++      tema: conceptos.length === 1 ? conceptos[0] : null,
++      intencion: null, destino: null, nivel: null, extension: null, origen: null,
++    },
++    candidatos: [], // Se conectará al grafo y a las FAQ en V2.
++    evaluacion: 'no_disponible_v1',
++    bitacora: [],
++  };
++  sesion.bitacora = bitacora(sesion, 'inicio', {
++    texto: pregunta,
++    hipotesisTema: sesion.consulta.tema,
++    intencionDetectada: sesion.analisis.intencionDetectada,
++    nota: 'El léxico aporta una hipótesis; ninguna preferencia se presupone.',
++  });
++  return sesion;
++}
++
++export function siguientePregunta(sesion) {
++  if (!sesion || sesion.estado !== 'en_refinamiento') return null;
++  const c = sesion.consulta;
++  let clave = null;
++  if (!hasValue(c.tema)) clave = 'tema';
++  else if (!hasValue(c.intencion)) clave = 'intencion';
++  else if (c.intencion === 'relacionar' && !hasValue(c.destino)) clave = 'destino';
++  else if (!hasValue(c.nivel)) clave = 'nivel';
++  else if (!hasValue(c.extension)) clave = 'extension';
++  else if (!hasValue(c.origen)) clave = 'origen';
++  if (!clave) return null;
++  const spec = PREGUNTAS[clave];
++  return {
++    clave, texto: spec.texto,
++    opciones: spec.opciones
++      .filter(([v]) => clave !== 'destino' || v !== c.tema)
++      .map(([valor, etiqueta]) => ({ valor, etiqueta })),
++  };
++}
++
++export function responderOrientacion(sesion, valor) {
++  if (sesion?.estado !== 'en_refinamiento') throw new Error('Esta orientación ya terminó.');
++  const pregunta = siguientePregunta(sesion);
++  if (!pregunta) throw new Error('La consulta está completa. Podés confirmar o abandonar.');
++  const opcion = pregunta.opciones.find(o => o.valor === valor);
++  if (!opcion) throw new Error('Opción no válida para la pregunta actual.');
++  const previo = clone(sesion.consulta);
++  const nueva = { ...sesion, consulta: { ...sesion.consulta, [pregunta.clave]: valor } };
++  nueva.bitacora = bitacora(nueva, 'respuesta', {
++    pregunta: pregunta.clave,
++    formulacion: pregunta.texto,
++    opcion: { ...opcion },
++    anterior: previo[pregunta.clave],
++    efecto: `Se registra ${pregunta.clave}; la priorización de trayectos queda pendiente de V2/V3.`,
++  });
++  return nueva;
++}
++
++export function cerrarOrientacion(sesion, motivo) {
++  if (sesion?.estado !== 'en_refinamiento') throw new Error('La sesión no está activa.');
++  if (!['conforme', 'abandonado'].includes(motivo)) throw new Error('Cierre no reconocido.');
++  const nueva = { ...sesion, estado: motivo };
++  nueva.bitacora = bitacora(nueva, 'cierre', {
++    motivo,
++    completa: siguientePregunta(sesion) === null,
++    nota: motivo === 'conforme'
++      ? 'Conformidad con la consulta formulada; no implica aprobación de un trayecto.'
++      : 'Abandono registrado sin inferir disconformidad.',
++  });
++  return nueva;
++}
++
++export function resumenOrientacion(sesion) {
++  const pendiente = siguientePregunta(sesion);
++  return {
++    estado: sesion.estado,
++    consulta: clone(sesion.consulta),
++    siguiente: pendiente?.clave || null,
++    decisiones: sesion.bitacora.length,
++    candidatos: sesion.candidatos.length,
++    advertencia: 'V1 no genera ni puntúa trayectos; los conceptos reconocidos son hipótesis léxicas.',
++  };
++}
+diff --git a/public/js/main.js b/public/js/main.js
+index 4bb7977..01b3aaf 100644
+--- a/public/js/main.js
++++ b/public/js/main.js
+@@ -13,6 +13,7 @@ import { loadLibrary } from './reader/text.js';
+ import { createReadingView } from './views/reading.js';
+ import { createGraphCatalogView, createGraphView, GRAPHS } from './views/graphs.js';
+ import { createLabView, createLabCatalogView, EXPERIMENTS } from './views/lab.js';
++import { createLabOrientadorView } from './views/labOrientadorView.js';
+ 
+ const App = {
+   S: null,
+@@ -60,6 +61,7 @@ const router = createRouter({
+     '/grafos':    () => createGraphCatalogView(),
+     ...Object.fromEntries(Object.keys(GRAPHS).map(id => [`/grafos/${id}`, () => createGraphView(id)])),
+     ...Object.fromEntries(Object.keys(EXPERIMENTS).map(id => [`/lab/${id}`, () => createLabView(App, { exp: id })])),
++    '/lab/orientador': () => createLabOrientadorView(),
+   },
+   notFound: () => createLandingView(App),
+   onChange: (path) => {
+diff --git a/public/js/views/lab.js b/public/js/views/lab.js
+index b09838e..f37a8c6 100644
+--- a/public/js/views/lab.js
++++ b/public/js/views/lab.js
+@@ -13,6 +13,11 @@ import { openTrayectoEditor } from './labTrayectoEditor.js';
+ 
+ // Catálogo de experimentos para la maqueta grid
+ export const EXPERIMENTS = Object.freeze({
++  orientador: {
++    id: 'orientador', tab: 4, title: 'Orientador de consultas',
++    desc: 'Precisá una inquietud en diálogo y examiná la génesis de cada decisión. V1 no genera trayectos.',
++    tag: 'Experimento 4', icon: '🧭', featured: false
++  },
+   motor: {
+     id: 'motor',
+     tab: 1,
+diff --git a/public/js/views/labOrientadorView.js b/public/js/views/labOrientadorView.js
+new file mode 100644
+index 0000000..1a4bb75
+--- /dev/null
++++ b/public/js/views/labOrientadorView.js
+@@ -0,0 +1,82 @@
++import { esc } from '../ui.js';
++import { iniciarOrientacion, siguientePregunta, responderOrientacion, cerrarOrientacion, resumenOrientacion } from '../lab/orientador.js';
++import { downloadJSON, copyJSON } from '../lab/session.js';
++
++const EJEMPLO = 'Quiero comprender la naturaleza y su relación con la felicidad';
++const etiquetas = {
++  tema: 'Tema', intencion: 'Propósito', destino: 'Relación buscada',
++  nivel: 'Punto de partida del estudiante', extension: 'Extensión', origen: 'Origen preferido',
++};
++
++// Experimento aislado: no usa el bot del Chat ni guarda cambios editoriales.
++export function createLabOrientadorView() {
++  const el = document.createElement('div');
++  el.className = 'view-lab scrollable has-scroll';
++  let sesion = null;
++
++  function render() {
++    const actual = sesion ? siguientePregunta(sesion) : null;
++    const resumen = sesion ? resumenOrientacion(sesion) : null;
++    el.innerHTML = `<div class="lab__inner">
++      <nav class="lab-nav"><a class="btn btn--ghost btn--sm" href="#/lab">← Laboratorio</a></nav>
++      <header class="lab-exp__header"><h1 class="lab-exp__title">Orientador de consultas · V1</h1></header>
++      <section class="lab-card" id="lab-orientador">
++        <h2>Dar forma a una inquietud</h2>
++        <p class="hint">Un pequeño diálogo para precisar qué buscamos. La V1 registra decisiones, pero todavía no construye ni puntúa trayectos. Las preferencias no expresadas permanecen abiertas.</p>
++        ${!sesion ? `<form id="orientador-inicio" class="lab-form">
++          <label for="orientador-texto">¿Qué te gustaría comprender?</label>
++          <input class="lab-input" id="orientador-texto" name="texto" type="text" required maxlength="400" placeholder="${esc(EJEMPLO)}" />
++          <button class="lab-btn" type="submit">Comenzar orientación</button>
++        </form>` : `
++        <p><strong>Inquietud inicial:</strong> ${esc(sesion.textoInicial)}</p>
++        <p><strong>Estado:</strong> ${esc(sesion.estado)} · ${sesion.bitacora.length} decisiones registradas.</p>
++        ${actual ? `<div class="lab-panel" aria-live="polite">
++          <h3>${esc(actual.texto)}</h3>
++          <p class="hint">Aclaración ${esc(actual.clave)}. Ninguna respuesta altera el grafo ni el Chat.</p>
++          <div class="lab-help" id="orientador-opciones">${actual.opciones.map(o => `<button class="lab-help__item" type="button" data-opcion="${esc(o.valor)}">${esc(o.etiqueta)}</button>`).join('')}</div>
++        </div>` : sesion.estado === 'en_refinamiento' ? '<p class="lab-panel">La consulta está especificada. Podés confirmarla o abandonar el proceso.</p>' : '<p class="lab-panel">La orientación terminó. La bitácora sigue disponible para su examen.</p>'}
++        <div class="lab-toolbar">
++          ${sesion.estado === 'en_refinamiento' ? `<button type="button" class="lab-btn" id="orientador-conforme">Conforme con la consulta</button>
++          <button type="button" class="lab-btn lab-btn--ghost" id="orientador-abandonar">Abandonar</button>` : ''}
++          <button type="button" class="lab-btn lab-btn--ghost" id="orientador-reiniciar">Nueva consulta</button>
++          <button type="button" class="lab-btn lab-btn--ghost" id="orientador-exportar">Exportar bitácora JSON</button>
++          <button type="button" class="lab-btn lab-btn--ghost" id="orientador-copiar">Copiar JSON</button>
++        </div>
++        <p class="hint" id="orientador-estado" role="status"></p>
++        <div class="lab-panel"><h3>Consulta estructurada</h3>
++        <dl class="lab-facts">${Object.entries(sesion.consulta).map(([k,v]) => `<dt>${esc(etiquetas[k] || k)}</dt><dd>${esc(v === null ? 'No precisado' : v)}</dd>`).join('')}</dl>
++        <p class="hint">Candidatos: ${resumen.candidatos}. Aún no se asigna ranking ni validación hermenéutica.</p></div>
++        <div class="lab-panel"><h3>Génesis de las decisiones</h3>
++          <ol id="orientador-bitacora">${sesion.bitacora.map(p => `<li><strong>${esc(p.numero)}. ${esc(p.tipo)}</strong> · ${esc(p.datos.formulacion || p.datos.texto || p.datos.motivo || '')} ${p.datos.opcion ? `→ ${esc(p.datos.opcion.etiqueta)}` : ''}</li>`).join('')}</ol>
++          <details><summary>JSON completo de la sesión</summary><pre class="lab-json" id="orientador-json">${esc(JSON.stringify(sesion, null, 2))}</pre></details>
++        </div>`}
++      </section></div>`;
++    bind();
++  }
++
++  function bind() {
++    const form = el.querySelector('#orientador-inicio');
++    form?.addEventListener('submit', event => {
++      event.preventDefault();
++      const texto = form.querySelector('#orientador-texto').value.trim();
++      if (!texto) return;
++      sesion = iniciarOrientacion(texto);
++      render();
++    });
++    el.querySelectorAll('[data-opcion]').forEach(button => button.addEventListener('click', () => {
++      sesion = responderOrientacion(sesion, button.dataset.opcion);
++      render();
++    }));
++    el.querySelector('#orientador-conforme')?.addEventListener('click', () => { sesion = cerrarOrientacion(sesion, 'conforme'); render(); });
++    el.querySelector('#orientador-abandonar')?.addEventListener('click', () => { sesion = cerrarOrientacion(sesion, 'abandonado'); render(); });
++    el.querySelector('#orientador-reiniciar')?.addEventListener('click', () => { sesion = null; render(); });
++    el.querySelector('#orientador-exportar')?.addEventListener('click', () => downloadJSON(sesion, 'agora-orientador-v1.json'));
++    el.querySelector('#orientador-copiar')?.addEventListener('click', async () => {
++      const status = el.querySelector('#orientador-estado');
++      try { await copyJSON(sesion); status.textContent = 'Bitácora copiada.'; }
++      catch (error) { status.textContent = 'No se pudo copiar: ' + error.message; }
++    });
++  }
++  render();
++  return { el, destroy() { sesion = null; } };
++}
+diff --git a/public/package.json b/public/package.json
+index a0078c9..5716948 100644
+--- a/public/package.json
++++ b/public/package.json
+@@ -1,8 +1,9 @@
+ {
+   "type": "module",
+   "scripts": {
+-    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs && node scripts/check-evidence-audit.mjs",
++    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs && node scripts/check-evidence-audit.mjs && node scripts/check-orientador.mjs",
+     "test:questions": "node scripts/check-question-diagnostic.mjs",
+-    "test:evidence": "node scripts/check-evidence-audit.mjs"
++    "test:evidence": "node scripts/check-evidence-audit.mjs",
++    "test:orientador": "node scripts/check-orientador.mjs"
+   }
+ }
+diff --git a/public/scripts/check-orientador.mjs b/public/scripts/check-orientador.mjs
+new file mode 100644
+index 0000000..4763208
+--- /dev/null
++++ b/public/scripts/check-orientador.mjs
+@@ -0,0 +1,40 @@
++import assert from 'node:assert/strict';
++import { iniciarOrientacion, siguientePregunta, responderOrientacion, cerrarOrientacion, resumenOrientacion } from '../js/lab/orientador.js';
++
++assert.throws(() => iniciarOrientacion('  '), /inquietud/);
++const original = iniciarOrientacion('Quiero entender la naturaleza');
++assert.equal(original.consulta.tema, 'phusis');
++assert.equal(original.consulta.intencion, null);
++assert.equal(siguientePregunta(original).clave, 'intencion');
++assert.equal(original.candidatos.length, 0);
++assert.equal(original.bitacora.length, 1);
++assert.throws(() => responderOrientacion(original, 'arbitrario'), /válida/);
++const v1 = responderOrientacion(original, 'relacionar');
++assert.equal(original.consulta.intencion, null, 'No mutar sesión anterior');
++assert.equal(siguientePregunta(v1).clave, 'destino');
++assert.ok(!siguientePregunta(v1).opciones.some(o => o.valor === 'phusis'));
++const v2 = responderOrientacion(v1, 'eudaimonia');
++const v3 = responderOrientacion(v2, 'principiante');
++const v4 = responderOrientacion(v3, 'extensa');
++const v5 = responderOrientacion(v4, 'phusis');
++assert.equal(siguientePregunta(v5), null);
++assert.deepEqual([v5.consulta.tema, v5.consulta.destino, v5.consulta.nivel, v5.consulta.extension, v5.consulta.origen], ['phusis','eudaimonia','principiante','extensa','phusis']);
++assert.equal(v5.bitacora.length, 6);
++assert.equal(v5.evaluacion, 'no_disponible_v1');
++assert.equal(resumenOrientacion(v5).siguiente, null);
++const conformidad = cerrarOrientacion(v5, 'conforme');
++assert.equal(conformidad.estado, 'conforme');
++assert.equal(conformidad.bitacora.at(-1).datos.completa, true);
++assert.throws(() => responderOrientacion(conformidad, 'breve'), /terminó/);
++const abandono = cerrarOrientacion(v2, 'abandonado');
++assert.equal(abandono.bitacora.at(-1).datos.completa, false);
++assert.equal(abandono.estado, 'abandonado');
++assert.equal(original.bitacora.length, 1);
++const sinConcepto = iniciarOrientacion('Quiero comprender algo');
++assert.equal(siguientePregunta(sinConcepto).clave, 'tema');
++assert.equal(sinConcepto.consulta.tema, null);
++const sinPreferencia = responderOrientacion(responderOrientacion(responderOrientacion(sinConcepto,'arete'),'definir'), 'sin_preferencia');
++assert.equal(sinPreferencia.consulta.nivel, 'sin_preferencia');
++assert.equal(sinPreferencia.consulta.extension, null);
++assert.deepEqual(JSON.parse(JSON.stringify(conformidad)).consulta, conformidad.consulta);
++console.log('OK: orientador V1, aclaraciones, trazabilidad, estados terminales e inmutabilidad.');

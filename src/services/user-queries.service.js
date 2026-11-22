@@ -8,7 +8,12 @@ export async function registrarQuery(body, db = getPool()) {
   const match = clasificarFaq(value.textoInicial, faqs);
   const result = await db.query(`INSERT INTO user_queries
     (texto_inicial, consulta_json, estado_sesion, aportes_libres_json, faq_match_estado, faq_match_id)
-    VALUES (?, ?, ?, ?, ?, ?)`, [value.textoInicial, JSON.stringify(value.consulta), value.estado,
+    VALUES (?, ?, ?, ?, ?, ?)`, [value.textoInicial, JSON.stringify({ ...value.consulta,
+    ...(value.interpretacion && { interpretacion: value.interpretacion }),
+    ...(value.aclaracionSentido && { aclaracionSentido: value.aclaracionSentido }),
+    ...(value.evaluacionPiloto && { evaluacionPiloto: value.evaluacionPiloto }),
+    ...(value.trazabilidadIntencion && { trazabilidadIntencion: value.trazabilidadIntencion }),
+  }), value.estado,
     JSON.stringify(value.agregados), match.estado, match.faqId]);
   return { id: Number(result.insertId), faqMatch: match.estado, faqId: match.faqId, aportesLibres: value.agregados.length };
 }

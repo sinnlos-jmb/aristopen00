@@ -1,0 +1,190 @@
+diff --git a/public/js/lab/graphConceptIdentity.js b/public/js/lab/graphConceptIdentity.js
+new file mode 100644
+--- /dev/null
++++ b/public/js/lab/graphConceptIdentity.js
+@@ -0,0 +1,30 @@
++// Sólo en la vista: una identidad gráfica por concepto compartido.
++// No modifica la proyección editorial ni fusiona fuentes de datos.
++export const idVisual = id => {
++  const text = String(id || '');
++  return text.startsWith('nodo_funcional:') ? `concepto_estatico:${text.slice('nodo_funcional:'.length)}` : text;
++};
++
++export function integrarIdentidadesVisuales(elementos = []) {
++  const original = new Map(elementos.filter(e => e.group === 'nodes').map(e => [e.data.id, e]));
++  const nodos = new Map();
++  const equivalencias = new Map();
++  for (const node of original.values()) {
++    const id = node.data.id;
++    const shared = id.startsWith('nodo_funcional:') && original.has(idVisual(id));
++    const canonical = shared ? idVisual(id) : id;
++    equivalencias.set(id, canonical);
++    if (shared) continue;
++    const functional = id.startsWith('nodo_funcional:') || original.has(`nodo_funcional:${id.slice('concepto_estatico:'.length)}`) && id.startsWith('concepto_estatico:');
++    nodos.set(canonical, { ...node, data: { ...node.data, facetaFuncional: functional ? 1 : 0,
++      facetaEstatica: id.startsWith('concepto_estatico:') ? 1 : 0,
++      identidadCompartida: functional && id.startsWith('concepto_estatico:') ? 1 : 0 } });
++  }
++  const aristas = elementos.filter(e => e.group === 'edges').map(edge => {
++    const source = equivalencias.get(edge.data.source), target = equivalencias.get(edge.data.target);
++    if (!source || !target || source === target) return null;
++    return { ...edge, data: { ...edge.data, source, target } };
++  }).filter(Boolean);
++  return { elementos: [...nodos.values(), ...aristas], equivalencias,
++    compartidos: [...nodos.values()].filter(n => n.data.identidadCompartida).length };
++}
+diff --git a/public/js/lab/graphDisplayPolicy.js b/public/js/lab/graphDisplayPolicy.js
+--- a/public/js/lab/graphDisplayPolicy.js
++++ b/public/js/lab/graphDisplayPolicy.js
+@@ -1,6 +1,6 @@
+ // Política de visualización, no de edición: conserva intacta la proyección documental.
+-// Las subunidades no se dibujan. Los párrafos sólo se dibujan por defecto si
+-// conectan directamente al menos dos focos; el checkbox habilita los restantes.
++// No representar asociaciones de indexación como vecindad filosófica inicial.
++// Párrafos y subunidades sólo se incorporan por acción explícita.
+ export function filtrarGrafoDidactico(elementos, focos = [], { mostrarParrafos = false } = {}) {
+   const nodos = elementos.filter(el => el.group === 'nodes');
+   const aristas = elementos.filter(el => el.group === 'edges');
+@@ -21,7 +21,7 @@
+   const puente = new Set([...vecinosFocoPorParrafo]
+     .filter(([, vecinos]) => vecinos.size >= 2).map(([id]) => id));
+   const mostrar = n => n.data.tipo !== 'subunidad' &&
+-    (n.data.tipo !== 'parrafo' || mostrarParrafos || puente.has(n.data.id));
++    (n.data.tipo !== 'parrafo' || mostrarParrafos);
+   const visibles = nodos.filter(mostrar);
+   const ids = new Set(visibles.map(n => n.data.id));
+   return {
+diff --git a/public/js/views/labGraphPilotView.js b/public/js/views/labGraphPilotView.js
+--- a/public/js/views/labGraphPilotView.js
++++ b/public/js/views/labGraphPilotView.js
+@@ -4,6 +4,7 @@
+ import { indexarGrafo, crearEstadoFocal, cambiarFocos, alternarExpansion, obtenerSubgrafoFocal, restaurarBaseFocal } from '../lab/graphFocusExpansion.js';
+ import { crearVisorGrafo } from '../lab/cytoscapeRenderer.js';
+ import { filtrarGrafoDidactico, ordenarBusquedaFocal } from '../lab/graphDisplayPolicy.js';
++import { integrarIdentidadesVisuales } from '../lab/graphConceptIdentity.js';
+ 
+ // Checkpoint 2: Cytoscape permanece como visor experimental; el corpus es de sólo lectura.
+ // Focos estables + expansión local reversible + inspector lateral. Sin Relate/MariaDB.
+@@ -11,7 +12,9 @@
+   const el = document.createElement('div');
+   el.className = 'view-lab scrollable has-scroll';
+   const projection = buildSemanticProjection(App?.S || {});
+-  const todos = proyeccionAElementos(projection);
++  const identidad = integrarIdentidadesVisuales(proyeccionAElementos(projection));
++  const todos = identidad.elementos;
++  const visualId = id => identidad.equivalencias.get(id) || id;
+   let mostrarParrafos = false;
+   let filtrado = filtrarGrafoDidactico(todos, ['concepto_estatico:phusis', 'concepto_estatico:arete', 'concepto_estatico:eudaimonia']);
+   let indice = indexarGrafo(filtrado.elementos);
+@@ -40,7 +43,7 @@
+ 
+   el.innerHTML = `<div class="lab__inner">
+     <nav class="lab-nav"><a class="btn btn--ghost btn--sm" href="#/lab">← Laboratorio</a></nav>
+-    <header class="lab-exp__header"><h1 class="lab-exp__title">Visor de grafos · Checkpoint 2</h1></header>
++    <header class="lab-exp__header"><h1 class="lab-exp__title">Visor de grafos · identidad compartida</h1></header>
+     <section class="lab-card">
+       <h2>Navegación focal y exploración libre</h2>
+       <p class="hint">${projection.stats.nodos} nodos · ${projection.stats.aristas} vínculos · ${projection.issues.length} incidencias. El grafo documental no se modifica.</p>
+@@ -54,7 +57,7 @@
+       <div id="gv-focal-controls" class="lab-graph-focal-controls">
+         <p class="hint">Focos permanentes (máximo 5). Se muestran sus aristas entrantes y salientes, pero NO las conexiones secundarias entre vecinos hasta que las expandas.</p>
+         <div id="gv-foci" class="lab-graph-foci"></div>
+-        <label class="lab-graph-option"><input id="gv-parrafos" type="checkbox" /> Mostrar párrafos adicionales (los que conectan dos focos permanecen visibles)</label>
++        <label class="lab-graph-option"><input id="gv-parrafos" type="checkbox" /> Mostrar párrafos (ocultos inicialmente; incorporación voluntaria)</label>
+         <p class="hint" id="gv-filter-status">Las subunidades se mantienen en el corpus, pero no se dibujan.</p>
+         <div class="lab-toolbar">
+           <button type="button" id="gv-collapse-all" class="lab-btn lab-btn--ghost">Contraer todas las expansiones</button>
+@@ -67,7 +70,7 @@
+         <button type="submit" class="lab-btn">Buscar</button>
+         <button type="button" class="lab-btn lab-btn--ghost" id="gv-functional-search">Ver nodos funcionales</button>
+       </form>
+-      <p class="hint">En los resultados aparecen primero los conceptos estáticos; los funcionales se identifican como <code>nodo_funcional:…</code>. Las FAQ permanecen disponibles.</p>
++      <p class="hint">En los resultados aparecen primero los conceptos estáticos; los compartidos reúnen las facetas estática y funcional bajo un único concepto. Las FAQ permanecen disponibles.</p>
+       <div id="gv-matches" class="lab-help" aria-live="polite"></div>
+       <div class="lab-toolbar">
+         <button id="gv-zoom-out" type="button" class="lab-btn lab-btn--ghost" aria-label="Alejar grafo">− Zoom</button>
+@@ -115,8 +118,8 @@
+     const sub = obtenerSubgrafoFocal(estado);
+     viewer?.actualizarElementos(sub.elementos);
+     renderFocos();
+-    const funcionales = sub.elementos.filter(e => e.group === 'nodes' && e.data.tipo === 'nodo_funcional').length;
+-    $('#gv-filter-status').textContent = `${funcionales} nodos funcionales visibles · ${filtrado.puentes.size} párrafos puente · ${filtrado.excluidos.parrafos} párrafos ocultos · subunidades excluidas de la vista.`;
++    const funcionales = sub.elementos.filter(e => e.group === 'nodes' && e.data.facetaFuncional).length;
++    $('#gv-filter-status').textContent = `${funcionales} nodos con faceta funcional visibles · ${filtrado.excluidos.parrafos} párrafos ocultos · subunidades excluidas de la vista.`;
+     status(`${sub.estadisticas.nodos} nodos · ${sub.estadisticas.aristas} aristas · ${funcionales} funcionales · ${sub.estadisticas.expandidos} expandidos · ${sub.estadisticas.vecinosCompartidos} vecinos compartidos.`);
+   }
+   function dobleClick(item) {
+@@ -207,14 +210,19 @@
+   }
+   $('#gv-search-form').addEventListener('submit', e => {
+     e.preventDefault();
++    const vistos = new Set();
+     const matches = ordenarBusquedaFocal(buscarNodosSemanticos(projection, $('#gv-search').value.trim(), 80))
+-      .filter(n => n.tipo !== 'parrafo' && n.tipo !== 'subunidad').slice(0, 15);
++      .filter(n => n.tipo !== 'parrafo' && n.tipo !== 'subunidad')
++      .map(n => ({ ...n, uid: visualId(n.uid) }))
++      .filter(n => { if (vistos.has(n.uid)) return false; vistos.add(n.uid); return true; })
++      .slice(0, 15);
+     presentarResultados(matches);
+   });
+   $('#gv-functional-search').addEventListener('click', () => {
+     const q = $('#gv-search').value.trim().toLowerCase();
+     const matches = projection.nodes.filter(n => n.tipo === 'nodo_funcional' &&
+-      (!q || `${n.etiqueta} ${n.uid} ${n.griego || ''}`.toLowerCase().includes(q))).slice(0, 25);
++      (!q || `${n.etiqueta} ${n.uid} ${n.griego || ''}`.toLowerCase().includes(q)))
++      .map(n => ({ ...n, uid: visualId(n.uid) })).slice(0, 25);
+     presentarResultados(matches);
+     status(`${matches.length} nodos funcionales encontrados en el catálogo (máximo 25).`);
+   });
+diff --git a/public/scripts/check-identidad-visor.mjs b/public/scripts/check-identidad-visor.mjs
+new file mode 100644
+--- /dev/null
++++ b/public/scripts/check-identidad-visor.mjs
+@@ -0,0 +1,29 @@
++import assert from 'node:assert/strict';
++import { integrarIdentidadesVisuales } from '../js/lab/graphConceptIdentity.js';
++import { filtrarGrafoDidactico } from '../js/lab/graphDisplayPolicy.js';
++import { indexarGrafo, crearEstadoFocal, obtenerSubgrafoFocal } from '../js/lab/graphFocusExpansion.js';
++const n = (id, tipo) => ({ group: 'nodes', data: { id, tipo, label: id } });
++const e = (id, source, target, tipo) => ({ group: 'edges', data: { id, source, target, tipo } });
++const src = [n('concepto_estatico:phusis','concepto_estatico'), n('nodo_funcional:phusis','nodo_funcional'),
++  n('nodo_funcional:dunamis','nodo_funcional'), n('concepto_estatico:arete','concepto_estatico'),
++  n('parrafo:1','parrafo'), n('subunidad:x','subunidad'), n('faq:f','faq'),
++  e('f1','nodo_funcional:phusis','nodo_funcional:dunamis','arista_funcional'),
++  e('p1','parrafo:1','concepto_estatico:phusis','tag_parrafo'),
++  e('p2','parrafo:1','concepto_estatico:arete','tag_parrafo'),
++  e('f2','concepto_estatico:phusis','faq:f','foco_faq')];
++const {elementos, equivalencias, compartidos} = integrarIdentidadesVisuales(src);
++assert.equal(compartidos, 1);
++assert.equal(equivalencias.get('nodo_funcional:phusis'),'concepto_estatico:phusis');
++assert.equal(elementos.filter(x=>x.group==='nodes').length,6);
++assert.equal(elementos.find(x=>x.data.id==='f1').data.source,'concepto_estatico:phusis');
++assert.equal(elementos.find(x=>x.data.id==='concepto_estatico:phusis').data.facetaFuncional,1);
++const filtered=filtrarGrafoDidactico(elementos,['concepto_estatico:phusis','concepto_estatico:arete']);
++assert.ok(!filtered.elementos.some(x=>x.data.id==='parrafo:1'));
++assert.ok(!filtered.elementos.some(x=>x.data.id==='subunidad:x'));
++const focal=obtenerSubgrafoFocal(crearEstadoFocal(indexarGrafo(filtered.elementos),['concepto_estatico:phusis']));
++assert.ok(focal.nodos.has('nodo_funcional:dunamis'));
++assert.ok(focal.nodos.has('faq:f'));
++assert.ok(!focal.nodos.has('parrafo:1'));
++const shown=filtrarGrafoDidactico(elementos,['concepto_estatico:phusis'],{mostrarParrafos:true});
++assert.ok(shown.elementos.some(x=>x.data.id==='parrafo:1'));
++console.log('OK: identidad gráfica compartida, aristas funcionales, FAQ y párrafos opcionales.');
+diff --git a/public/scripts/check-visor-filtros.mjs b/public/scripts/check-visor-filtros.mjs
+--- a/public/scripts/check-visor-filtros.mjs
++++ b/public/scripts/check-visor-filtros.mjs
+@@ -21,7 +21,7 @@
+ const focos=['concepto_estatico:phusis','concepto_estatico:arete'];
+ let base=filtrarGrafoDidactico(all,focos);
+ const ids=new Set(base.elementos.filter(e=>e.group==='nodes').map(e=>e.data.id));
+-assert(ids.has('parrafo:puente'), 'párrafo que conecta dos focos visible');
++assert(!ids.has('parrafo:puente'), 'párrafos ocultos inicialmente incluso si conectan dos focos');
+ assert(!ids.has('parrafo:secundario'), 'otros párrafos ocultos');
+ assert(!ids.has('subunidad:1'), 'subunidades excluidas');
+ assert(ids.has('faq:1'), 'FAQ preservada');
+@@ -42,4 +42,4 @@
+ assert(!otros.elementos.some(e=>e.data.id==='parrafo:puente'),'párrafo puente depende del conjunto focal');
+ const orden=ordenarBusquedaFocal([{tipo:'nodo_funcional',etiqueta:'p'},{tipo:'concepto_estatico',etiqueta:'p'},{tipo:'faq',etiqueta:'p'}]);
+ assert.deepEqual(orden.map(x=>x.tipo),['concepto_estatico','nodo_funcional','faq']);
+-console.log('OK: párrafos puente, ocultamiento opcional, subunidades, FAQ, funcionales, foco y expansión.');
++console.log('OK: párrafos optativos, subunidades, FAQ, funcionales, foco y expansión.');

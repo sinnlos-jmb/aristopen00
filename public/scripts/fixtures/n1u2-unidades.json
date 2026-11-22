@@ -1,0 +1,2117 @@
+{
+  "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
+  "tags": {
+    "unidades": [
+      {
+        "id": "proemio",
+        "titulo": "Proemio: el bien y la política",
+        "resumen": "Todo lo que hacemos busca algún bien. Los fines se ordenan unos bajo otros, y tiene que haber uno último, querido por sí mismo: el bien supremo. El saber que se ocupa de él es la política, porque dirige a todos los demás.",
+        "tramos": [
+          [
+            "1094a1",
+            "1094b11"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1094a1-3",
+            "titulo": "Todo tiende a algún bien",
+            "bekker": [
+              "1094a1",
+              "1094a3"
+            ]
+          },
+          {
+            "id": "1094a3-6",
+            "titulo": "Fines: actividades y obras",
+            "bekker": [
+              "1094a3",
+              "1094a6"
+            ]
+          },
+          {
+            "id": "1094a6-9",
+            "titulo": "Muchos fines",
+            "bekker": [
+              "1094a6",
+              "1094a9"
+            ]
+          },
+          {
+            "id": "1094a9-16",
+            "titulo": "Subordinación de las artes",
+            "bekker": [
+              "1094a9",
+              "1094a16"
+            ]
+          },
+          {
+            "id": "1094a16-18",
+            "titulo": "Actividad u obra: indiferente",
+            "bekker": [
+              "1094a16",
+              "1094a18"
+            ]
+          },
+          {
+            "id": "1094a18-22",
+            "titulo": "Si hay un fin último",
+            "bekker": [
+              "1094a18",
+              "1094a22"
+            ]
+          },
+          {
+            "id": "1094a22-24",
+            "titulo": "Los arqueros y el blanco",
+            "bekker": [
+              "1094a22",
+              "1094a24"
+            ]
+          },
+          {
+            "id": "1094a24-26",
+            "titulo": "Programa: qué es y de qué ciencia",
+            "bekker": [
+              "1094a24",
+              "1094a26"
+            ]
+          },
+          {
+            "id": "1094a26-b3",
+            "titulo": "La política, la más arquitectónica",
+            "bekker": [
+              "1094a26",
+              "1094b3"
+            ]
+          },
+          {
+            "id": "1094b4-7",
+            "titulo": "Su fin abarca los demás: el bien humano",
+            "bekker": [
+              "1094b4",
+              "1094b7"
+            ]
+          },
+          {
+            "id": "1094b7-10",
+            "titulo": "El bien de uno y el de la ciudad",
+            "bekker": [
+              "1094b7",
+              "1094b10"
+            ]
+          },
+          {
+            "id": "1094b10-11",
+            "titulo": "La investigación es política",
+            "bekker": [
+              "1094b10",
+              "1094b11"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "metodo",
+        "titulo": "Método: el rigor y el oyente",
+        "resumen": "La ética no puede ser exacta como la matemática: habla en esbozo y de lo que pasa por lo general. Y no sirve a cualquiera: quien la escucha necesita experiencia y vivir según la razón, porque su fin es actuar, no solo saber.",
+        "tramos": [
+          [
+            "1094b11",
+            "1095a13"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1094b11-14",
+            "titulo": "El rigor depende de la materia",
+            "bekker": [
+              "1094b11",
+              "1094b14"
+            ]
+          },
+          {
+            "id": "1094b14-19",
+            "titulo": "Lo noble, lo justo y los bienes varían",
+            "bekker": [
+              "1094b14",
+              "1094b19"
+            ]
+          },
+          {
+            "id": "1094b19-22",
+            "titulo": "Hablar en esbozo y por lo general",
+            "bekker": [
+              "1094b19",
+              "1094b22"
+            ]
+          },
+          {
+            "id": "1094b22-27",
+            "titulo": "El hombre educado pide el rigor justo",
+            "bekker": [
+              "1094b22",
+              "1094b27"
+            ]
+          },
+          {
+            "id": "1094b27-1095a2",
+            "titulo": "Juzga bien quien conoce",
+            "bekker": [
+              "1094b27",
+              "1095a2"
+            ]
+          },
+          {
+            "id": "1095a2-6",
+            "titulo": "El joven no es oyente adecuado",
+            "bekker": [
+              "1095a2",
+              "1095a6"
+            ]
+          },
+          {
+            "id": "1095a6-11",
+            "titulo": "No es la edad: es vivir según la pasión",
+            "bekker": [
+              "1095a6",
+              "1095a11"
+            ]
+          },
+          {
+            "id": "1095a11-13",
+            "titulo": "Cierre del proemio",
+            "bekker": [
+              "1095a11",
+              "1095a13"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "felicidad_opiniones",
+        "titulo": "La felicidad: el nombre, las opiniones y el punto de partida",
+        "resumen": "Todos llaman felicidad al bien más alto y dicen que es vivir bien y obrar bien. Pero no coinciden en qué es: unos dicen placer, riqueza u honor; los platónicos, un bien en sí. Para examinarlo hay que partir de lo que nos es conocido, y por eso hace falta haber sido bien criado.",
+        "tramos": [
+          [
+            "1095a14",
+            "1095b13"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1095a14-17",
+            "titulo": "Retomamos: ¿cuál es el bien más alto?",
+            "bekker": [
+              "1095a14",
+              "1095a17"
+            ]
+          },
+          {
+            "id": "1095a17-20",
+            "titulo": "Su nombre: la felicidad",
+            "bekker": [
+              "1095a17",
+              "1095a20"
+            ]
+          },
+          {
+            "id": "1095a20-26",
+            "titulo": "Qué es: acá empiezan las diferencias",
+            "bekker": [
+              "1095a20",
+              "1095a26"
+            ]
+          },
+          {
+            "id": "1095a26-28",
+            "titulo": "Los platónicos: un bien en sí, causa de los demás",
+            "bekker": [
+              "1095a26",
+              "1095a28"
+            ]
+          },
+          {
+            "id": "1095a28-30",
+            "titulo": "Basta con las opiniones que más pesan",
+            "bekker": [
+              "1095a28",
+              "1095a30"
+            ]
+          },
+          {
+            "id": "1095a30-b4",
+            "titulo": "Desde los principios o hacia los principios",
+            "bekker": [
+              "1095a30",
+              "1095b4"
+            ]
+          },
+          {
+            "id": "1095b4-8",
+            "titulo": "El oyente bien criado parte del hecho",
+            "bekker": [
+              "1095b4",
+              "1095b8"
+            ]
+          },
+          {
+            "id": "1095b8-13",
+            "titulo": "Hesíodo: pensar por sí, obedecer o ser inútil",
+            "bekker": [
+              "1095b8",
+              "1095b13"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "modos_vida",
+        "titulo": "Los tres modos de vida",
+        "resumen": "Lo que cada uno entiende por el bien se ve en la vida que lleva. Tres vidas sobresalen: la de disfrute, la política y la contemplativa. El placer es un bien de bestias; el honor depende de quien lo da; la virtud se puede tener durmiendo; la riqueza es útil y se busca por otra cosa. La vida contemplativa queda para más adelante.",
+        "tramos": [
+          [
+            "1095b14",
+            "1096a10"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1095b14-16",
+            "titulo": "Retomamos: el bien se lee en las vidas",
+            "bekker": [
+              "1095b14",
+              "1095b16"
+            ]
+          },
+          {
+            "id": "1095b16-17",
+            "titulo": "La mayoría: el bien es el placer",
+            "bekker": [
+              "1095b16",
+              "1095b17"
+            ]
+          },
+          {
+            "id": "1095b17-19",
+            "titulo": "Tres vidas sobresalen",
+            "bekker": [
+              "1095b17",
+              "1095b19"
+            ]
+          },
+          {
+            "id": "1095b19-22",
+            "titulo": "Una vida de bestias: Sardanápalo",
+            "bekker": [
+              "1095b19",
+              "1095b22"
+            ]
+          },
+          {
+            "id": "1095b22-23",
+            "titulo": "Los refinados: el honor",
+            "bekker": [
+              "1095b22",
+              "1095b23"
+            ]
+          },
+          {
+            "id": "1095b23-26",
+            "titulo": "El honor es superficial: está en quien lo da",
+            "bekker": [
+              "1095b23",
+              "1095b26"
+            ]
+          },
+          {
+            "id": "1095b26-30",
+            "titulo": "Se busca por la virtud: la virtud es superior",
+            "bekker": [
+              "1095b26",
+              "1095b30"
+            ]
+          },
+          {
+            "id": "1095b30-1096a3",
+            "titulo": "Ni la virtud: se la puede tener durmiendo",
+            "bekker": [
+              "1095b30",
+              "1096a3"
+            ]
+          },
+          {
+            "id": "1096a4-5",
+            "titulo": "La vida contemplativa, para más adelante",
+            "bekker": [
+              "1096a4",
+              "1096a5"
+            ]
+          },
+          {
+            "id": "1096a5-10",
+            "titulo": "La riqueza es útil, por otra cosa",
+            "bekker": [
+              "1096a5",
+              "1096a10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "idea_bien",
+        "titulo": "Crítica de la Idea del bien",
+        "resumen": "Aristóteles examina el bien universal y cómo se dice. No hay una Idea común: el bien se dice con anterior y posterior, en todas las categorías y por muchas ciencias; lo en sí y lo eterno no agregan bondad; y aun los bienes por sí tienen definiciones distintas. ¿Cómo se dice, entonces? Desde uno, hacia uno o por analogía: la cuestión queda para otra filosofía. Aunque la Idea existiera, no sería realizable: el bien que se busca es el que se realiza, y el médico mira la salud de este hombre.",
+        "tramos": [
+          [
+            "1096a11",
+            "1097a14"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1096a11-13",
+            "titulo": "¿Cómo se dice el bien universal?",
+            "bekker": [
+              "1096a11",
+              "1096a13"
+            ]
+          },
+          {
+            "id": "1096a13-17",
+            "titulo": "Amigos, pero primero la verdad",
+            "bekker": [
+              "1096a13",
+              "1096a17"
+            ]
+          },
+          {
+            "id": "1096a17-23",
+            "titulo": "Donde hay anterior y posterior no hay Idea común",
+            "bekker": [
+              "1096a17",
+              "1096a23"
+            ]
+          },
+          {
+            "id": "1096a23-29",
+            "titulo": "El bien se dice como el ente",
+            "bekker": [
+              "1096a23",
+              "1096a29"
+            ]
+          },
+          {
+            "id": "1096a29-34",
+            "titulo": "Muchas ciencias del bien",
+            "bekker": [
+              "1096a29",
+              "1096a34"
+            ]
+          },
+          {
+            "id": "1096a34-b3",
+            "titulo": "El hombre en sí no es más hombre",
+            "bekker": [
+              "1096a34",
+              "1096b3"
+            ]
+          },
+          {
+            "id": "1096b3-5",
+            "titulo": "Lo eterno no es más bueno",
+            "bekker": [
+              "1096b3",
+              "1096b5"
+            ]
+          },
+          {
+            "id": "1096b5-8",
+            "titulo": "Los pitagóricos: lo uno en la columna de los bienes",
+            "bekker": [
+              "1096b5",
+              "1096b8"
+            ]
+          },
+          {
+            "id": "1096b8-13",
+            "titulo": "Lo que produce o protege se dice bien por lo bueno por sí",
+            "bekker": [
+              "1096b8",
+              "1096b13"
+            ]
+          },
+          {
+            "id": "1096b13-19",
+            "titulo": "¿Cuáles son bienes por sí?",
+            "bekker": [
+              "1096b13",
+              "1096b19"
+            ]
+          },
+          {
+            "id": "1096b19-26",
+            "titulo": "Honor, pensamiento y placer: definiciones distintas",
+            "bekker": [
+              "1096b19",
+              "1096b26"
+            ]
+          },
+          {
+            "id": "1096b26-31",
+            "titulo": "¿Desde uno, hacia uno o por analogía?",
+            "bekker": [
+              "1096b26",
+              "1096b31"
+            ]
+          },
+          {
+            "id": "1096b31-35",
+            "titulo": "Aunque exista, no es realizable",
+            "bekker": [
+              "1096b31",
+              "1096b35"
+            ]
+          },
+          {
+            "id": "1096b35-1097a3",
+            "titulo": "¿Modelo o blanco?",
+            "bekker": [
+              "1096b35",
+              "1097a3"
+            ]
+          },
+          {
+            "id": "1097a3-8",
+            "titulo": "Las técnicas no la buscan",
+            "bekker": [
+              "1097a3",
+              "1097a8"
+            ]
+          },
+          {
+            "id": "1097a8-11",
+            "titulo": "El tejedor y el general",
+            "bekker": [
+              "1097a8",
+              "1097a11"
+            ]
+          },
+          {
+            "id": "1097a11-14",
+            "titulo": "El médico mira la salud de este hombre",
+            "bekker": [
+              "1097a11",
+              "1097a14"
+            ]
+          }
+        ],
+        "articulacion": {
+          "momentos": [
+            {
+              "id": "I",
+              "titulo": "La pregunta",
+              "subs": [
+                "1096a11-13",
+                "1096a13-17"
+              ],
+              "t": "Cómo se dice el bien universal, y por qué discutirlo aunque las formas las hayan introducido amigos."
+            },
+            {
+              "id": "II",
+              "titulo": "El bien no es uno por Idea",
+              "subs": [
+                "1096a17-23",
+                "1096a23-29",
+                "1096a29-34"
+              ],
+              "t": "El bien se dice con anterior y posterior, en todas las categorías y por muchas ciencias: no hay una Idea común."
+            },
+            {
+              "id": "III",
+              "titulo": "Lo separado no agrega bondad",
+              "subs": [
+                "1096a34-b3",
+                "1096b3-5",
+                "1096b5-8"
+              ],
+              "t": "Lo en sí no cambia la definición, ni lo eterno la bondad; los pitagóricos hablan con más verosimilitud."
+            },
+            {
+              "id": "IV",
+              "titulo": "Por sí y por otro",
+              "subs": [
+                "1096b8-13",
+                "1096b13-19",
+                "1096b19-26"
+              ],
+              "t": "La Idea sería solo de los bienes por sí; pero aun el honor, el pensamiento y el placer tienen definiciones distintas en cuanto bienes."
+            },
+            {
+              "id": "V",
+              "titulo": "Bisagra",
+              "subs": [
+                "1096b26-31"
+              ],
+              "t": "¿Cómo se dice, entonces? Desde uno, hacia uno o por analogía. La cuestión queda para otra filosofía, pero las dos últimas salidas articulan lo que sigue."
+            },
+            {
+              "id": "VI",
+              "titulo": "El uno buscado es realizable",
+              "subs": [
+                "1096b31-35",
+                "1096b35-1097a3",
+                "1097a3-8",
+                "1097a8-11",
+                "1097a11-14"
+              ],
+              "t": "Aunque existiera, la Idea no sería realizable ni serviría de modelo a las técnicas: el médico mira la salud de este hombre."
+            }
+          ]
+        }
+      },
+      {
+        "id": "forma_fin",
+        "titulo": "La forma del fin: completo y autosuficiente",
+        "resumen": "Antes de decir qué es la felicidad, se fija la forma del bien buscado: es el fin de todo lo realizable, completo (se elige siempre por sí y nunca por otra cosa) y autosuficiente (basta por sí solo para hacer digna de elección la vida).",
+        "tramos": [
+          [
+            "1097a15",
+            "1097b21"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1097a15-18",
+            "titulo": "Volvamos al bien buscado",
+            "bekker": [
+              "1097a15",
+              "1097a18"
+            ]
+          },
+          {
+            "id": "1097a18-22",
+            "titulo": "El bien de cada arte: aquello en vista de lo cual",
+            "bekker": [
+              "1097a18",
+              "1097a22"
+            ]
+          },
+          {
+            "id": "1097a22-24",
+            "titulo": "Si hay un fin de todo lo realizable",
+            "bekker": [
+              "1097a22",
+              "1097a24"
+            ]
+          },
+          {
+            "id": "1097a24-30",
+            "titulo": "No todos los fines son completos",
+            "bekker": [
+              "1097a24",
+              "1097a30"
+            ]
+          },
+          {
+            "id": "1097a30-34",
+            "titulo": "Más completo y completo sin más",
+            "bekker": [
+              "1097a30",
+              "1097a34"
+            ]
+          },
+          {
+            "id": "1097a34-b6",
+            "titulo": "La felicidad se elige siempre por sí misma",
+            "bekker": [
+              "1097a34",
+              "1097b6"
+            ]
+          },
+          {
+            "id": "1097b6-11",
+            "titulo": "No para uno solo: el hombre es político por naturaleza",
+            "bekker": [
+              "1097b6",
+              "1097b11"
+            ]
+          },
+          {
+            "id": "1097b11-14",
+            "titulo": "Un límite; se examinará después",
+            "bekker": [
+              "1097b11",
+              "1097b14"
+            ]
+          },
+          {
+            "id": "1097b14-16",
+            "titulo": "Lo que por sí solo hace digna de elección la vida",
+            "bekker": [
+              "1097b14",
+              "1097b16"
+            ]
+          },
+          {
+            "id": "1097b16-20",
+            "titulo": "No se cuenta junto con los demás bienes",
+            "bekker": [
+              "1097b16",
+              "1097b20"
+            ]
+          },
+          {
+            "id": "1097b20-21",
+            "titulo": "Completa y autosuficiente, fin de lo realizable",
+            "bekker": [
+              "1097b20",
+              "1097b21"
+            ]
+          }
+        ],
+        "articulacion": {
+          "momentos": [
+            {
+              "id": "I",
+              "titulo": "El bien de cada acción",
+              "subs": [
+                "1097a15-18",
+                "1097a18-22",
+                "1097a22-24"
+              ],
+              "t": "En cada arte el bien es aquello en vista de lo cual se hace lo demás; si hay un fin de todo lo realizable, ese es el bien."
+            },
+            {
+              "id": "II",
+              "titulo": "Grados de lo completo",
+              "subs": [
+                "1097a24-30",
+                "1097a30-34",
+                "1097a34-b6"
+              ],
+              "t": "Hay fines por otro y fines por sí; completo sin más es lo que se elige siempre por sí. Así es la felicidad."
+            },
+            {
+              "id": "III",
+              "titulo": "Autosuficiencia",
+              "subs": [
+                "1097b6-11",
+                "1097b11-14",
+                "1097b14-16",
+                "1097b16-20"
+              ],
+              "t": "El bien completo basta por sí: no para uno aislado sino para una vida con otros, sin carencia y sin que nada se le sume."
+            },
+            {
+              "id": "IV",
+              "titulo": "Conclusión",
+              "subs": [
+                "1097b20-21"
+              ],
+              "t": "Completa y autosuficiente, fin de todo lo realizable."
+            }
+          ]
+        }
+      },
+      {
+        "id": "ergon",
+        "titulo": "Argumento del érgon",
+        "resumen": "De la pregunta por qué es la felicidad a su definición. Por analogía con los artífices y los órganos se busca la función propia del hombre; descartado lo común (vivir, sentir), queda la vida práctica de lo que tiene razón, tomada en ejercicio. El bien humano es actividad del alma según la virtud, y en una vida entera.",
+        "tramos": [
+          [
+            "1097b22",
+            "1098a20"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1097b22-25",
+            "titulo": "Lo mejor, sí; pero ¿qué es?",
+            "bekker": [
+              "1097b22",
+              "1097b25"
+            ]
+          },
+          {
+            "id": "1097b25-28",
+            "titulo": "El paradigma de los artífices",
+            "bekker": [
+              "1097b25",
+              "1097b28"
+            ]
+          },
+          {
+            "id": "1097b28-33",
+            "titulo": "¿Inactivo por naturaleza? Oficios y órganos",
+            "bekker": [
+              "1097b28",
+              "1097b33"
+            ]
+          },
+          {
+            "id": "1097b33-1098a3",
+            "titulo": "Lo común: vivir y sentir",
+            "bekker": [
+              "1097b33",
+              "1098a3"
+            ]
+          },
+          {
+            "id": "1098a3-5",
+            "titulo": "Lo que resta: la vida práctica de lo que tiene razón",
+            "bekker": [
+              "1098a3",
+              "1098a5"
+            ]
+          },
+          {
+            "id": "1098a5-7",
+            "titulo": "En ejercicio, que se dice con más propiedad",
+            "bekker": [
+              "1098a5",
+              "1098a7"
+            ]
+          },
+          {
+            "id": "1098a7-8",
+            "titulo": "La función: actividad del alma según razón",
+            "bekker": [
+              "1098a7",
+              "1098a8"
+            ]
+          },
+          {
+            "id": "1098a8-12",
+            "titulo": "El citarista y el buen citarista",
+            "bekker": [
+              "1098a8",
+              "1098a12"
+            ]
+          },
+          {
+            "id": "1098a12-16",
+            "titulo": "Reformulación (corchete de la edición)",
+            "bekker": [
+              "1098a12",
+              "1098a16"
+            ]
+          },
+          {
+            "id": "1098a16-18",
+            "titulo": "Conclusión: el bien humano",
+            "bekker": [
+              "1098a16",
+              "1098a18"
+            ]
+          },
+          {
+            "id": "1098a18-20",
+            "titulo": "Una golondrina no hace verano",
+            "bekker": [
+              "1098a18",
+              "1098a20"
+            ]
+          }
+        ],
+        "articulacion": {
+          "momentos": [
+            {
+              "id": "I",
+              "titulo": "Aporía y paradigma",
+              "subs": [
+                "1097b22-25",
+                "1097b25-28",
+                "1097b28-33"
+              ],
+              "t": "Se acepta que la felicidad es lo mejor; falta decir qué es. El paradigma de los artífices y de los órganos: si ellos tienen función, también el hombre."
+            },
+            {
+              "id": "II",
+              "titulo": "La criba de lo propio",
+              "subs": [
+                "1097b33-1098a3",
+                "1098a3-5",
+                "1098a5-7"
+              ],
+              "t": "Se descarta lo común (vivir, sentir) y queda la vida práctica de lo que tiene razón, tomada en ejercicio."
+            },
+            {
+              "id": "III",
+              "titulo": "El argumento",
+              "subs": [
+                "1098a7-8",
+                "1098a8-12",
+                "1098a12-16",
+                "1098a16-18"
+              ],
+              "t": "La función del hombre, la del hombre bueno y la virtud que se suma: el bien humano es actividad del alma según la virtud."
+            },
+            {
+              "id": "IV",
+              "titulo": "Una vida entera",
+              "subs": [
+                "1098a18-20"
+              ],
+              "t": "Y en una vida entera: un día no hace feliz."
+            }
+          ]
+        }
+      },
+      {
+        "id": "esbozo_metodo",
+        "titulo": "Esbozo y método",
+        "resumen": "La definición es un bosquejo: el tiempo y otros la completarán. Se recuerda el rigor según la materia (el carpintero y el geómetra), se advierte que no en todo hay que pedir la causa y se distingue cómo se alcanzan los principios, que valen más de la mitad del todo.",
+        "tramos": [
+          [
+            "1098a20",
+            "1098b8"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1098a20-22",
+            "titulo": "Primero un bosquejo",
+            "bekker": [
+              "1098a20",
+              "1098a22"
+            ]
+          },
+          {
+            "id": "1098a22-26",
+            "titulo": "El tiempo, descubridor o colaborador",
+            "bekker": [
+              "1098a22",
+              "1098a26"
+            ]
+          },
+          {
+            "id": "1098a26-29",
+            "titulo": "Recordar lo dicho: el rigor según la materia",
+            "bekker": [
+              "1098a26",
+              "1098a29"
+            ]
+          },
+          {
+            "id": "1098a29-32",
+            "titulo": "El carpintero y el geómetra",
+            "bekker": [
+              "1098a29",
+              "1098a32"
+            ]
+          },
+          {
+            "id": "1098a32-33",
+            "titulo": "Que lo accesorio no supere a lo principal",
+            "bekker": [
+              "1098a32",
+              "1098a33"
+            ]
+          },
+          {
+            "id": "1098b1-3",
+            "titulo": "No pedir la causa en todo: el hecho es principio",
+            "bekker": [
+              "1098b1",
+              "1098b3"
+            ]
+          },
+          {
+            "id": "1098b3-7",
+            "titulo": "Cómo se alcanzan los principios",
+            "bekker": [
+              "1098b3",
+              "1098b7"
+            ]
+          },
+          {
+            "id": "1098b7-8",
+            "titulo": "El principio, más de la mitad del todo",
+            "bekker": [
+              "1098b7",
+              "1098b8"
+            ]
+          }
+        ],
+        "articulacion": {
+          "momentos": [
+            {
+              "id": "I",
+              "titulo": "El bosquejo",
+              "subs": [
+                "1098a20-22",
+                "1098a22-26"
+              ],
+              "t": "Primero un bosquejo; el tiempo y otros agregan lo que falta."
+            },
+            {
+              "id": "II",
+              "titulo": "El rigor",
+              "subs": [
+                "1098a26-29",
+                "1098a29-32",
+                "1098a32-33"
+              ],
+              "t": "Cada materia admite su rigor: el carpintero y el geómetra."
+            },
+            {
+              "id": "III",
+              "titulo": "Los principios",
+              "subs": [
+                "1098b1-3",
+                "1098b3-7",
+                "1098b7-8"
+              ],
+              "t": "No pedir la causa en todo; el hecho es principio, y los principios se alcanzan de distintos modos."
+            }
+          ]
+        }
+      },
+      {
+        "id": "confirmacion",
+        "titulo": "Confirmación por las opiniones",
+        "resumen": "La definición se prueba también con lo que se dice de la felicidad. Concuerda con la división de los bienes y con el «vivir bien y obrar bien», y recoge lo que unos y otros buscan en ella: la virtud, pero en ejercicio y no solo como disposición; el placer, que no se le agrega como un amuleto, porque las acciones según la virtud son placenteras por sí mismas; y los bienes exteriores, que necesita como instrumentos. La felicidad es lo mejor, lo más noble y lo más placentero: las mejores actividades, o la mejor de ellas.",
+        "tramos": [
+          [
+            "1098b9",
+            "1099b8"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1098b9-12",
+            "titulo": "Examinarla también por lo que se dice",
+            "bekker": [
+              "1098b9",
+              "1098b12"
+            ]
+          },
+          {
+            "id": "1098b12-16",
+            "titulo": "Tres clases de bienes: los del alma, los más propios",
+            "bekker": [
+              "1098b12",
+              "1098b16"
+            ]
+          },
+          {
+            "id": "1098b16-20",
+            "titulo": "Una opinión antigua: el fin son acciones y actividades",
+            "bekker": [
+              "1098b16",
+              "1098b20"
+            ]
+          },
+          {
+            "id": "1098b20-22",
+            "titulo": "Vivir bien y obrar bien",
+            "bekker": [
+              "1098b20",
+              "1098b22"
+            ]
+          },
+          {
+            "id": "1098b22-26",
+            "titulo": "Virtud, prudencia, sabiduría, placer, prosperidad",
+            "bekker": [
+              "1098b22",
+              "1098b26"
+            ]
+          },
+          {
+            "id": "1098b26-29",
+            "titulo": "Muchos y antiguos, pocos y reputados: nadie yerra del todo",
+            "bekker": [
+              "1098b26",
+              "1098b29"
+            ]
+          },
+          {
+            "id": "1098b30-31",
+            "titulo": "Concuerda con los que dicen que es la virtud",
+            "bekker": [
+              "1098b30",
+              "1098b31"
+            ]
+          },
+          {
+            "id": "1098b31-1099a3",
+            "titulo": "Posesión o uso, disposición o actividad: el que duerme",
+            "bekker": [
+              "1098b31",
+              "1099a3"
+            ]
+          },
+          {
+            "id": "1099a3-7",
+            "titulo": "En Olimpia coronan a los que compiten",
+            "bekker": [
+              "1099a3",
+              "1099a7"
+            ]
+          },
+          {
+            "id": "1099a7-11",
+            "titulo": "Una vida placentera por sí misma: a cada uno le place lo que ama",
+            "bekker": [
+              "1099a7",
+              "1099a11"
+            ]
+          },
+          {
+            "id": "1099a11-17",
+            "titulo": "Placeres en pugna y placeres por naturaleza: el placer no es un amuleto",
+            "bekker": [
+              "1099a11",
+              "1099a17"
+            ]
+          },
+          {
+            "id": "1099a17-21",
+            "titulo": "No es bueno quien no goza obrando bien",
+            "bekker": [
+              "1099a17",
+              "1099a21"
+            ]
+          },
+          {
+            "id": "1099a22-24",
+            "titulo": "Buenas y nobles en grado sumo, a juicio del hombre ejemplar",
+            "bekker": [
+              "1099a22",
+              "1099a24"
+            ]
+          },
+          {
+            "id": "1099a24-28",
+            "titulo": "No están separados, como en el epigrama de Delos",
+            "bekker": [
+              "1099a24",
+              "1099a28"
+            ]
+          },
+          {
+            "id": "1099a29-31",
+            "titulo": "Las mejores actividades, o la mejor de ellas: la felicidad",
+            "bekker": [
+              "1099a29",
+              "1099a31"
+            ]
+          },
+          {
+            "id": "1099a31-b6",
+            "titulo": "Sin recursos no se obra lo noble; lo que falta mancha la bienaventuranza",
+            "bekker": [
+              "1099a31",
+              "1099b6"
+            ]
+          },
+          {
+            "id": "1099b6-8",
+            "titulo": "Unos ponen la buena fortuna junto a la felicidad; otros, la virtud",
+            "bekker": [
+              "1099b6",
+              "1099b8"
+            ]
+          }
+        ],
+        "articulacion": {
+          "momentos": [
+            {
+              "id": "I",
+              "titulo": "La prueba por lo que se dice",
+              "subs": [
+                "1098b9-12"
+              ],
+              "t": "La definición se examina también con lo que se dice: con lo verdadero todo concuerda."
+            },
+            {
+              "id": "II",
+              "titulo": "Bienes del alma",
+              "subs": [
+                "1098b12-16",
+                "1098b16-20",
+                "1098b20-22"
+              ],
+              "t": "Los bienes del alma son los más propios; el fin son acciones y actividades; el feliz vive bien y obra bien."
+            },
+            {
+              "id": "III",
+              "titulo": "Lo que se busca de la felicidad",
+              "subs": [
+                "1098b22-26",
+                "1098b26-29"
+              ],
+              "t": "Virtud, prudencia, sabiduría, placer, prosperidad: muchos y pocos, y nadie yerra del todo."
+            },
+            {
+              "id": "IV",
+              "titulo": "La virtud: tenerla o ejercerla",
+              "subs": [
+                "1098b30-31",
+                "1098b31-1099a3",
+                "1099a3-7"
+              ],
+              "t": "La felicidad está en la actividad, no en la sola disposición: en Olimpia coronan a los que compiten."
+            },
+            {
+              "id": "V",
+              "titulo": "El placer",
+              "subs": [
+                "1099a7-11",
+                "1099a11-17",
+                "1099a17-21"
+              ],
+              "t": "La vida buena es placentera por sí misma: las acciones según la virtud lo son por naturaleza, y el placer no se les cuelga como un amuleto."
+            },
+            {
+              "id": "VI",
+              "titulo": "Lo mejor, lo más noble y lo más placentero",
+              "subs": [
+                "1099a22-24",
+                "1099a24-28",
+                "1099a29-31"
+              ],
+              "t": "Lo que el epigrama de Delos separa se reúne en las mejores actividades, o en la mejor: eso es la felicidad."
+            },
+            {
+              "id": "VII",
+              "titulo": "Bienes exteriores",
+              "subs": [
+                "1099a31-b6",
+                "1099b6-8"
+              ],
+              "t": "Sin recursos no se obra lo noble; por eso algunos confunden la felicidad con la buena fortuna."
+            }
+          ]
+        }
+      },
+      {
+        "id": "adquisicion",
+        "titulo": "Cómo se adquiere la felicidad",
+        "resumen": "La pregunta por cómo llega la felicidad distingue aprendizaje, habituación y práctica de destino divino y fortuna. Aun adquirida mediante la virtud, la felicidad es divina y ampliamente compartible. La argumentación la identifica con cierta actividad del alma según la virtud; los demás bienes son necesarios o instrumentales. La política forma ciudadanos para lo noble, pero la actividad y una vida entera excluyen de la felicidad al niño y hacen problemática la vida de Príamo.",
+        "tramos": [
+          [
+            "1099b9",
+            "1100a9"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1099b9-11",
+            "titulo": "¿Cómo llega la felicidad?",
+            "bekker": [
+              "1099b9",
+              "11"
+            ]
+          },
+          {
+            "id": "1099b11-14",
+            "titulo": "La posibilidad de un don divino",
+            "bekker": [
+              "1099b11",
+              "14"
+            ]
+          },
+          {
+            "id": "1099b14-18",
+            "titulo": "Aunque no sea enviada por los dioses",
+            "bekker": [
+              "1099b14",
+              "18"
+            ]
+          },
+          {
+            "id": "1099b18-20",
+            "titulo": "Un bien ampliamente compartible",
+            "bekker": [
+              "1099b18",
+              "1099b20"
+            ]
+          },
+          {
+            "id": "1099b20-24",
+            "titulo": "Lo mejor y la mejor causa",
+            "bekker": [
+              "1099b20",
+              "1099b24"
+            ]
+          },
+          {
+            "id": "1099b24-25",
+            "titulo": "No confiar lo supremo a la fortuna",
+            "bekker": [
+              "1099b24",
+              "1099b25"
+            ]
+          },
+          {
+            "id": "1099b25-27",
+            "titulo": "La respuesta desde la argumentación",
+            "bekker": [
+              "1099b25",
+              "1099b27"
+            ]
+          },
+          {
+            "id": "1099b27-28",
+            "titulo": "Los demás bienes",
+            "bekker": [
+              "1099b27",
+              "1099b28"
+            ]
+          },
+          {
+            "id": "1099b28-31",
+            "titulo": "La concordancia con la política",
+            "bekker": [
+              "1099b28",
+              "1099b31"
+            ]
+          },
+          {
+            "id": "1099b31-1100a1",
+            "titulo": "Los demás animales",
+            "bekker": [
+              "1099b31",
+              "1100a1"
+            ]
+          },
+          {
+            "id": "1100a1-3",
+            "titulo": "El niño y la esperanza",
+            "bekker": [
+              "1100a1",
+              "1100a3"
+            ]
+          },
+          {
+            "id": "1100a3-5",
+            "titulo": "Virtud completa y vida entera",
+            "bekker": [
+              "1100a3",
+              "1100a5"
+            ]
+          },
+          {
+            "id": "1100a5-8",
+            "titulo": "Las vicisitudes: Príamo",
+            "bekker": [
+              "1100a5",
+              "1100a8"
+            ]
+          },
+          {
+            "id": "1100a8-9",
+            "titulo": "Una muerte miserable",
+            "bekker": [
+              "1100a8",
+              "1100a9"
+            ]
+          }
+        ],
+        "articulacion": {
+          "momentos": [
+            {
+              "id": "I",
+              "titulo": "La pregunta y el don divino",
+              "subs": [
+                "1099b9-11",
+                "1099b11-14"
+              ],
+              "t": "La dificultad sobre la adquisición y la hipótesis de un don divino, reservada para otra investigación."
+            },
+            {
+              "id": "II",
+              "titulo": "Divina y, sin embargo, adquirible",
+              "subs": [
+                "1099b14-18",
+                "1099b18-20"
+              ],
+              "t": "No hace falta que sea enviada por los dioses para ser divina; podría ser muy compartida mediante aprendizaje y cultivo."
+            },
+            {
+              "id": "III",
+              "titulo": "La fortuna y la mejor causa",
+              "subs": [
+                "1099b20-24",
+                "1099b24-25"
+              ],
+              "t": "Es razonable que lo mejor no se confíe a la fortuna: naturaleza, arte y causas."
+            },
+            {
+              "id": "IV",
+              "titulo": "La definición y los demás bienes",
+              "subs": [
+                "1099b25-27",
+                "1099b27-28"
+              ],
+              "t": "El argumento recuerda la actividad del alma y distingue los demás bienes necesarios de los instrumentales."
+            },
+            {
+              "id": "V",
+              "titulo": "La política y la actividad",
+              "subs": [
+                "1099b28-31",
+                "1099b31-1100a1",
+                "1100a1-3"
+              ],
+              "t": "La política forma ciudadanos buenos; animales y niños no participan de esa actividad en el sentido requerido."
+            },
+            {
+              "id": "VI",
+              "titulo": "Virtud completa y vida entera",
+              "subs": [
+                "1100a3-5",
+                "1100a5-8",
+                "1100a8-9"
+              ],
+              "t": "La virtud completa y la vida entera: las vicisitudes y el caso de Príamo abren el problema del final de la vida."
+            }
+          ]
+        }
+      },
+      {
+        "id": "solon",
+        "titulo": "Solón y la vida entera",
+        "resumen": "En I.10 la pregunta de Solón conduce a considerar la felicidad de los vivos, la firmeza de la actividad virtuosa y la incidencia de la fortuna. En I.11 se examina si las vicisitudes de descendientes y amigos afectan a los difuntos y se concluye que su eventual influencia no altera su felicidad.",
+        "tramos": [
+          [
+            "1100a10",
+            "1101b9"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1100a10-12",
+            "titulo": "¿Esperar al fin?",
+            "bekker": [
+              "1100a10",
+              "1100a11"
+            ]
+          },
+          {
+            "id": "1100a12-14",
+            "titulo": "La felicidad y el muerto",
+            "bekker": [
+              "1100a11",
+              "1100a14"
+            ]
+          },
+          {
+            "id": "1100a14-18",
+            "titulo": "La seguridad del juicio",
+            "bekker": [
+              "1100a14",
+              "1100a18"
+            ]
+          },
+          {
+            "id": "1100a18-21",
+            "titulo": "Bienes y males sin percepción",
+            "bekker": [
+              "1100a18",
+              "1100a21"
+            ]
+          },
+          {
+            "id": "1100a21-27",
+            "titulo": "Los cambios de los descendientes",
+            "bekker": [
+              "1100a21",
+              "1100a27"
+            ]
+          },
+          {
+            "id": "1100a27-30",
+            "titulo": "La doble dificultad",
+            "bekker": [
+              "1100a27",
+              "1100a30"
+            ]
+          },
+          {
+            "id": "1100a30-1100b3",
+            "titulo": "El problema de reconocer la felicidad",
+            "bekker": [
+              "1100a31",
+              "1100b4"
+            ]
+          },
+          {
+            "id": "1100b3-7",
+            "titulo": "El hombre feliz como camaleón",
+            "bekker": [
+              "1100b4",
+              "1100b7"
+            ]
+          },
+          {
+            "id": "1100b7-11",
+            "titulo": "Las actividades son rectoras",
+            "bekker": [
+              "1100b7",
+              "1100b11"
+            ]
+          },
+          {
+            "id": "1100b11-15",
+            "titulo": "La firmeza de las actividades virtuosas",
+            "bekker": [
+              "1100b11",
+              "1100b14"
+            ]
+          },
+          {
+            "id": "1100b15-17",
+            "titulo": "Las actividades más valiosas",
+            "bekker": [
+              "1100b15",
+              "1100b17"
+            ]
+          },
+          {
+            "id": "1100b17-22",
+            "titulo": "Una vida de actividad virtuosa",
+            "bekker": [
+              "1100b18",
+              "1100b22"
+            ]
+          },
+          {
+            "id": "1100b22-25",
+            "titulo": "Pequeños y grandes acontecimientos",
+            "bekker": [
+              "1100b22",
+              "1100b25"
+            ]
+          },
+          {
+            "id": "1100b25-30",
+            "titulo": "Bienes favorables y adversidades",
+            "bekker": [
+              "1100b25",
+              "1100b30"
+            ]
+          },
+          {
+            "id": "1100b30-33",
+            "titulo": "Lo noble en el infortunio",
+            "bekker": [
+              "1100b30",
+              "1100b33"
+            ]
+          },
+          {
+            "id": "1100b33-1101a5",
+            "titulo": "El hombre bueno y sensato",
+            "bekker": [
+              "1100b33",
+              "1101a6"
+            ]
+          },
+          {
+            "id": "1101a6-8",
+            "titulo": "El límite de Príamo",
+            "bekker": [
+              "1101a6",
+              "1101a8"
+            ]
+          },
+          {
+            "id": "1101a8-13",
+            "titulo": "Desplazamiento y recuperación",
+            "bekker": [
+              "1101a8",
+              "1101a13"
+            ]
+          },
+          {
+            "id": "1101a13-16",
+            "titulo": "La formulación de la felicidad",
+            "bekker": [
+              "1101a14",
+              "1101a16"
+            ]
+          },
+          {
+            "id": "1101a16-19",
+            "titulo": "El futuro oculto",
+            "bekker": [
+              "1101a16",
+              "1101a19"
+            ]
+          },
+          {
+            "id": "1101a19-21",
+            "titulo": "Bienaventurados en cuanto hombres",
+            "bekker": [
+              "1101a19",
+              "1101a21"
+            ]
+          },
+          {
+            "id": "1101a22-24",
+            "titulo": "Las vicisitudes de descendientes y amigos",
+            "bekker": [
+              "1101a22",
+              "1101a24"
+            ]
+          },
+          {
+            "id": "1101a24-28",
+            "titulo": "Un examen general y esquemático",
+            "bekker": [
+              "1101a24",
+              "1101a28"
+            ]
+          },
+          {
+            "id": "1101a28-31",
+            "titulo": "El peso desigual de las vicisitudes",
+            "bekker": [
+              "1101a28",
+              "1101a31"
+            ]
+          },
+          {
+            "id": "1101a31-34",
+            "titulo": "La diferencia entre vivos y difuntos",
+            "bekker": [
+              "1101a31",
+              "1101a34"
+            ]
+          },
+          {
+            "id": "1101a34-1101b1",
+            "titulo": "La aporía sobre la participación de los difuntos",
+            "bekker": [
+              "1101a34",
+              "1101b1"
+            ]
+          },
+          {
+            "id": "1101b1-5",
+            "titulo": "Lo que llega a los difuntos",
+            "bekker": [
+              "1101b1",
+              "1101b5"
+            ]
+          },
+          {
+            "id": "1101b5-9",
+            "titulo": "Influencia limitada sobre los difuntos",
+            "bekker": [
+              "1101b5",
+              "1101b9"
+            ]
+          }
+        ],
+        "articulacion": {
+          "momentos": [
+            {
+              "id": "I",
+              "titulo": "Solón y el final de la vida",
+              "subs": [
+                "1100a10-12",
+                "1100a12-14",
+                "1100a14-18"
+              ],
+              "t": "La pregunta por el final y las dos interpretaciones de Solón."
+            },
+            {
+              "id": "II",
+              "titulo": "Los descendientes y la dificultad del muerto",
+              "subs": [
+                "1100a18-21",
+                "1100a21-27",
+                "1100a27-30"
+              ],
+              "t": "Bienes y males después de la muerte y la doble dificultad."
+            },
+            {
+              "id": "III",
+              "titulo": "La felicidad de los vivos y el camaleón",
+              "subs": [
+                "1100a30-1100b3",
+                "1100b3-7"
+              ],
+              "t": "La dificultad de reconocer la felicidad y el riesgo de seguir cada giro de la fortuna."
+            },
+            {
+              "id": "IV",
+              "titulo": "Actividad virtuosa y permanencia",
+              "subs": [
+                "1100b7-11",
+                "1100b11-15",
+                "1100b15-17",
+                "1100b17-22"
+              ],
+              "t": "La actividad virtuosa es rectora; su firmeza sostiene la vida feliz."
+            },
+            {
+              "id": "V",
+              "titulo": "El peso de la fortuna",
+              "subs": [
+                "1100b22-25",
+                "1100b25-30",
+                "1100b30-33"
+              ],
+              "t": "Acontecimientos pequeños y grandes, y lo noble en el infortunio."
+            },
+            {
+              "id": "VI",
+              "titulo": "Firmeza, límites y recuperación",
+              "subs": [
+                "1100b33-1101a5",
+                "1101a6-8",
+                "1101a8-13"
+              ],
+              "t": "El hombre bueno, el límite de Príamo y la posibilidad de recuperación."
+            },
+            {
+              "id": "VII",
+              "titulo": "Felicidad humana y vida entera",
+              "subs": [
+                "1101a13-16",
+                "1101a16-19",
+                "1101a19-21"
+              ],
+              "t": "La formulación final, la incertidumbre del futuro y la felicidad humana."
+            },
+            {
+              "id": "VIII",
+              "titulo": "La dificultad y el alcance de la investigación",
+              "subs": [
+                "1101a22-24",
+                "1101a24-28"
+              ],
+              "t": "Se plantea la dificultad de negar toda influencia y se propone tratarla en términos generales y esquemáticos."
+            },
+            {
+              "id": "IX",
+              "titulo": "Las diferencias que deben ponderarse",
+              "subs": [
+                "1101a28-31",
+                "1101a31-34",
+                "1101a34-1101b1"
+              ],
+              "t": "Peso desigual de las vicisitudes, diferencia entre vivos y difuntos y aporía de la participación de los muertos."
+            },
+            {
+              "id": "X",
+              "titulo": "Una influencia limitada",
+              "subs": [
+                "1101b1-5",
+                "1101b5-9"
+              ],
+              "t": "Lo que llegue a los difuntos, si llega algo, no altera su condición de felices o no felices en los términos expuestos."
+            }
+          ]
+        }
+      },
+      {
+        "id": "elogio",
+        "titulo": "La felicidad: ¿elogiable u honorable?",
+        "resumen": "La felicidad no se cuenta entre las capacidades ni se elogia como la virtud: se proclama bienaventurada, como algo digno de honor y completo. El capítulo examina el carácter referencial del elogio, la defensa del placer de Eudoxo y la felicidad como principio y causa de los bienes.",
+        "tramos": [
+          [
+            "1101b10",
+            "1102a4"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1101b10-12",
+            "titulo": "¿Elogiable o digna de honor?",
+            "bekker": [
+              "1101b10",
+              "1101b12"
+            ]
+          },
+          {
+            "id": "1101b12-18",
+            "titulo": "El elogio y la referencia",
+            "bekker": [
+              "1101b12",
+              "1101b18"
+            ]
+          },
+          {
+            "id": "1101b18-21",
+            "titulo": "Los elogios a los dioses",
+            "bekker": [
+              "1101b18",
+              "1101b21"
+            ]
+          },
+          {
+            "id": "1101b21-25",
+            "titulo": "Más allá del elogio",
+            "bekker": [
+              "1101b21",
+              "1101b25"
+            ]
+          },
+          {
+            "id": "1101b25-27",
+            "titulo": "La felicidad no se elogia",
+            "bekker": [
+              "1101b25",
+              "1101b27"
+            ]
+          },
+          {
+            "id": "1101b27-31",
+            "titulo": "La defensa de Eudoxo",
+            "bekker": [
+              "1101b27",
+              "1101b31"
+            ]
+          },
+          {
+            "id": "1101b31-34",
+            "titulo": "Elogio de la virtud y encomio de las obras",
+            "bekker": [
+              "1101b31",
+              "1101b34"
+            ]
+          },
+          {
+            "id": "1101b34-1102a1",
+            "titulo": "Dignas de honor y completas",
+            "bekker": [
+              "1101b34",
+              "1102a1"
+            ]
+          },
+          {
+            "id": "1102a2-4",
+            "titulo": "La felicidad como principio y causa",
+            "bekker": [
+              "1102a2",
+              "1102a4"
+            ]
+          }
+        ],
+        "articulacion": {
+          "momentos": [
+            {
+              "id": "I",
+              "titulo": "La pregunta y el carácter del elogio",
+              "subs": [
+                "1101b10-12",
+                "1101b12-18"
+              ],
+              "t": "La felicidad y la distinción propuesta; la índole y la referencia de lo elogiable."
+            },
+            {
+              "id": "II",
+              "titulo": "Las mejores cosas y la felicidad",
+              "subs": [
+                "1101b18-21",
+                "1101b21-25",
+                "1101b25-27"
+              ],
+              "t": "Los elogios a los dioses y la proclamación de bienaventuranza para las mejores cosas y para la felicidad."
+            },
+            {
+              "id": "III",
+              "titulo": "Eudoxo, elogio y encomio",
+              "subs": [
+                "1101b27-31",
+                "1101b31-34"
+              ],
+              "t": "La defensa de Eudoxo y la distinción entre el elogio de la virtud y el encomio de las obras."
+            },
+            {
+              "id": "IV",
+              "titulo": "La conclusión y su fundamento",
+              "subs": [
+                "1101b34-1102a1",
+                "1102a2-4"
+              ],
+              "t": "La felicidad es digna de honor y completa; se la presenta como principio y causa de los bienes."
+            }
+          ]
+        }
+      },
+      {
+        "id": "alma_virtudes",
+        "titulo": "Partes del alma y división de las virtudes",
+        "resumen": "La felicidad como actividad del alma según virtud completa conduce al examen político del alma, a la distinción de sus partes y a la división entre virtudes dianoéticas y éticas.",
+        "tramos": [
+          [
+            "1102a5",
+            "1103a10"
+          ],
+          [
+            "1098a3",
+            "1098a5"
+          ]
+        ],
+        "subunidades": [
+          {
+            "id": "1102a5-7",
+            "titulo": "La virtud como objeto de examen",
+            "bekker": [
+              "1102a5",
+              "1102a7"
+            ]
+          },
+          {
+            "id": "1102a7-12",
+            "titulo": "La tarea del político",
+            "bekker": [
+              "1102a7",
+              "1102a12"
+            ]
+          },
+          {
+            "id": "1102a12-13",
+            "titulo": "Continuidad de la investigación",
+            "bekker": [
+              "1102a12",
+              "1102a13"
+            ]
+          },
+          {
+            "id": "1102a13-18",
+            "titulo": "La virtud humana es la del alma",
+            "bekker": [
+              "1102a13",
+              "1102a18"
+            ]
+          },
+          {
+            "id": "1102a18-23",
+            "titulo": "La analogía con la medicina",
+            "bekker": [
+              "1102a18",
+              "1102a23"
+            ]
+          },
+          {
+            "id": "1102a23-26",
+            "titulo": "El alcance del examen",
+            "bekker": [
+              "1102a23",
+              "1102a26"
+            ]
+          },
+          {
+            "id": "1102a26-28",
+            "titulo": "Lo irracional y lo que posee razón",
+            "bekker": [
+              "1102a26",
+              "1102a28"
+            ]
+          },
+          {
+            "id": "1102a28-32",
+            "titulo": "Separación o distinción en la definición",
+            "bekker": [
+              "1102a28",
+              "1102a32"
+            ]
+          },
+          {
+            "id": "1102a32-1102b2",
+            "titulo": "Nutrición y crecimiento",
+            "bekker": [
+              "1102a32",
+              "1102b2"
+            ]
+          },
+          {
+            "id": "1102b3-11",
+            "titulo": "El sueño y la virtud humana",
+            "bekker": [
+              "1102b3",
+              "1102b11"
+            ]
+          },
+          {
+            "id": "1102b11-13",
+            "titulo": "La parte nutritiva queda de lado",
+            "bekker": [
+              "1102b11",
+              "1102b13"
+            ]
+          },
+          {
+            "id": "1102b13-14",
+            "titulo": "Otra naturaleza irracional",
+            "bekker": [
+              "1102b13",
+              "1102b14"
+            ]
+          },
+          {
+            "id": "1102b14-18",
+            "titulo": "Continencia e incontinencia",
+            "bekker": [
+              "1102b14",
+              "1102b18"
+            ]
+          },
+          {
+            "id": "1102b18-21",
+            "titulo": "La analogía de los miembros paralizados",
+            "bekker": [
+              "1102b18",
+              "1102b21"
+            ]
+          },
+          {
+            "id": "1102b21-25",
+            "titulo": "La oposición en el alma",
+            "bekker": [
+              "1102b21",
+              "1102b25"
+            ]
+          },
+          {
+            "id": "1102b25-28",
+            "titulo": "Del continente al templado y al valiente",
+            "bekker": [
+              "1102b25",
+              "1102b28"
+            ]
+          },
+          {
+            "id": "1102b28-31",
+            "titulo": "Dos aspectos de lo irracional",
+            "bekker": [
+              "1102b28",
+              "1102b31"
+            ]
+          },
+          {
+            "id": "1102b31-33",
+            "titulo": "La razón del padre y de los amigos",
+            "bekker": [
+              "1102b31",
+              "1102b33"
+            ]
+          },
+          {
+            "id": "1102b33-1103a1",
+            "titulo": "Persuasión y exhortación",
+            "bekker": [
+              "1102b33",
+              "1103a1"
+            ]
+          },
+          {
+            "id": "1103a1-3",
+            "titulo": "Dos modos de poseer razón",
+            "bekker": [
+              "1103a1",
+              "1103a3"
+            ]
+          },
+          {
+            "id": "1103a3-7",
+            "titulo": "Virtudes dianoéticas y éticas",
+            "bekker": [
+              "1103a3",
+              "1103a7"
+            ]
+          },
+          {
+            "id": "1103a7-10",
+            "titulo": "Carácter, modo de ser y elogio",
+            "bekker": [
+              "1103a7",
+              "1103a10"
+            ]
+          }
+        ],
+        "articulacion": {
+          "momentos": [
+            {
+              "id": "I",
+              "titulo": "De la felicidad a la virtud",
+              "subs": [
+                "1102a5-7",
+                "1102a7-12",
+                "1102a12-13"
+              ],
+              "t": "La felicidad conduce al examen de la virtud dentro de la política."
+            },
+            {
+              "id": "II",
+              "titulo": "Por qué el político estudia el alma",
+              "subs": [
+                "1102a13-18",
+                "1102a18-23",
+                "1102a23-26"
+              ],
+              "t": "El político estudia el alma en la medida necesaria para su investigación."
+            },
+            {
+              "id": "III",
+              "titulo": "Una primera división del alma",
+              "subs": [
+                "1102a26-28",
+                "1102a28-32"
+              ],
+              "t": "Se distinguen partes del alma y se deja abierta su separación."
+            },
+            {
+              "id": "IV",
+              "titulo": "La parte vegetativa",
+              "subs": [
+                "1102a32-1102b2",
+                "1102b3-11",
+                "1102b11-13"
+              ],
+              "t": "La parte vegetativa es común y se deja fuera del examen de la virtud humana."
+            },
+            {
+              "id": "V",
+              "titulo": "El conflicto con la razón",
+              "subs": [
+                "1102b13-14",
+                "1102b14-18",
+                "1102b18-21",
+                "1102b21-25"
+              ],
+              "t": "La razón y los impulsos pueden entrar en conflicto."
+            },
+            {
+              "id": "VI",
+              "titulo": "Participación y concordancia con la razón",
+              "subs": [
+                "1102b25-28",
+                "1102b28-31",
+                "1102b31-33"
+              ],
+              "t": "Lo desiderativo participa de la razón de maneras que se distinguen en los distintos caracteres."
+            },
+            {
+              "id": "VII",
+              "titulo": "Dos modos de poseer razón",
+              "subs": [
+                "1102b33-1103a1",
+                "1103a1-3"
+              ],
+              "t": "La persuasión y la doble acepción de poseer razón precisan esa participación."
+            },
+            {
+              "id": "VIII",
+              "titulo": "La división de las virtudes",
+              "subs": [
+                "1103a3-7",
+                "1103a7-10"
+              ],
+              "t": "Las virtudes se dividen conforme a la diferencia establecida y se reconocen como disposiciones elogiables."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

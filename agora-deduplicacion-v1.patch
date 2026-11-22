@@ -1,0 +1,231 @@
+diff --git a/docs/REFACTOR_COMPARTIDO_V1.md b/docs/REFACTOR_COMPARTIDO_V1.md
+new file mode 100644
+index 0000000..eac9298
+--- /dev/null
++++ b/docs/REFACTOR_COMPARTIDO_V1.md
+@@ -0,0 +1,28 @@
++# Ágora — consolidación mínima de utilidades compartidas (v1)
++
++## Alcance
++
++Parche incremental enfocado en duplicación comprobada. No cambia API, rutas, persistencia, trayectos, algoritmo del diálogo ni contenido editorial.
++
++1. `public/shared/escape-html.js`: una función de escape HTML para la SPA, el Labo y Tagueo. Las tres API históricas `esc()` siguen exportándose desde sus `ui.js` respectivos. Tagueo ahora codifica también el carácter de comilla simple, evitando que se interprete como HTML si se usa en un atributo con comillas simples.
++2. `src/utils/public-module.js`: un único adaptador Node para importar módulos ES ubicados dentro de `public`. Sustituye rutas `path.join + pathToFileURL + import()` repetidas en `shared.js`, `corpus-service.js` y `routes.js`. El adaptador rechaza rutas absolutas y `..`; solo los paths literales del propio código lo invocan.
++3. `test/refactor/shared-modules.test.mjs`: tres pruebas que comprueban equivalencia de las exportaciones de escape, identidad de los módulos dinámicos y rechazo de rutas no permitidas.
++
++## Qué NO resuelve
++
++El backend **sigue dependiendo** de módulos puros situados bajo `public/`. Es un acoplamiento consciente que **no se elimina** en este parche: resolverlo requiere definir una ubicación estable para módulos de dominio compartidos y revisar sus consumidores. Tampoco se han mezclado las aplicaciones `/`, `/labo/` y `/tagueo/`.
++
++## Validación disponible
++
++```sh
++node --test test/refactor/shared-modules.test.mjs
++cd public && npm run test:views
++```
++
++Se comprobaron sintaxis y pruebas de módulo en una reconstrucción del proyecto a partir de los archivos facilitados anteriormente, incluida la refactorización del Laboratorio. La ejecución HTTP de GitHub Actions, los tests de integración contra la base `aristotle` y la comparación exacta con el HEAD remoto quedan pendientes.
++
++## Orden aconsejado
++
++1. Aplicar solo si `git apply --check` no encuentra diferencias.
++2. Ejecutar pruebas del refactor y vistas; abrir PR para Playwright.
++3. Una vez aprobado, continuar con la revisión del contenido: traducciones, terminología y referencias Bekker, sin tocar el modelo de trayectos.
+diff --git a/public/js/ui.js b/public/js/ui.js
+index 97fa8c6..c9cb252 100644
+--- a/public/js/ui.js
++++ b/public/js/ui.js
+@@ -1,2 +1,2 @@
+-export const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+-  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+\ No newline at end of file
++// API pública de escape conservada para los consumidores de la SPA.
++export { esc } from '../shared/escape-html.js';
+diff --git a/public/labo/js/ui.js b/public/labo/js/ui.js
+index aaef013..a562691 100644
+--- a/public/labo/js/ui.js
++++ b/public/labo/js/ui.js
+@@ -1,11 +1,7 @@
+ import { SOURCE_LABELS, VOICE_LABELS } from './store.js';
+ 
+-export const esc = value => String(value ?? '')
+-  .replace(/&/g, '&amp;')
+-  .replace(/</g, '&lt;')
+-  .replace(/>/g, '&gt;')
+-  .replace(/"/g, '&quot;')
+-  .replace(/'/g, '&#39;');
++import { esc } from '../../shared/escape-html.js';
++export { esc };
+ 
+ export const voiceKey = item => item.voiceStatus === 'estructurada'
+   ? item.voices.join('+')
+diff --git a/public/shared/escape-html.js b/public/shared/escape-html.js
+new file mode 100644
+index 0000000..dd28567
+--- /dev/null
++++ b/public/shared/escape-html.js
+@@ -0,0 +1,11 @@
++// Función pura compartida por las tres interfaces de Ágora.
++// Codifica contenido de texto o atributos entrecomillados en HTML.
++const ENTITIES = Object.freeze({
++  '&': '&amp;',
++  '<': '&lt;',
++  '>': '&gt;',
++  '"': '&quot;',
++  "'": '&#39;',
++});
++
++export const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ENTITIES[char]);
+diff --git a/public/tagueo/js/ui.js b/public/tagueo/js/ui.js
+index cd4666d..53c8fe1 100644
+--- a/public/tagueo/js/ui.js
++++ b/public/tagueo/js/ui.js
+@@ -1,7 +1,8 @@
+ // Piezas de interfaz comunes (devuelven HTML)
+ import { href } from './router.js';
+ import { mapaRef } from './store.js';
+-export const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
++import { esc } from '../../shared/escape-html.js';
++export { esc };
+ export const ST = {propuesto: 'Propuesto', confirmado: 'Confirmado', discusion: 'En discusión', esbozo: 'Esbozo', borrador: 'Borrador', none: 'sin revisar'};
+ export const VLAB = {textual: 'Textual', comentarista: 'Comentarista', nuestra: 'Lectura nuestra', traduccion: 'Traducción', endoxa: 'Éndoxon'};
+ export const KIND = {raiz: 'Raíz', categoria: 'Categoría', division: 'División', especie: 'Especie', parte: 'Parte', concepto: 'Concepto', compartido: 'Compartido', propio: 'Propio del funcional'};
+diff --git a/src/labo/corpus-service.js b/src/labo/corpus-service.js
+index df0e8ca..17bad73 100644
+--- a/src/labo/corpus-service.js
++++ b/src/labo/corpus-service.js
+@@ -1,8 +1,6 @@
+ // Índice derivado efímero, nunca otra fuente editorial. No almacena un JSON público.
+ import crypto from 'node:crypto';
+-import path from 'node:path';
+-import { pathToFileURL } from 'node:url';
+-import { config } from '../config.js';
++import { loadPublicModule } from '../utils/public-module.js';
+ import { leerSnapshot, validarFuentes } from './snapshot.js';
+ import { generarCorpus } from './corpus-core.js';
+ import { generarConstructor } from './query-builder-core.js';
+@@ -29,7 +27,7 @@ export function crearServicioCorpus({leer = leerSnapshot, motor, maxAgeMs = 5000
+           cache.vence = Date.now() + maxAgeMs;
+           return cache;
+         }
+-        const tools = motor || await import(pathToFileURL(path.join(config.publicDir, 'tagueo/js/store.js')).href);
++        const tools = motor || await loadPublicModule('tagueo/js/store.js');
+         // build() puede agregar campos a los objetos de tags; no modificar el snapshot original.
+         const corpus = generarCorpus(structuredClone(snapshot), tools);
+         const avisos = [];
+diff --git a/src/labo/routes.js b/src/labo/routes.js
+index 41223a9..6856ff3 100644
+--- a/src/labo/routes.js
++++ b/src/labo/routes.js
+@@ -3,9 +3,7 @@ import {Router} from 'express';
+ import {asyncHandler as h} from '../utils/async-handler.js';
+ import {HttpError} from '../utils/http-error.js';
+ import {crearServicioCorpus} from './corpus-service.js';
+-import {pathToFileURL} from 'node:url';
+-import path from 'node:path';
+-import {config} from '../config.js';
++import {loadPublicModule} from '../utils/public-module.js';
+ const notFound = new HttpError(404,'Modelo no encontrado.');
+ const bad = message => new HttpError(400,message);
+ const conflict = () => new HttpError(409,'Los datos cambiaron. Recargá para continuar con una sola versión.');
+@@ -22,8 +20,8 @@ export function crearLaboRouter(options={}) {
+  const r=Router();
+  let searchModules=null;
+  const mod=async()=>searchModules ||= Promise.all([
+-   buscador || import(pathToFileURL(path.join(config.publicDir,'labo/js/buscar.js')).href),
+-   constructor || import(pathToFileURL(path.join(config.publicDir,'labo/js/constructor.js')).href)
++   buscador || loadPublicModule('labo/js/buscar.js'),
++   constructor || loadPublicModule('labo/js/constructor.js')
+  ]);
+  const read=async revision=>{const data=await servicio.obtener();if(typeof revision!=='string'||revision!==data.sourceHash)throw conflict();return data;};
+  const send=(res,value)=>res.set('Cache-Control','no-store').json(value);
+@@ -58,7 +56,7 @@ export function crearLaboRouter(options={}) {
+    if(!['query','ia','mapa'].includes(tipo))throw bad('Comando inválido.');
+    if(tipo!=='mapa'&&(typeof pregunta!=='string'||!pregunta.trim()||pregunta.length>2000))throw bad('Consulta inválida.');
+    const data=await read(revision),c=indexar(data.corpus);
+-   const cmd=await (comandos||import(pathToFileURL(path.join(config.publicDir,'labo/js/bot-commands.js')).href));
++   const cmd=await (comandos||loadPublicModule('labo/js/bot-commands.js'));
+    let text;
+    if(tipo==='mapa'){
+      const u=ubicacion,ids=data.fase.topics.map(t=>t.id);
+diff --git a/src/utils/public-module.js b/src/utils/public-module.js
+new file mode 100644
+index 0000000..11a7a43
+--- /dev/null
++++ b/src/utils/public-module.js
+@@ -0,0 +1,14 @@
++// Único adaptador entre el backend y los módulos ES públicos de dominio.
++// Conserva sus rutas existentes sin duplicar conversiones path -> file://.
++import path from 'node:path';
++import { pathToFileURL } from 'node:url';
++import { config } from '../config.js';
++
++export function loadPublicModule(relativePath) {
++  if (typeof relativePath !== 'string' || !relativePath ||
++      path.isAbsolute(relativePath) || path.win32.isAbsolute(relativePath) ||
++      relativePath.split(/[\\/]/).some(part => part === '..' || part === '.')) {
++    throw new TypeError('Se requiere una ruta relativa dentro de public.');
++  }
++  return import(pathToFileURL(path.join(config.publicDir, relativePath)).href);
++}
+diff --git a/src/utils/shared.js b/src/utils/shared.js
+index 60d524d..91a0b42 100644
+--- a/src/utils/shared.js
++++ b/src/utils/shared.js
+@@ -1,12 +1,8 @@
+ // Código de dominio compartido con el navegador (public/js/content/…).
+ // El back usa exactamente las mismas reglas de validación que el front.
+-import path from 'node:path';
+-import { pathToFileURL } from 'node:url';
+-import { config } from '../config.js';
++import { loadPublicModule } from './public-module.js';
+ 
+-const load = rel => import(pathToFileURL(path.join(config.publicDir, rel)).href);
+-
+-export const trayectoModel = await load('js/content/trayecto.js');
+-export const storeModel = await load('js/store.js');
+-export const graphModel = await load('js/bot/graph.js');
+-export const detectModel = await load('js/bot/detect.js');
++export const trayectoModel = await loadPublicModule('js/content/trayecto.js');
++export const storeModel = await loadPublicModule('js/store.js');
++export const graphModel = await loadPublicModule('js/bot/graph.js');
++export const detectModel = await loadPublicModule('js/bot/detect.js');
+diff --git a/test/refactor/shared-modules.test.mjs b/test/refactor/shared-modules.test.mjs
+new file mode 100644
+index 0000000..18e3de1
+--- /dev/null
++++ b/test/refactor/shared-modules.test.mjs
+@@ -0,0 +1,32 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { esc as escShared } from '../../public/shared/escape-html.js';
++import { esc as escMain } from '../../public/js/ui.js';
++import { esc as escLabo } from '../../public/labo/js/ui.js';
++import { esc as escTagueo } from '../../public/tagueo/js/ui.js';
++import { loadPublicModule } from '../../src/utils/public-module.js';
++
++test('las tres interfaces usan el mismo escape HTML', () => {
++  const input = `<p title="O'Reilly">Ágora & λόγος</p>`;
++  const expected = '&lt;p title=&quot;O&#39;Reilly&quot;&gt;Ágora &amp; λόγος&lt;/p&gt;';
++  for (const escape of [escShared, escMain, escLabo, escTagueo]) {
++    assert.equal(escape(input), expected);
++    assert.equal(escape(null), '');
++    assert.equal(escape(0), '0');
++  }
++});
++
++test('el backend carga los mismos módulos públicos de dominio', async () => {
++  const viaAdapter = await loadPublicModule('js/content/trayecto.js');
++  const viaImport = await import('../../public/js/content/trayecto.js');
++  assert.equal(viaAdapter, viaImport);
++  assert.equal(typeof viaAdapter.normalizeTrayecto, 'function');
++  const motor = await loadPublicModule('tagueo/js/store.js');
++  assert.equal(typeof motor.build, 'function');
++});
++
++test('el adaptador rechaza rutas que salgan de public', () => {
++  for (const name of ['../server.js', '/etc/passwd', '.', './js/store.js', 'js/../store.js', 'C:\\private.js', '..\\server.js', '']) {
++    assert.throws(() => loadPublicModule(name), TypeError);
++  }
++});

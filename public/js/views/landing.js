@@ -24,7 +24,7 @@ export function createLandingView(App) {
         </p>
         <div class="hero__actions">
           <a href="#/chat" class="btn btn--primary btn--lg">Entrar al diálogo</a>
-          <a href="#/lab" class="btn btn--secondary btn--lg">Ir al laboratorio</a>
+          <a href="#/fichas" class="btn btn--secondary btn--lg">Explorar fichas</a>
           <a href="#/reading" class="btn btn--ghost btn--lg">Leer la Ética</a>
         </div>
       </div>

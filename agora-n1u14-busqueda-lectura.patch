@@ -1,0 +1,462 @@
+diff --git a/docs/AGORA_N1U14_BUSQUEDA_Y_LECTURA.md b/docs/AGORA_N1U14_BUSQUEDA_Y_LECTURA.md
+new file mode 100644
+index 0000000..426cf0f
+--- /dev/null
++++ b/docs/AGORA_N1U14_BUSQUEDA_Y_LECTURA.md
+@@ -0,0 +1,47 @@
++# Ágora · N1-U.14 · Búsqueda sobre fichas + lectura bilingüe
++
++## Alcance
++
++Primer puente desde la sección pública de fichas hacia la recuperación del antiguo Lab, **sin sustituir todavía el motor de búsqueda del corpus**. Este incremento no modifica MariaDB, fichas, FAQ ni las relaciones de sus grafos.
++
++### Buscador de fichas
++
++- Se añade un panel plegable «Buscar una explicación entre las siete fichas» en `/#/fichas`.
++- Índice local de 7 fichas: los recursos editoriales `/lab/n1u5-fichas-explicativas.json` y `/lab/n1u7-fichas-red-piloto.json` deben corresponder a la misma revisión. No se descarga otro corpus y no se infieren nuevas aristas.
++- Vectorización TF-IDF **dispersa** con pesos adicionales en títulos y ranking por similitud coseno. No emplea embeddings de modelos generativos ni constituye una búsqueda semántica profunda. Solo encuentra coincidencias de términos del material explicativo.
++- Al elegir un resultado, se abre la ficha por su ID editorial original (sin duplicar una ficha). Se muestran los términos coincidentes, no una falsa medida de certeza filosófica.
++- Enlace al Lab histórico `/labo/#/buscar`, con la misma consulta ya incorporada. Ese Lab continúa ofreciendo su API de búsqueda en fragmentos y criterios (`/api/labo/buscar`) y es independiente del índice local.
++- Las cuatro fichas nuevas continúan marcadas como borrador.
++
++**Pendiente de la integración integral**: reunir resultados de fichas y pasajes del corpus con trazabilidad de revisión y subunidad, evaluar relevancia de los rankings y estudiar embeddings reales solo si aportan valor frente a los criterios editoriales existentes.
++
++### Lectura bilingüe
++
++- La proporción de columnas pasa a **1,7 : 1** (castellano/griego, aproximadamente 63 %/37 %) en Biblioteca, lector de citas y respaldo de las fichas.
++- Párrafos justificados, fuente monoespaciada y griego politónico sin ligaduras tipográficas. Se utiliza la primera tipografía disponible del equipo; no se distribuyen fuentes.
++- Pantallas estrechas (750 px o menos): se apilan castellano y griego con encabezados independientes para evitar columnas ilegibles.
++- Biblioteca y lector de pasajes incorporan A− / A+ entre 14 y 30 px (valor inicial 18). Comparten el almacenamiento `agora.lab.arquitectura.lectura.v1` de N1-U.12; al guardar el tamaño se conservan `graphFont` y `showEdgeNames`.
++- Los controles tipográficos propios del lector dentro de fichas N1-U.12 permanecen disponibles.
++
++## Instalación desde CMD
++
++Con **N1-U.13** ya instalado, guardá el parche en la raíz del repositorio:
++
++```cmd
++git apply --check agora-n1u14-busqueda-lectura.patch
++git apply agora-n1u14-busqueda-lectura.patch
++node public/scripts/check-n1u14-busqueda-lectura.mjs
++```
++
++No ejecutar el segundo comando si falla `--check`.
++
++## Pruebas manuales
++
++1. `/#/fichas`: expandir la búsqueda y escribir «partes del alma». Debe aparecer la ficha sobre el alma. Elegirla y comprobar la selección del grafo. Repetir con «¿Qué es la felicidad?».
++2. Abrir el Lab anterior desde la búsqueda; comprobar que conserva la consulta en la URL. El antiguo motor puede requerir el servidor y MariaDB activos.
++3. `/#/reading`: abrir Libro I / capítulo 1. El castellano debe ocupar más espacio que el griego, los párrafos deben estar justificados y A− / A+ debe actualizar el tamaño.
++4. Abrir un pasaje desde una ficha o cita: verificar mismas proporciones y tamaño guardado.
++5. Reducir el ancho de la ventana a menos de 750 px y comprobar que se apilan las lenguas.
++6. Abrir el Lab de fichas y comprobar que permanecen sus controles de grafo, expansión y `wheelSensitivity: 0.60`.
++
++Las pruebas de Node comprueban integridad estática del puente, resultados TF-IDF, inmutabilidad de fichas, fuentes bilingües y persistencia de preferencias. **No sustituyen pruebas de UI en tu navegador ni la API conectada a MariaDB.**
+diff --git a/public/css/reader-n1u14.css b/public/css/reader-n1u14.css
+new file mode 100644
+index 0000000..d2f6ddd
+--- /dev/null
++++ b/public/css/reader-n1u14.css
+@@ -0,0 +1,66 @@
++/* N1-U.14 · Tipografía y columnas de lectura. Se carga DESPUÉS de app.css. */
++.reading-catalog,
++.reader-modal,
++.lab-architecture .arch-reader {
++  --agora-reader-font-size:18px;
++  --agora-reader-mono:"DejaVu Sans Mono","Noto Sans Mono","FreeMono",Consolas,"Liberation Mono","Courier New",monospace;
++}
++/* Ambos lectores usan el mismo orden: castellano, griego. */
++.reading-catalog .reader-columns,
++.reading-catalog .reader-columns-head,
++.reader-modal .reader-columns,
++.reader-modal .reader-columns-head,
++.lab-architecture .arch-reader .reader-columns,
++.lab-architecture .arch-reader .reader-columns-head {
++  display:grid;
++  grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);
++  column-gap:clamp(12px,2vw,30px);
++}
++.reading-catalog .reader-text,
++.reader-modal .reader-text,
++.lab-architecture .arch-reader .reader-text {
++  font-family:var(--agora-reader-mono);
++  font-size:var(--agora-reader-font-size);
++  line-height:1.8;
++  text-align:justify;
++  text-align-last:start;
++  hyphens:auto;
++  white-space:pre-wrap;
++  overflow-wrap:break-word;
++  word-break:normal;
++  font-variant-ligatures:none;
++  min-width:0;
++}
++/* El tamaño local del Lab (N1-U.12) se conserva: el usuario puede ajustarlo allí. */
++.lab-architecture .arch-reader .reader-text { font-size:var(--arch-reader-font,var(--agora-reader-font-size)); }
++.reading-catalog .reader-text[lang="el"],
++.reader-modal .reader-text[lang="el"] { font-family:var(--agora-reader-mono); font-size:var(--agora-reader-font-size); line-height:1.8; }
++.agora-reader-tools {display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;font:500 12px/1.4 var(--f-body,system-ui);}
++.agora-reader-tools button {min-width:33px;min-height:33px;cursor:pointer;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:inherit;}
++.agora-reader-tools button:disabled {opacity:.4;cursor:default;}
++.agora-reader-tools output {min-width:42px;text-align:center;font-variant-numeric:tabular-nums;}
++.agora-reading-controls {display:flex;justify-content:flex-end;gap:12px;align-items:center;margin:0 0 1rem;}
++.reader-modal .reader-modal-bar {display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding:6px 1.5rem;}
++.reader-modal .reader-modal-bar > .reader-navigation {padding:0;border:0;flex:1 1 320px;}
++.reader-modal .reader-modal-bar > .agora-reader-tools {margin-left:auto;}
++@media (max-width:750px) {
++  .reading-catalog .reader-columns,
++  .reader-modal .reader-columns,
++  .lab-architecture .arch-reader .reader-columns {grid-template-columns:minmax(0,1fr);row-gap:1rem;}
++  .reading-catalog .reader-columns-head,
++  .reader-modal .reader-columns-head,
++  .lab-architecture .arch-reader .reader-columns-head {display:none;}
++  .reader-text[lang="el"]::before {content:"Griego";display:block;text-align:left;font:600 12px/1.5 system-ui,sans-serif;opacity:.7;margin-bottom:4px;}
++  .reader-text[lang="es"]::before {content:"Castellano";display:block;text-align:left;font:600 12px/1.5 system-ui,sans-serif;opacity:.7;margin-bottom:4px;}
++}
++
++/* Puente compacto de búsqueda; no reduce el área de Cytoscape. */
++.agora-fichas-search {margin:.35rem 0 .65rem;padding:.4rem .65rem;border:1px solid var(--border);border-radius:8px;}
++.agora-fichas-search > summary {cursor:pointer;font-size:.9rem;}
++.agora-fichas-search-form {display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.65rem 0;}
++.agora-fichas-search-form input {flex:1 1 210px;min-width:0;padding:.45rem .6rem;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);}
++.agora-fichas-search-form button,.agora-fichas-search-list button {border:1px solid var(--border);border-radius:5px;padding:.45rem .65rem;background:var(--surface);color:var(--text);cursor:pointer;}
++.agora-fichas-search-note {font-size:.8rem;color:var(--muted);line-height:1.5;}
++.agora-fichas-search-list {padding:0 0 0 1.4rem;margin:.5rem 0;}
++.agora-fichas-search-list li {margin:.4rem 0;}
++.agora-fichas-search-list small {display:block;color:var(--muted);font-size:.75rem;}
+diff --git a/public/index.html b/public/index.html
+index c6997fa..5a66fe8 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -25,6 +25,7 @@
+   <link rel="stylesheet" href="/css/app.css" />
+   <link rel="stylesheet" href="/css/ux-compact.css" />
+   <link rel="stylesheet" href="/css/views.css" />
++  <link rel="stylesheet" href="/css/reader-n1u14.css" />
+ 
+   <!-- main.js importa shell.js: sidebar, tema, breadcrumbs y scroll dinámico -->
+   <script type="module" src="/js/main.js"></script>
+diff --git a/public/js/lab/architectureSparseSearch.js b/public/js/lab/architectureSparseSearch.js
+new file mode 100644
+index 0000000..8f1af1b
+--- /dev/null
++++ b/public/js/lab/architectureSparseSearch.js
+@@ -0,0 +1,65 @@
++// N1-U.14 · Índice vectorial léxico local (TF-IDF disperso + coseno).
++// NO utiliza embeddings; los resultados son candidatos de orientación, NO aristas.
++const STOP = new Set(('de del la las el los lo un una unos unas que por para con sin en a al y o e se su sus es son ser fue como cuando que cual quien dónde qué cómo cuál cuál es este esta estos estas desde sobre entre según aun más menos cada toda todo todos todas ya también pero no si sino acerca tiene tener hay hacia mediante asi aquí allí otro otra otros otras dentro donde porque pues algo alguno alguna').split(' '));
++export function tokens(text) {
++  return String(text || '').normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().replace(/ς/g,'σ')
++    .match(/[\p{L}\p{N}]+/gu)?.filter(t => t.length >= 3 && !STOP.has(t)) || [];
++}
++function collectText(card) {
++  const pieces = [card.titulo, ...(card.introduccion || []), ...(card.lectura_grafo || [])];
++  for(const step of (card.pasos || [])) pieces.push(step.titulo, step.comentario);
++  pieces.push(...(card.transiciones || []));
++  return pieces.filter(x => typeof x === 'string').join(' ').slice(0,40000);
++}
++const tf = text => {
++  const counts = new Map();
++  for (const token of tokens(text)) counts.set(token,(counts.get(token)||0)+1);
++  return counts;
++};
++export function construirIndiceFichas(cards) {
++  if (!Array.isArray(cards) || !cards.length || cards.length > 200) throw new Error('Catálogo de fichas inválido');
++  const seen = new Set();
++  const docs = cards.map(card => {
++    if (!card?.id || !card?.titulo || seen.has(card.id)) throw new Error('Identidad editorial ausente o repetida');
++    seen.add(card.id);
++    // Los nombres reciben mayor peso, pero NO se inventan términos que no figuren.
++    const counts = tf(collectText(card));
++    for (const token of tokens(card.titulo)) counts.set(token,(counts.get(token)||0)+5);
++    return { id:card.id,title:card.titulo,summary:card.introduccion?.[0]||'', counts };
++  });
++  const df = new Map();
++  for (const doc of docs) for (const token of doc.counts.keys()) df.set(token,(df.get(token)||0)+1);
++  const idf = token => 1+Math.log((docs.length+1)/((df.get(token)||0)+1));
++  for(const doc of docs) {
++    doc.weights = new Map([...doc.counts].map(([t,n])=>[t,(1+Math.log(n))*idf(t)]));
++    doc.norm = Math.hypot(...doc.weights.values());
++  }
++  return { docs, idf };
++}
++export function buscarFichasVectorial(indice, query, limit=5) {
++  const q = tf(String(query || '').slice(0,200));
++  if (!q.size) return [];
++  const qweights = new Map([...q].map(([t,n])=>[t,(1+Math.log(n))*indice.idf(t)]));
++  const qnorm = Math.hypot(...qweights.values());
++  return indice.docs.map(doc=>{
++    let dot=0;
++    const matches=[];
++    for(const [term,w] of qweights) if(doc.weights.has(term)) { dot += w*doc.weights.get(term); matches.push(term); }
++    return { id:doc.id,title:doc.title,summary:doc.summary,
++      score: doc.norm && qnorm ? dot/(doc.norm*qnorm) : 0, terms:matches };
++  }).filter(r=>r.score>0).sort((a,b)=>b.score-a.score || a.id.localeCompare(b.id))
++    .slice(0,Math.max(1,Math.min(7,limit)));
++}
++export async function cargarIndiceFichas(fetcher=fetch) {
++  const paths=['/lab/n1u5-fichas-explicativas.json','/lab/n1u7-fichas-red-piloto.json'];
++  const sources = await Promise.all(paths.map(async path=>{
++    const response=await fetcher(path,{cache:'no-cache'});
++    if(!response.ok) throw new Error(`No se pudo cargar ${path} (${response.status})`);
++    return response.json();
++  }));
++  if(sources[0]?.schema!=='agora.lab.n1u5.fichas.v1' || sources[1]?.schema!=='agora.lab.n1u7.fichas-red.v1')
++    throw new Error('Revisión editorial de fichas incompatible');
++  if(sources[0].fuente?.revision !== sources[1].fuente?.revision)
++    throw new Error('Los conjuntos de fichas tienen revisiones diferentes');
++  return construirIndiceFichas([...sources[0].fichas,...sources[1].fichas]);
++}
+diff --git a/public/js/reader/fontPreferences.js b/public/js/reader/fontPreferences.js
+new file mode 100644
+index 0000000..7742991
+--- /dev/null
++++ b/public/js/reader/fontPreferences.js
+@@ -0,0 +1,47 @@
++// N1-U.14 · Preferencia compartida con el lector del Lab N1-U.12.
++// Mantiene graphFont y showEdgeNames; jamás modifica los datos editoriales.
++export const READER_PREFS_KEY = 'agora.lab.arquitectura.lectura.v1';
++export const MIN_READER_FONT = 14;
++export const MAX_READER_FONT = 30;
++export const DEFAULT_READER_FONT = 18;
++export function normalizarTamanoLector(value) {
++  return Number.isInteger(value) && value >= MIN_READER_FONT && value <= MAX_READER_FONT
++    ? value : DEFAULT_READER_FONT;
++}
++export function obtenerTamanoLector(storage = undefined) {
++  try { return normalizarTamanoLector(JSON.parse((storage ?? globalThis.localStorage)?.getItem(READER_PREFS_KEY) || '{}').readerFont); }
++  catch { return DEFAULT_READER_FONT; }
++}
++export function guardarTamanoLector(size, storage = undefined) {
++  const value = normalizarTamanoLector(size);
++  try {
++    storage = storage ?? globalThis.localStorage;
++    const previous = JSON.parse(storage?.getItem(READER_PREFS_KEY) || '{}');
++    const safe = previous && typeof previous === 'object' && !Array.isArray(previous) ? previous : {};
++    storage?.setItem(READER_PREFS_KEY, JSON.stringify({ ...safe, readerFont: value }));
++  } catch { /* Lectura sigue disponible sin almacenamiento. */ }
++  if (typeof document !== 'undefined') document.dispatchEvent(new CustomEvent('agora:reader-font-change', { detail: { value } }));
++  return value;
++}
++export function controlesTamanoLector() {
++  return `<div class="agora-reader-tools" role="group" aria-label="Tamaño del texto bilingüe">
++    <span>Texto</span>
++    <button type="button" data-reader-font-step="-2" aria-label="Disminuir tamaño del texto">A−</button>
++    <output data-reader-font-value aria-live="polite">${obtenerTamanoLector()} px</output>
++    <button type="button" data-reader-font-step="2" aria-label="Aumentar tamaño del texto">A+</button>
++  </div>`;
++}
++export function actualizarLectura(root, value = obtenerTamanoLector()) {
++  if (!root) return;
++  root.style?.setProperty('--agora-reader-font-size', `${value}px`);
++  root.querySelectorAll?.('[data-reader-font-value]').forEach(out => { out.textContent = `${value} px`; });
++  root.querySelectorAll?.('[data-reader-font-step]').forEach(button => {
++    button.disabled = Number(button.dataset.readerFontStep) < 0 ? value <= MIN_READER_FONT : value >= MAX_READER_FONT;
++  });
++}
++export function cambiarTamanoLector(root, delta) {
++  const next = Math.min(MAX_READER_FONT, Math.max(MIN_READER_FONT, obtenerTamanoLector() + delta));
++  guardarTamanoLector(next);
++  actualizarLectura(root, next);
++  return next;
++}
+diff --git a/public/js/reader/modal.js b/public/js/reader/modal.js
+index fe16a27..a8af779 100644
+--- a/public/js/reader/modal.js
++++ b/public/js/reader/modal.js
+@@ -1,6 +1,7 @@
+ import { esc } from '../ui.js';
+ import { resolveCitation } from './text.js';
+ import { chapterNavigation, renderChapter } from './render.js';
++import { controlesTamanoLector, actualizarLectura, cambiarTamanoLector } from './fontPreferences.js';
+ 
+ export function createPassageModal(App) {
+   const dialog = document.createElement('dialog');
+@@ -16,6 +17,8 @@ export function createPassageModal(App) {
+   dialog.addEventListener('cancel', () => { if (opener?.isConnected) opener.focus(); });
+   dialog.addEventListener('click', e => {
+     if (e.target === dialog || e.target.closest('[data-reader-close]')) { close(); return; }
++    const adjustment = e.target.closest('[data-reader-font-step]');
++    if (adjustment) { cambiarTamanoLector(dialog, Number(adjustment.dataset.readerFontStep)); return; }
+     const direction = e.target.closest('[data-reader-direction]');
+     if (direction && book) {
+       const index = book.chapters.findIndex(c => c.number === chapterNumber);
+@@ -31,10 +34,11 @@ export function createPassageModal(App) {
+     const target = passage?.chapter === chapterNumber ? passage : null;
+     dialog.innerHTML = `<header class="reader-modal-head"><div><h2 id="reader-modal-title" tabindex="-1">Libro ${esc(book.id)} · Capítulo ${chapterNumber}</h2>
+       <p>${target ? `${esc(target.title)} · ${esc(target.id)}` : esc(book.title)}</p></div><button type="button" data-reader-close aria-label="Cerrar lectura">×</button></header>
+-      ${chapterNavigation(book, chapterNumber)}
++      <div class="reader-modal-bar">${chapterNavigation(book, chapterNumber)}${controlesTamanoLector()}</div>
+       ${target?.approximate ? '<p class="reader-anchor-note">Este pasaje aún no tiene subdivisión tagueada. Se resalta el párrafo completo localizado por las marcas Bekker del original.</p>' : ''}
+       ${target && (!target.es.length || !target.gr.length) ? '<p class="reader-anchor-note">El fragmento exacto se resalta en la lengua con ancla disponible; la otra columna conserva el párrafo paralelo completo.</p>' : ''}
+       <div class="reader-modal-body" tabindex="0" aria-label="Texto del capítulo en castellano y griego">${renderChapter(chapter, target)}</div>`;
++    actualizarLectura(dialog);
+     dialog.querySelector('#reader-modal-title').focus();
+     const body = dialog.querySelector('.reader-modal-body');
+     body.scrollTop = 0;
+diff --git a/public/js/views/fichas.js b/public/js/views/fichas.js
+index af7b88d..f9d30fc 100644
+--- a/public/js/views/fichas.js
++++ b/public/js/views/fichas.js
+@@ -3,6 +3,7 @@
+ // recorridos, vínculos o texto. Las rutas son alias explícitos de fichas.
+ import { createLabArchitectureView } from './labArchitectureView.js';
+ import { FICHAS_PUBLICAS } from '../lab/architecturePublicRoutes.js';
++import { cargarIndiceFichas, buscarFichasVectorial } from '../lab/architectureSparseSearch.js';
+ 
+ // La lista de rutas y este catálogo se contrastan en la prueba de N1-U.13.
+ const slugsPorId = new Map(Object.entries(FICHAS_PUBLICAS).map(([slug, id]) => [id, slug]));
+@@ -35,6 +36,58 @@ export async function createFichasView(App, { fichaId = null } = {}) {
+     <p><a href="#/lab/arquitectura">Abrir el experimento en el Laboratorio</a></p>`;
+   intro?.insertAdjacentElement('afterend', detalles);
+ 
++  // N1-U.14 · Puente hacia el antiguo Lab de búsqueda: índice local de fichas.
++  // La búsqueda orienta al lector, pero no altera grafos ni relaciones editoriales.
++  const buscar = document.createElement('details');
++  buscar.className = 'agora-fichas-search';
++  buscar.innerHTML = `<summary>Buscar una explicación entre las siete fichas</summary>
++    <form class="agora-fichas-search-form">
++      <label for="agora-buscar-fichas">Pregunta o conceptos</label>
++      <input id="agora-buscar-fichas" type="search" maxlength="200" autocomplete="off" placeholder="Ej.: actividad del alma y virtud" required>
++      <button type="submit">Buscar fichas</button>
++    </form>
++    <p class="agora-fichas-search-note">Búsqueda experimental por vectores TF-IDF y similitud coseno: compara palabras de las fichas, no comprende significados ni certifica relaciones filosóficas.
++      Para buscar en pasajes y fuentes del corpus: <a href="/labo/#/buscar" data-agora-open-corpus>abrir el Lab anterior</a>.</p>
++    <div class="agora-fichas-search-results" role="status" aria-live="polite"></div>`;
++  detalles.insertAdjacentElement('afterend', buscar);
++  let indiceBusqueda = null;
++  let seqBusqueda = 0;
++  buscar.querySelector('form').addEventListener('submit', async (event) => {
++    event.preventDefault();
++    const seq=++seqBusqueda;
++    const consulta=buscar.querySelector('input').value;
++    buscar.querySelector('[data-agora-open-corpus]').href=`/labo/#/buscar?mode=libre&q=${encodeURIComponent(consulta)}&scope=en1`;
++    const area=buscar.querySelector('.agora-fichas-search-results');
++    if (el.querySelector('.arch-status--error')) {
++      area.textContent='La revisión editorial activa es incompatible; no se muestran resultados de una versión anterior.';
++      return;
++    }
++    area.textContent='Buscando…';
++    try {
++      if (!indiceBusqueda) indiceBusqueda=await cargarIndiceFichas();
++      if (seq!==seqBusqueda) return;
++      const resultados=buscarFichasVectorial(indiceBusqueda, consulta);
++      area.replaceChildren();
++      if (!resultados.length) { area.textContent='No se encontraron coincidencias en estas siete fichas. Probá con otros términos o usá la búsqueda del Lab.';return; }
++      const list=document.createElement('ol');
++      list.className='agora-fichas-search-list';
++      for (const result of resultados) {
++        const li=document.createElement('li');
++        const button=document.createElement('button');
++        button.type='button'; button.textContent=result.title;
++        button.addEventListener('click',()=>{
++          const ficha=[...el.querySelectorAll('[data-arch-card]')].find(n=>n.dataset.archCard===result.id);
++          if(ficha) {ficha.click();buscar.open=false;}
++          else area.textContent='No se pudo localizar la ficha en la revisión actual.';
++        });
++        const detail=document.createElement('small');
++        detail.textContent=`Coincidencias: ${result.terms.join(', ')}`;
++        li.append(button,detail);list.append(li);
++      }
++      area.append(list);
++    } catch (error) { if(seq===seqBusqueda) area.textContent=`Búsqueda no disponible: ${error.message}`; }
++  });
++
+   if (fichaId) {
+     // Selecciona por identidad editorial, no por el texto visible del botón.
+     const boton = [...el.querySelectorAll('[data-arch-card]')]
+diff --git a/public/js/views/reading.js b/public/js/views/reading.js
+index 2a3cbd9..d1fd2f8 100644
+--- a/public/js/views/reading.js
++++ b/public/js/views/reading.js
+@@ -2,12 +2,15 @@
+ import { esc } from '../ui.js';
+ import { renderChapter } from '../reader/render.js';
+ import { renderCatalogHeader, renderSiteFooter } from './shared.js';
++import { controlesTamanoLector, actualizarLectura, cambiarTamanoLector } from '../reader/fontPreferences.js';
+ 
+ export async function createReadingView(App) {
+   const el = document.createElement('div');
+   el.className = 'scrollable has-scroll catalog-view reading-catalog';
+   let chapters = new Map();
+   let loading = false;
++  const sincronizarTamano = () => actualizarLectura(el);
++  document.addEventListener?.('agora:reader-font-change', sincronizarTamano);
+ 
+   function chapterKey(book, chapter) { return `${book}:${chapter}`; }
+ 
+@@ -47,6 +50,7 @@ export async function createReadingView(App) {
+             title: 'Ética nicomáquea',
+             description: 'Texto original y traducción al castellano. El texto se carga progresivamente; el tagueo avanza por capítulos.',
+           })}
++          <div class="agora-reading-controls">${controlesTamanoLector()}</div>
+           ${books.map((book, index) => `
+             <details class="reader-book" ${index === 0 ? 'open' : ''}>
+               <summary><span>Libro ${esc(book.id)} · ${esc(book.title)}</span><span class="reader-summary__icon" aria-hidden="true">↓</span></summary>
+@@ -58,6 +62,7 @@ export async function createReadingView(App) {
+             </details>`).join('')}
+         </div>
+         ${renderSiteFooter()}`;
++      actualizarLectura(el);
+     } catch (error) {
+       el.innerHTML = `<div class="empty reading-catalog__error">
+         <p>No se pudo conectar al servidor Bekker: ${esc(error.message)}</p>
+@@ -69,9 +74,11 @@ export async function createReadingView(App) {
+   }
+ 
+   el.addEventListener('click', event => {
++    const ajuste = event.target.closest('[data-reader-font-step]');
++    if (ajuste) { cambiarTamanoLector(el, Number(ajuste.dataset.readerFontStep)); return; }
+     if (event.target.closest('[data-retry]')) loadAndRender();
+   });
+ 
+   await loadAndRender();
+-  return { el };
++  return { el, destroy() { document.removeEventListener?.('agora:reader-font-change', sincronizarTamano); } };
+ }
+diff --git a/public/scripts/check-n1u14-busqueda-lectura.mjs b/public/scripts/check-n1u14-busqueda-lectura.mjs
+new file mode 100644
+index 0000000..b6a35e0
+--- /dev/null
++++ b/public/scripts/check-n1u14-busqueda-lectura.mjs
+@@ -0,0 +1,41 @@
++// N1-U.14 · Comprobaciones sin MariaDB ni navegador.
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++import { dirname, resolve } from 'node:path';
++import { construirIndiceFichas, buscarFichasVectorial, cargarIndiceFichas, tokens } from '../js/lab/architectureSparseSearch.js';
++import { normalizarTamanoLector, obtenerTamanoLector, guardarTamanoLector } from '../js/reader/fontPreferences.js';
++import { renderChapter } from '../js/reader/render.js';
++const base=resolve(dirname(fileURLToPath(import.meta.url)), '..');
++const read=(name)=>readFileSync(resolve(base,name),'utf8');
++const a=JSON.parse(read('lab/n1u5-fichas-explicativas.json'));
++const b=JSON.parse(read('lab/n1u7-fichas-red-piloto.json'));
++const index=construirIndiceFichas([...a.fichas,...b.fichas]);
++assert.equal(index.docs.length,7);
++assert.equal(new Set(index.docs.map(d=>d.id)).size,7);
++assert.equal(buscarFichasVectorial(index,'¿Qué es la felicidad?')[0].id,'faq.lab.felicidad');
++assert.equal(buscarFichasVectorial(index,'partes del alma')[0].id,'faq.lab.alma');
++assert.deepEqual(buscarFichasVectorial(index,'zzzzz qqqqqq'),[]);
++assert(!tokens('la de el para por').length);
++assert.throws(()=>construirIndiceFichas([a.fichas[0],a.fichas[0]]),/repetida/);
++const original=JSON.stringify(a.fichas[0]);
++buscarFichasVectorial(index,'política');
++assert.equal(JSON.stringify(a.fichas[0]),original,'búsqueda no altera documentos');
++const mock={data:new Map([['agora.lab.arquitectura.lectura.v1',JSON.stringify({readerFont:20,graphFont:24,showEdgeNames:false})]]),getItem(k){return this.data.get(k)||null;},setItem(k,v){this.data.set(k,v);}};
++assert.equal(obtenerTamanoLector(mock),20);
++guardarTamanoLector(22,mock);
++assert.deepEqual(JSON.parse(mock.getItem('agora.lab.arquitectura.lectura.v1')),{readerFont:22,graphFont:24,showEdgeNames:false});
++assert.equal(normalizarTamanoLector(100),18);
++const html=renderChapter({paragraphs:[{number:1,es:'La vida entera.',gr:'Ὅλος βίος.'}]});
++assert(html.includes('lang="es"')&&html.includes('lang="el"'));
++const css=read('css/reader-n1u14.css');
++assert(css.includes('1.7fr')&&css.includes('text-align:justify')&&css.includes('max-width:750px'));
++const main=read('js/views/fichas.js');
++assert(main.includes('buscarFichasVectorial')&&main.includes('/labo/#/buscar'));
++assert(read('js/views/reading.js').includes('controlesTamanoLector'));
++assert(read('js/reader/modal.js').includes('controlesTamanoLector'));
++assert(read('index.html').includes('/css/reader-n1u14.css'));
++// La carga real emplea las fuentes editoriales de la app y no material externo.
++const loader=await cargarIndiceFichas(async(path)=>({ok:true,json:async()=>JSON.parse(read(path.replace(/^\//,'')))}));
++assert.equal(loader.docs.length,7);
++console.log('N1-U.14 OK: 7 fichas, vectores TF-IDF, resultados, corpus inmutable, lector bilingüe y preferencias.');

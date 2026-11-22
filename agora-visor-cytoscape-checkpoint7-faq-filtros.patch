@@ -1,0 +1,378 @@
+diff --git a/public/js/lab/graphFaqGrouping.js b/public/js/lab/graphFaqGrouping.js
+new file mode 100644
+--- /dev/null
++++ b/public/js/lab/graphFaqGrouping.js
+@@ -0,0 +1,84 @@
++// Capa de presentación: agrupa FAQ que comparten el mismo concepto de foco.
++// No inventa aristas editoriales ni modifica el grafo subyacente.
++export const TIPOS_VISIBLES = Object.freeze([
++  ['concepto_estatico', 'Conceptos estáticos'],
++  ['nodo_funcional', 'Nodos funcionales propios'],
++  ['faq', 'Preguntas FAQ'],
++  ['unidad', 'Unidades'],
++  ['definicion', 'Definiciones'],
++]);
++
++export function estadoTiposInicial() {
++  return Object.fromEntries(TIPOS_VISIBLES.map(([tipo]) => [tipo, true]));
++}
++
++export function normalizarTiposVisibles(value) {
++  const defaults = estadoTiposInicial();
++  if (!value || typeof value !== 'object' || Array.isArray(value)) return defaults;
++  for (const key of Object.keys(defaults)) if (typeof value[key] === 'boolean') defaults[key] = value[key];
++  return defaults;
++}
++
++// Identidad determinista del grupo: depende solo del concepto receptor.
++export function idGrupoFaq(concepto) {
++  return `grupo_faq:${concepto}`;
++}
++
++export function agruparFaqs(elementos, { expandidos = new Set(), tiposVisibles = estadoTiposInicial(), focos = [] } = {}) {
++  const focus = new Set(focos);
++  const visibles = normalizarTiposVisibles(tiposVisibles);
++  const nodos = elementos.filter(el => el.group === 'nodes');
++  const aristas = elementos.filter(el => el.group === 'edges');
++  const byId = new Map(nodos.map(n => [n.data.id, n]));
++  const ocultos = new Set(nodos.filter(n => !focus.has(n.data.id) && visibles[n.data.tipo] === false).map(n => n.data.id));
++  const candidatas = new Map();
++  for (const a of aristas) {
++    const d = a.data;
++    if (d.tipo !== 'foco_faq') continue;
++    const faq = byId.get(d.source)?.data.tipo === 'faq' ? d.source
++      : byId.get(d.target)?.data.tipo === 'faq' ? d.target : null;
++    if (!faq || ocultos.has(faq) || focus.has(faq)) continue;
++    const concepto = d.source === faq ? d.target : d.source;
++    if (!byId.has(concepto) || ocultos.has(concepto)) continue;
++    const entries = candidatas.get(concepto) || new Set();
++    entries.add(faq);
++    candidatas.set(concepto, entries);
++  }
++  const grupos = [];
++  const faqReemplazadas = new Set();
++  const edgesReemplazadas = new Set();
++  const adicionales = [];
++  for (const [concepto, faqs] of candidatas) {
++    if (faqs.size < 2) continue;
++    const id = idGrupoFaq(concepto);
++    const miembros = [...faqs].sort();
++    grupos.push({ id, concepto, miembros, expandido: expandidos.has(id) });
++    if (!expandidos.has(id)) for (const faq of miembros) faqReemplazadas.add(faq);
++    adicionales.push({ group: 'nodes', data: {
++      id, tipo: 'grupo_faq', label: `FAQ (${miembros.length})`,
++      resumen: 1, agrupadorFaq: 1, concepto, cantidad: miembros.length,
++      miembros: miembros.join(', '),
++    } });
++    // Este enlace representa el conjunto visual; no se identifica como relación del corpus.
++    adicionales.push({ group: 'edges', data: {
++      id: `enlace:${id}`, source: id, target: concepto, tipo: 'agrupacion_visual',
++      label: '', relacion: '', fuente: 'presentacion', agrupacionVisual: 1,
++    } });
++  }
++  for (const edge of aristas) {
++    if (faqReemplazadas.has(edge.data.source) || faqReemplazadas.has(edge.data.target)) {
++      edgesReemplazadas.add(edge.data.id);
++    }
++  }
++  const outNodes = nodos.filter(n => !ocultos.has(n.data.id) && !faqReemplazadas.has(n.data.id));
++  const outIds = new Set([...outNodes, ...adicionales.filter(x => x.group === 'nodes')].map(x => x.data.id));
++  const outEdges = aristas.filter(e => !edgesReemplazadas.has(e.data.id) &&
++    outIds.has(e.data.source) && outIds.has(e.data.target));
++  return {
++    elementos: [...outNodes, ...adicionales.filter(e => e.group === 'nodes'), ...outEdges,
++      ...adicionales.filter(e => e.group === 'edges')],
++    grupos,
++    ocultos: ocultos.size,
++    agrupadas: faqReemplazadas.size,
++  };
++}
+diff --git a/public/js/lab/graphLayoutPersistence.js b/public/js/lab/graphLayoutPersistence.js
+--- a/public/js/lab/graphLayoutPersistence.js
++++ b/public/js/lab/graphLayoutPersistence.js
+@@ -1,6 +1,7 @@
+ // Preferencias de visualización por conjunto de focos; jamás modifica el corpus.
+ export const GRAPH_LAYOUT_STORAGE_KEY = 'agora.lab.visorgrafos.layouts.v1';
+ const MAX_ENTRIES = 30;
++import { estadoTiposInicial, normalizarTiposVisibles } from './graphFaqGrouping.js';
+ export const MAX_TITULO_ARISTA = 100;
+ const MAX_TITULOS_POR_DISPOSICION = 250;
+ 
+@@ -41,7 +42,10 @@
+     .map(([id, titulo]) => [id, normalizarTituloArista(titulo)])
+     .filter(([, titulo]) => titulo)
+     .slice(0, MAX_TITULOS_POR_DISPOSICION));
+-  return { posiciones, todasEtiquetas: value.todasEtiquetas === true, etiquetas, titulos };
++  const faqExpandidas = Array.isArray(value.faqExpandidas)
++    ? [...new Set(value.faqExpandidas.filter(x => typeof x === 'string' && x.startsWith('grupo_faq:') && x.length < 300))].slice(0, 150) : [];
++  return { posiciones, todasEtiquetas: value.todasEtiquetas === true, etiquetas, titulos,
++    tiposVisibles: normalizarTiposVisibles(value.tiposVisibles || estadoTiposInicial()), faqExpandidas };
+ }
+ 
+ export function leerDisposicion(storage, key) {
+diff --git a/public/js/lab/cytoscapeRenderer.js b/public/js/lab/cytoscapeRenderer.js
+--- a/public/js/lab/cytoscapeRenderer.js
++++ b/public/js/lab/cytoscapeRenderer.js
+@@ -28,6 +28,10 @@
+         'shape': 'round-rectangle', 'text-outline-width': 0,
+       } },
+       { selector: 'node[tipo = "nodo_funcional"]', style: { 'background-color': '#d5eadf' } },
++      { selector: 'node[tipo = "grupo_faq"]', style: {
++        'background-color': '#f6dba0', 'border-color': '#a87524', 'border-width': 2.6,
++        'width': 96, 'height': 45, 'font-weight': 'bold',
++      } },
+       { selector: 'node[tipo = "faq"]', style: { 'background-color': '#f4e6bf' } },
+       { selector: 'node[tipo = "subunidad"]', style: { 'background-color': '#e4dcf0' } },
+       { selector: 'node[compartido = 1]', style: { 'border-color': '#6e67b1', 'border-width': 2.5 } },
+@@ -38,6 +42,9 @@
+         'curve-style': 'bezier', 'width': 1.2, 'line-color': '#99a8b5',
+         'target-arrow-shape': 'triangle', 'target-arrow-color': '#99a8b5',
+         'arrow-scale': 0.7, 'opacity': 0.75,
++      } },
++      { selector: 'edge[agrupacionVisual = 1]', style: {
++        'line-style': 'dashed', 'line-color': '#c6a266', 'target-arrow-shape': 'none', 'opacity': 0.6,
+       } },
+       { selector: 'edge[conexionFocos = 1]', style: {
+         'width': 3.2, 'line-color': '#376f93', 'target-arrow-color': '#376f93', 'opacity': 1,
+diff --git a/public/js/views/labGraphPilotView.js b/public/js/views/labGraphPilotView.js
+--- a/public/js/views/labGraphPilotView.js
++++ b/public/js/views/labGraphPilotView.js
+@@ -5,6 +5,7 @@
+ import { crearVisorGrafo } from '../lab/cytoscapeRenderer.js';
+ import { filtrarGrafoDidactico, ordenarBusquedaFocal } from '../lab/graphDisplayPolicy.js';
+ import { integrarIdentidadesVisuales } from '../lab/graphConceptIdentity.js';
++import { agruparFaqs, TIPOS_VISIBLES, estadoTiposInicial, normalizarTiposVisibles } from '../lab/graphFaqGrouping.js';
+ import { huellaGrafo, claveDisposicion, leerDisposicion, guardarDisposicion, decorarAristasFocales, normalizarTituloArista, MAX_TITULO_ARISTA } from '../lab/graphLayoutPersistence.js';
+ 
+ // Checkpoint 2: Cytoscape permanece como visor experimental; el corpus es de sólo lectura.
+@@ -35,10 +36,10 @@
+     estado.expandidos = new Set([...previo].filter(id => indice.nodos.has(id)));
+   }
+   reconstruirIndice(predeterminados);
+-  let preferencias = { posiciones: {}, todasEtiquetas: false, etiquetas: [], titulos: {} };
++  let preferencias = { posiciones: {}, todasEtiquetas: false, etiquetas: [], titulos: {}, tiposVisibles: estadoTiposInicial(), faqExpandidas: [] };
+   const claveActual = () => claveDisposicion(estado.focos, huella);
+   const leerPreferencias = () => { preferencias = leerDisposicion(almacenamiento, claveActual()) ||
+-    { posiciones: {}, todasEtiquetas: false, etiquetas: [], titulos: {} }; };
++    { posiciones: {}, todasEtiquetas: false, etiquetas: [], titulos: {}, tiposVisibles: estadoTiposInicial(), faqExpandidas: [] }; };
+   leerPreferencias();
+   let modo = 'focal';
+   let tipo = 'todos';
+@@ -66,6 +67,10 @@
+         <p class="hint">Focos permanentes (máximo 5). Se muestran sus aristas entrantes y salientes, pero NO las conexiones secundarias entre vecinos hasta que las expandas.</p>
+         <div id="gv-foci" class="lab-graph-foci"></div>
+         <label class="lab-graph-option"><input id="gv-parrafos" type="checkbox" /> Mostrar párrafos (ocultos inicialmente; incorporación voluntaria)</label>
++        <fieldset class="lab-graph-type-filters"><legend>Mostrar tipos de nodo</legend>
++          ${TIPOS_VISIBLES.map(([t, label]) => `<label class="lab-graph-option"><input type="checkbox" data-gv-tipo="${esc(t)}" checked /> ${esc(label)}</label>`).join('')}
++        </fieldset>
++        <p class="hint">Las FAQ del mismo concepto se agrupan cuando hay dos o más. Doble clic sobre «FAQ (n)» para desplegarlas o volver a contraerlas. Los focos no se ocultan.</p>
+         <label class="lab-graph-option"><input id="gv-edge-labels" type="checkbox" /> Mostrar nombres de todas las aristas (vista detallada)</label>
+         <p class="hint">Las aristas directas entre focos están destacadas. Los títulos se ocultan inicialmente: seleccioná una arista para ponerle un título propio y mostrar solo las etiquetas que te interesen.</p>
+         <div class="lab-toolbar">
+@@ -138,7 +143,18 @@
+       acciones.querySelector('input').value = tituloPropio;
+       out.append(acciones);
+     }
+-    if (item.clase === 'nodo' && !item.resumen && indice.nodos.has(item.id)) {
++    if (item.clase === 'nodo' && item.agrupadorFaq) {
++      const actions = document.createElement('div');
++      actions.className = 'lab-graph-inspector-actions';
++      const grupo = item.id;
++      const abierto = preferencias.faqExpandidas.includes(grupo);
++      const actual = agruparFaqs(obtenerSubgrafoFocal(estado).elementos, { focos: estado.focos });
++      const detalle = actual.grupos.find(g => g.id === grupo);
++      actions.innerHTML = `<p class="hint">Agrupación visual, no relación filosófica. ${esc(String(detalle?.miembros.length || 0))} preguntas vinculadas al concepto.</p>
++        <ul>${(detalle?.miembros || []).map(id => `<li>${esc(indice.nodos.get(id)?.data.label || id)}</li>`).join('')}</ul>
++        <button type="button" class="lab-btn" data-gv-faq-toggle="${esc(grupo)}">${abierto ? 'Contraer FAQ' : 'Desplegar FAQ'}</button>`;
++      out.append(actions);
++    } else if (item.clase === 'nodo' && !item.resumen && indice.nodos.has(item.id)) {
+       const actions = document.createElement('div');
+       actions.className = 'lab-graph-inspector-actions';
+       actions.innerHTML = `<button type="button" class="lab-btn" data-gv-sole="${esc(item.id)}">Usar como único foco</button>
+@@ -152,15 +168,32 @@
+       out.append(button);
+     }
+   }
++  function elementosFocales() {
++    const sub = obtenerSubgrafoFocal(estado);
++    const vista = agruparFaqs(sub.elementos, { focos: estado.focos, expandidos: new Set(preferencias.faqExpandidas),
++      tiposVisibles: preferencias.tiposVisibles });
++    return { sub, vista, elementos: decorarAristasFocales(vista.elementos, estado.focos, preferencias) };
++  }
+   function actualizarFocal() {
+-    const sub = obtenerSubgrafoFocal(estado);
+-    viewer?.actualizarElementos(decorarAristasFocales(sub.elementos, estado.focos, preferencias), { posiciones: preferencias.posiciones });
++    // Conservar también la última posición de los nodos que un filtro va a ocultar.
++    if (viewer) preferencias.posiciones = { ...preferencias.posiciones, ...viewer.posiciones() };
++    const { sub, vista, elementos } = elementosFocales();
++    viewer?.actualizarElementos(elementos, { posiciones: preferencias.posiciones });
+     renderFocos();
+     const funcionales = sub.elementos.filter(e => e.group === 'nodes' && e.data.facetaFuncional).length;
+-    $('#gv-filter-status').textContent = `${funcionales} nodos con faceta funcional visibles · ${filtrado.excluidos.parrafos} párrafos ocultos · subunidades excluidas de la vista.`;
+-    status(`${sub.estadisticas.nodos} nodos · ${sub.estadisticas.aristas} aristas · ${funcionales} funcionales · ${sub.estadisticas.expandidos} expandidos · ${sub.estadisticas.vecinosCompartidos} vecinos compartidos.`);
++    $('#gv-filter-status').textContent = `${funcionales} facetas funcionales en la vecindad · ${vista.grupos.length} agrupaciones FAQ · ${vista.agrupadas} preguntas plegadas · ${filtrado.excluidos.parrafos} párrafos ocultos. Subunidades excluidas.`;
++    status(`${elementos.filter(e => e.group === 'nodes').length} nodos visibles · ${elementos.filter(e => e.group === 'edges').length} conexiones · ${vista.agrupadas} FAQ plegadas · ${sub.estadisticas.expandidos} expansiones de conceptos.`);
++  }
++  function alternarGrupoFaq(id) {
++    const groups = new Set(preferencias.faqExpandidas);
++    if (groups.has(id)) groups.delete(id); else groups.add(id);
++    preferencias.faqExpandidas = [...groups];
++    actualizarFocal();
++    const grupo = viewer?.cy.getElementById(id);
++    if (grupo?.nonempty()) inspeccionar({ clase: 'nodo', ...grupo.data() });
+   }
+   function dobleClick(item) {
++    if (modo === 'focal' && item.agrupadorFaq) { alternarGrupoFaq(item.id); return; }
+     if (modo !== 'focal') {
+       const nodo = viewer?.cy.getElementById(item.id);
+       nodo?.hide();
+@@ -184,7 +217,7 @@
+     $('#gv-canvas').replaceChildren();
+     const focal = modo === 'focal';
+     const agrupado = modo === 'grupos';
+-    const elementos = focal ? decorarAristasFocales(obtenerSubgrafoFocal(estado).elementos, estado.focos, preferencias) : agrupado
++    const elementos = focal ? elementosFocales().elementos : agrupado
+       ? resumenClasesAElementos({ nodes: projection.nodes.filter(n => filtrado.elementos.some(e => e.group === 'nodes' && e.data.id === n.uid)), edges: projection.edges.filter(e => filtrado.elementos.some(x => x.group === 'edges' && x.data.id === e.uid)) })
+       : filtrado.elementos.filter(e => tipo === 'todos' || (e.group === 'nodes' ? e.data.tipo === tipo : true))
+           .filter(e => e.group === 'nodes' || tipo === 'todos' ||
+@@ -217,13 +250,20 @@
+       if (!closed && ticket === generation) status(`No se pudo cargar el visor: ${err.message}`);
+     }
+   }
++  function sincronizarFiltros() {
++    el.querySelectorAll('[data-gv-tipo]').forEach(input => {
++      input.checked = preferencias.tiposVisibles[input.dataset.gvTipo] !== false;
++    });
++  }
+   function seleccionarFocos(focos) {
+     reconstruirIndice(focos);
+     leerPreferencias();
+     $('#gv-edge-labels').checked = preferencias.todasEtiquetas;
++    sincronizarFiltros();
+     modo = 'focal'; tipo = 'todos'; $('#gv-kind').value = 'todos';
+     void dibujar();
+   }
++  sincronizarFiltros();
+   $('#gv-edge-labels').checked = preferencias.todasEtiquetas;
+   $('#gv-focal-mode').addEventListener('click', () => { modo = 'focal'; void dibujar(); });
+   $('#gv-group-mode').addEventListener('click', () => { modo = 'grupos'; void dibujar(); });
+@@ -234,6 +274,12 @@
+   $('#gv-fit').addEventListener('click', () => viewer?.ajustar());
+   $('#gv-hide').addEventListener('click', () => { viewer?.ocultarSeleccion(); status('Selección ocultada sólo en esta vista.'); });
+   $('#gv-restore').addEventListener('click', () => { viewer?.restaurar(); status('Elementos restaurados.'); });
++  $('#gv-focal-controls').addEventListener('change', e => {
++    const input = e.target.closest('[data-gv-tipo]');
++    if (!input) return;
++    preferencias.tiposVisibles = { ...preferencias.tiposVisibles, [input.dataset.gvTipo]: input.checked };
++    actualizarFocal();
++  });
+   $('#gv-parrafos').addEventListener('change', e => {
+     mostrarParrafos = e.target.checked;
+     reconstruirIndice(estado.focos);
+@@ -253,6 +299,7 @@
+   $('#gv-reset-layout').addEventListener('click', () => {
+     leerPreferencias();
+     $('#gv-edge-labels').checked = preferencias.todasEtiquetas;
++    sincronizarFiltros();
+     void dibujar();
+     status('Se recuperó el último ordenamiento guardado, si existe.');
+   });
+@@ -272,6 +319,8 @@
+     status('Título aplicado y visible. Usá «Persistir ordenamiento» para conservarlo.');
+   });
+   $('#gv-inspector').addEventListener('click', e => {
++    const toggleFaq = e.target.closest('[data-gv-faq-toggle]');
++    if (toggleFaq) { alternarGrupoFaq(toggleFaq.dataset.gvFaqToggle); return; }
+     const reset = e.target.closest('[data-gv-edge-reset]');
+     if (reset) {
+       const id = reset.dataset.gvEdgeReset;
+diff --git a/public/css/app.css b/public/css/app.css
+--- a/public/css/app.css
++++ b/public/css/app.css
+@@ -1338,3 +1338,7 @@
+ /* Checkpoint 3: filtros editoriales de visibilidad del visor focal. */
+ .lab-graph-option { display: inline-flex; align-items: center; gap: 9px; margin: 6px 0; cursor: pointer; }
+ .lab-graph-option input { accent-color: var(--accent, #447c99); width: 17px; height: 17px; }
++
++/* Checkpoint 7: filtros del visor */
++.lab-graph-type-filters { display:flex; flex-wrap:wrap; gap:8px 16px; border:1px solid var(--border, #d4dbe0); border-radius:8px; padding:10px 14px; margin:10px 0; }
++.lab-graph-type-filters legend { font-weight:600; padding:0 6px; }
+diff --git a/public/scripts/check-visor-faq-grupos.mjs b/public/scripts/check-visor-faq-grupos.mjs
+new file mode 100644
+--- /dev/null
++++ b/public/scripts/check-visor-faq-grupos.mjs
+@@ -0,0 +1,37 @@
++import assert from 'node:assert/strict';
++import { agruparFaqs, idGrupoFaq, normalizarTiposVisibles } from '../js/lab/graphFaqGrouping.js';
++import { normalizarDisposicion } from '../js/lab/graphLayoutPersistence.js';
++const n = (id, tipo) => ({ group: 'nodes', data: { id, tipo, label: id } });
++const e = (id, source, target, tipo = 'foco_faq') => ({ group: 'edges', data: { id, source, target, tipo, fuente: 'corpus' } });
++const corpus = [n('concepto_estatico:arete', 'concepto_estatico'), n('concepto_estatico:phusis', 'concepto_estatico'),
++  n('faq:1', 'faq'), n('faq:2', 'faq'), n('faq:3', 'faq'), n('unidad:1', 'unidad'),
++  e('e1', 'faq:1', 'concepto_estatico:arete'), e('e2', 'faq:2', 'concepto_estatico:arete'),
++  e('e3', 'faq:3', 'concepto_estatico:phusis'), e('e4', 'concepto_estatico:arete', 'concepto_estatico:phusis', 'arista_funcional')];
++const opts = { focos: ['concepto_estatico:arete', 'concepto_estatico:phusis'] };
++const collapsed = agruparFaqs(corpus, opts);
++const gid = idGrupoFaq('concepto_estatico:arete');
++assert.equal(collapsed.grupos.length, 1);
++assert.equal(collapsed.agrupadas, 2);
++assert(collapsed.elementos.some(x => x.data.id === gid && x.data.agrupadorFaq));
++assert(!collapsed.elementos.some(x => x.data.id === 'faq:1'));
++assert(!collapsed.elementos.some(x => x.data.id === 'e1'));
++assert(collapsed.elementos.some(x => x.data.id === 'e4'));
++assert(collapsed.elementos.some(x => x.data.id === 'faq:3'));
++const expanded = agruparFaqs(corpus, { ...opts, expandidos: new Set([gid]) });
++assert(expanded.elementos.some(x => x.data.id === 'faq:1'));
++assert(expanded.elementos.some(x => x.data.id === 'e1' && x.data.fuente === 'corpus'));
++assert(expanded.elementos.some(x => x.data.id === gid));
++const hidden = agruparFaqs(corpus, { ...opts, tiposVisibles: { faq: false, concepto_estatico: false, unidad: false } });
++assert(!hidden.elementos.some(x => x.data.tipo === 'faq' || x.data.tipo === 'unidad'));
++assert(hidden.elementos.some(x => x.data.id === 'concepto_estatico:arete')); // focos protegidos
++assert.equal(hidden.elementos.filter(x => x.group === 'edges').length, 1);
++assert.equal(normalizarTiposVisibles({ faq: false }).faq, false);
++assert.equal(normalizarTiposVisibles({ faq: false }).unidad, true);
++const focusFaq = agruparFaqs(corpus, { focos: ['faq:1', 'concepto_estatico:arete'] });
++assert(focusFaq.elementos.some(x => x.data.id === 'faq:1'));
++assert(!focusFaq.elementos.some(x => x.data.id === gid));
++const prefs = normalizarDisposicion({ tiposVisibles: { faq: false, unidad: false }, faqExpandidas: [gid], titulos: { e4: 'Condición' } });
++assert.equal(prefs.tiposVisibles.faq, false);
++assert.deepEqual(prefs.faqExpandidas, [gid]);
++assert.equal(prefs.titulos.e4, 'Condición');
++console.log('OK: FAQ agrupadas, expansión reversible, relaciones originales y filtros con focos protegidos.');
+diff --git a/docs/LAB_VISOR_CHECKPOINT7_FAQ_FILTROS.md b/docs/LAB_VISOR_CHECKPOINT7_FAQ_FILTROS.md
+new file mode 100644
+--- /dev/null
++++ b/docs/LAB_VISOR_CHECKPOINT7_FAQ_FILTROS.md
+@@ -0,0 +1,32 @@
++# Checkpoint 7 — FAQ agrupadas y filtros de tipos
++
++Se aplica **sobre el Checkpoint 6**. Solo modifica el visor. No edita datos de MariaDB, el corpus editorial, el Orientador ni el auditor.
++
++## Qué hace
++
++- En vista focal, al detectar **dos o más FAQ no focales** conectadas por `foco_faq` con un mismo concepto visible, sustituye su dibujo por un nodo `FAQ (n)` y una conexión **visual** punteada. No la presenta como una relación semántica. La agrupación se calcula sobre la vecindad visible; no añade FAQ externas a esa vecindad.
++- Doble clic en el nodo `FAQ (n)` o botón del inspector despliega las FAQ y sus aristas reales. El agrupador permanece visible, de modo que el segundo doble clic vuelve a plegarlas. Si el usuario elige una FAQ como foco, esa FAQ nunca se oculta dentro de un grupo.
++- El inspector enumera las preguntas agrupadas. El usuario puede ocultar/mostrar categorías: conceptos estáticos, nodos funcionales propios, FAQ, unidades, definiciones. Nunca se ocultan los **focos**, aunque se desmarque su categoría.
++- Los filtros son de **presentación**, posteriores a la selección de la vecindad. No alteran índices, identidad ni reglas de expansión. Las subunidades siguen fuera del grafo y los párrafos conservan su checkbox independiente.
++- `Persistir ordenamiento` conserva posiciones, títulos y etiquetas de aristas, y además el estado de los filtros y de las FAQ desplegadas. `Recuperar ordenamiento guardado` los restaura. Los registros antiguos del checkpoint 5/6 mantienen compatibilidad.
++
++## Pruebas
++
++```bash
++node public/scripts/check-visor-faq-grupos.mjs
++node public/scripts/check-visor-titulos-aristas.mjs
++node public/scripts/check-visor-disposiciones.mjs
++node public/scripts/check-visor-expansion.mjs
++node public/scripts/check-visor-filtros.mjs
++node public/scripts/check-identidad-visor.mjs
++```
++
++## Comprobación manual
++
++1. En `/#/lab/visor-grafos`, abrir focos que tengan dos o más FAQ vinculadas a un mismo concepto; verificar un único nodo `FAQ (n)`.
++2. Doble clic para desplegar; verificar que se conservan los IDs y aristas FAQ originales. Doble clic para plegar.
++3. Desmarcar «Preguntas FAQ» y volver a marcar; verificar que ningún concepto foco desaparece.
++4. Editar título de una arista existente, mover nodos, desplegar FAQ, cambiar filtros y pulsar «Persistir ordenamiento»; recargar y comprobar restauración.
++5. Comprobar que `foco_faq` y otras relaciones originales siguen intactas en el inspector una vez desplegadas.
++
++**Limitación deliberada:** no se agrupan FAQ que comparten solamente texto o etiquetas de párrafo; únicamente las vinculadas por conexiones `foco_faq` existentes y visibles. La lectura contextual y el despliegue de unidades/párrafos se reservan al siguiente checkpoint.

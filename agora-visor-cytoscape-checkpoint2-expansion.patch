@@ -1,0 +1,640 @@
+diff --git a/public/js/lab/cytoscapeRenderer.js b/public/js/lab/cytoscapeRenderer.js
+--- a/public/js/lab/cytoscapeRenderer.js
++++ b/public/js/lab/cytoscapeRenderer.js
+@@ -1,30 +1,38 @@
+-// Único renderer, reutilizable con CUALQUIER colección de elementos Cytoscape.
++// Renderer único: no sabe de filosofía ni genera relaciones.
++// Recibe elementos Cytoscape y propaga eventos al experimento que lo usa.
+ import { cargarCytoscape } from './cytoscapeLoader.js';
+ 
+-export async function crearVisorGrafo(contenedor, elementos, { agrupado = false, alSeleccionar = () => {}, alOcultar = () => {} } = {}) {
++export async function crearVisorGrafo(contenedor, elementos, {
++  agrupado = false, alSeleccionar = () => {}, alOcultar = () => {}, alDobleClick = null,
++} = {}) {
+   const cytoscape = await cargarCytoscape();
+   const cy = cytoscape({
+     container: contenedor,
+     elements: elementos,
+-    wheelSensitivity: 0.23,
+-    minZoom: 0.12,
+-    maxZoom: 3.5,
++    // Checkpoint 2: la sensibilidad del checkpoint previo (0.23) era muy baja.
++    wheelSensitivity: 0.9,
++    minZoom: 0.08,
++    maxZoom: 5,
+     layout: agrupado
+       ? { name: 'circle', animate: false, padding: 35 }
+-      : { name: 'cose', animate: false, randomize: true, numIter: 450, nodeRepulsion: () => 260000,
+-          idealEdgeLength: () => 100, padding: 45 },
++      : { name: 'cose', animate: false, randomize: true, numIter: 380,
++          nodeRepulsion: () => 160000, idealEdgeLength: () => 110, padding: 42 },
+     style: [
+       { selector: 'node', style: {
+         'background-color': '#dce7ec', 'border-color': '#7193a6', 'border-width': 1.3,
+-        'label': 'data(label)', 'color': '#24394a', 'font-size': agrupado ? 12 : 9,
+-        'text-wrap': 'ellipsis', 'text-max-width': agrupado ? 140 : 95,
++        'label': 'data(label)', 'color': '#24394a', 'font-size': agrupado ? 12 : 10,
++        'text-wrap': 'ellipsis', 'text-max-width': agrupado ? 140 : 100,
+         'text-valign': 'center', 'text-halign': 'center',
+-        'width': agrupado ? 138 : 76, 'height': agrupado ? 54 : 34,
++        'width': agrupado ? 138 : 82, 'height': agrupado ? 54 : 38,
+         'shape': 'round-rectangle', 'text-outline-width': 0,
+       } },
+       { selector: 'node[tipo = "nodo_funcional"]', style: { 'background-color': '#d5eadf' } },
+       { selector: 'node[tipo = "faq"]', style: { 'background-color': '#f4e6bf' } },
+       { selector: 'node[tipo = "subunidad"]', style: { 'background-color': '#e4dcf0' } },
++      { selector: 'node[compartido = 1]', style: { 'border-color': '#6e67b1', 'border-width': 2.5 } },
++      { selector: 'node[expandido = 1]', style: { 'border-color': '#287550', 'border-width': 3.5 } },
++      { selector: 'node[foco = 1]', style: { 'background-color': '#c3dbea', 'border-color': '#28618c',
++        'border-width': 3.5, 'font-weight': 'bold' } },
+       { selector: 'edge', style: {
+         'curve-style': 'bezier', 'width': 1.2, 'line-color': '#99a8b5',
+         'target-arrow-shape': 'triangle', 'target-arrow-color': '#99a8b5',
+@@ -40,27 +48,73 @@
+   cy.on('tap', 'node', evt => {
+     const item = evt.target;
+     const now = Date.now();
+-    // El doble toque/clic oculta sólo la instancia visual, jamás el corpus.
+-    if (item.id() === previous.id && now - previous.at < 340) {
+-      item.hide(); previous = { id: null, at: 0 }; alOcultar(item.data()); return;
++    if (item.id() === previous.id && now - previous.at < 350) {
++      previous = { id: null, at: 0 };
++      if (alDobleClick) alDobleClick({ clase: 'nodo', ...item.data() });
++      else { item.hide(); alOcultar(item.data()); }
++      return;
+     }
+     previous = { id: item.id(), at: now };
+     alSeleccionar({ clase: 'nodo', ...item.data() });
+   });
+-  cy.on('tap', 'edge', evt => alSeleccionar({ clase: 'arista', ...evt.target.data() }));
+-  cy.on('tap', evt => { if (evt.target === cy) alSeleccionar(null); });
++  cy.on('tap', 'edge', evt => { previous = { id: null, at: 0 }; alSeleccionar({ clase: 'arista', ...evt.target.data() }); });
++  cy.on('tap', evt => { if (evt.target === cy) { previous = { id: null, at: 0 }; alSeleccionar(null); } });
++
+   return {
+     cy,
+     enfocar(id) {
+       const node = cy.getElementById(id);
+       if (node.empty()) return false;
+-      node.show(); node.select(); cy.animate({ center: { eles: node }, zoom: Math.max(cy.zoom(), 1) }, { duration: 250 });
++      node.show(); node.select();
++      cy.animate({ center: { eles: node }, zoom: Math.max(cy.zoom(), 0.95) }, { duration: 220 });
+       alSeleccionar({ clase: 'nodo', ...node.data() });
+       return true;
+     },
++    // Actualización incremental: los nodos existentes conservan sus posiciones.
++    // Se agregan solo los nuevos vecinos alrededor de un nodo ya representado.
++    actualizarElementos(nuevos) {
++      const nodes = nuevos.filter(x => x.group === 'nodes');
++      const edges = nuevos.filter(x => x.group === 'edges');
++      const wantedN = new Set(nodes.map(x => x.data.id));
++      const wantedE = new Set(edges.map(x => x.data.id));
++      const knownN = new Set(cy.nodes().map(x => x.id()));
++      const slots = new Map();
++      const nuevosN = nodes.filter(n => !knownN.has(n.data.id));
++      cy.batch(() => {
++        cy.edges().forEach(e => { if (!wantedE.has(e.id())) e.remove(); });
++        cy.nodes().forEach(n => { if (!wantedN.has(n.id())) n.remove(); });
++        // Mantener datos de estilos (foco, compartido, expandido) actualizados.
++        for (const n of nodes) {
++          const actual = cy.getElementById(n.data.id);
++          if (actual.nonempty()) actual.data(n.data);
++        }
++        for (const n of nuevosN) {
++          const vecino = edges.find(e => (e.data.source === n.data.id && knownN.has(e.data.target)) ||
++            (e.data.target === n.data.id && knownN.has(e.data.source)));
++          const anchorId = vecino ? (vecino.data.source === n.data.id ? vecino.data.target : vecino.data.source) : null;
++          const anchor = anchorId ? cy.getElementById(anchorId) : null;
++          const pos = anchor?.nonempty() ? anchor.position() : { x: 0, y: 0 };
++          const count = slots.get(anchorId || '_') || 0;
++          slots.set(anchorId || '_', count + 1);
++          const angle = -Math.PI / 2 + (count % 10) * Math.PI * 2 / 10;
++          const radius = 135 + Math.floor(count / 10) * 100;
++          cy.add({ ...n, position: { x: pos.x + radius * Math.cos(angle), y: pos.y + radius * Math.sin(angle) } });
++        }
++        for (const e of edges) {
++          const actual = cy.getElementById(e.data.id);
++          if (actual.empty()) cy.add(e);
++          else actual.data(e.data);
++        }
++      });
++      return { nodos: cy.nodes().length, aristas: cy.edges().length };
++    },
+     ocultarSeleccion() { const s = cy.$(':selected'); s.hide(); alOcultar(null); },
+     restaurar() { cy.elements().show(); },
+-    ajustar() { cy.fit(undefined, 35); },
++    ajustar() { cy.fit(cy.elements().visible(), 35); },
++    zoom(factor) {
++      const level = Math.max(cy.minZoom(), Math.min(cy.maxZoom(), cy.zoom() * factor));
++      cy.zoom({ level, renderedPosition: { x: contenedor.clientWidth / 2, y: contenedor.clientHeight / 2 } });
++    },
+     destruir() { cy.destroy(); },
+   };
+ }
+diff --git a/public/js/views/labGraphPilotView.js b/public/js/views/labGraphPilotView.js
+--- a/public/js/views/labGraphPilotView.js
++++ b/public/js/views/labGraphPilotView.js
+@@ -1,110 +1,200 @@
+ import { esc } from '../ui.js';
+ import { buildSemanticProjection, buscarNodosSemanticos } from '../lab/semanticProjection.js';
+ import { proyeccionAElementos, resumenClasesAElementos, estadisticasElementos } from '../lab/semanticGraphAdapter.js';
++import { indexarGrafo, crearEstadoFocal, cambiarFocos, alternarExpansion, obtenerSubgrafoFocal, restaurarBaseFocal } from '../lab/graphFocusExpansion.js';
+ import { crearVisorGrafo } from '../lab/cytoscapeRenderer.js';
+ 
+-// Checkpoint 1: un visor genérico; todavía no modifica el Orientador ni las valoraciones didácticas.
++// Checkpoint 2: Cytoscape permanece como visor experimental; el corpus es de sólo lectura.
++// Focos estables + expansión local reversible + inspector lateral. Sin Relate/MariaDB.
+ export function createLabGraphPilotView(App) {
+   const el = document.createElement('div');
+   el.className = 'view-lab scrollable has-scroll';
+   const projection = buildSemanticProjection(App?.S || {});
+-  let modo = 'grupos';
++  const todos = proyeccionAElementos(projection);
++  const indice = indexarGrafo(todos);
++  const predeterminados = ['phusis', 'arete', 'eudaimonia']
++    .map(id => [`concepto_estatico:${id}`, `nodo_funcional:${id}`].find(uid => indice.nodos.has(uid)))
++    .filter(Boolean);
++  if (!predeterminados.length) predeterminados.push(...[...indice.nodos.keys()].slice(0, 3));
++  let estado = crearEstadoFocal(indice, predeterminados);
++  let modo = 'focal';
+   let tipo = 'todos';
+   let viewer = null;
+   let closed = false;
+   let generation = 0;
+-  const kinds = Object.keys(projection.stats.porTipo);
++  const tipos = Object.keys(projection.stats.porTipo);
++  const $ = selector => el.querySelector(selector);
++  const etiqueta = id => indice.nodos.get(id)?.data.label || id;
++
+   el.innerHTML = `<div class="lab__inner">
+     <nav class="lab-nav"><a class="btn btn--ghost btn--sm" href="#/lab">← Laboratorio</a></nav>
+-    <header class="lab-exp__header"><h1 class="lab-exp__title">Visor genérico de grafos · Checkpoint 1</h1></header>
++    <header class="lab-exp__header"><h1 class="lab-exp__title">Visor de grafos · Checkpoint 2</h1></header>
+     <section class="lab-card">
+-      <h2>Inventario y exploración libre</h2>
+-      <p class="hint">Copia de lectura del corpus: ${projection.stats.nodos} nodos, ${projection.stats.aristas} vínculos, ${projection.issues.length} incidencias. La dirección de las flechas representa la orientación documental; no implica causalidad.</p>
++      <h2>Navegación focal y exploración libre</h2>
++      <p class="hint">${projection.stats.nodos} nodos · ${projection.stats.aristas} vínculos · ${projection.issues.length} incidencias. El grafo documental no se modifica.</p>
++      <div class="lab-toolbar" aria-label="Modo de exploración">
++        <button type="button" class="lab-btn" id="gv-focal-mode">Vista de focos</button>
++        <button type="button" class="lab-btn lab-btn--ghost" id="gv-group-mode">Resumen por tipos</button>
++        <button type="button" class="lab-btn lab-btn--ghost" id="gv-all-mode">Universo completo</button>
++        <label for="gv-kind">Filtrar universo</label>
++        <select id="gv-kind" class="lab-input" disabled><option value="todos">Todos los tipos</option>${tipos.map(t => `<option value="${esc(t)}">${esc(t.replaceAll('_', ' '))}</option>`).join('')}</select>
++      </div>
++      <div id="gv-focal-controls" class="lab-graph-focal-controls">
++        <p class="hint">Focos permanentes (máximo 5). Se muestran sus aristas entrantes y salientes, pero NO las conexiones secundarias entre vecinos hasta que las expandas.</p>
++        <div id="gv-foci" class="lab-graph-foci"></div>
++        <div class="lab-toolbar">
++          <button type="button" id="gv-collapse-all" class="lab-btn lab-btn--ghost">Contraer todas las expansiones</button>
++          <button type="button" id="gv-default-foci" class="lab-btn lab-btn--ghost">Restaurar tres focos iniciales</button>
++        </div>
++      </div>
++      <form id="gv-search-form" class="lab-form">
++        <label for="gv-search">Buscar un concepto para convertirlo en foco</label>
++        <input id="gv-search" class="lab-input" type="search" maxlength="180" placeholder="phusis, arete, eudaimonia…" />
++        <button type="submit" class="lab-btn">Buscar</button>
++      </form>
++      <div id="gv-matches" class="lab-help" aria-live="polite"></div>
+       <div class="lab-toolbar">
+-        <button id="gv-mode" type="button" class="lab-btn">Mostrar universo completo</button>
+-        <label for="gv-kind">Tipo de nodo</label>
+-        <select id="gv-kind" class="lab-input"><option value="todos">Todos</option>${kinds.map(k => `<option value="${esc(k)}">${esc(k.replaceAll('_',' '))}</option>`).join('')}</select>
++        <button id="gv-zoom-out" type="button" class="lab-btn lab-btn--ghost" aria-label="Alejar grafo">− Zoom</button>
++        <button id="gv-zoom-in" type="button" class="lab-btn lab-btn--ghost" aria-label="Acercar grafo">+ Zoom</button>
+         <button id="gv-fit" type="button" class="lab-btn lab-btn--ghost">Ajustar vista</button>
+-        <button id="gv-hide" type="button" class="lab-btn lab-btn--ghost">Ocultar selección</button>
+-        <button id="gv-restore" type="button" class="lab-btn lab-btn--ghost">Restaurar ocultos</button>
+-      </div>
+-      <form id="gv-search-form" class="lab-form">
+-        <label for="gv-search">Buscar y enfocar nodo</label>
+-        <input id="gv-search" class="lab-input" type="search" placeholder="phusis, arete, eudaimonia…" />
+-        <button type="submit" class="lab-btn">Encontrar</button>
+-      </form>
+-      <div id="gv-matches" class="lab-help"></div>
+-      <p class="hint">Arrastrá un nodo para desplazarlo. Arrastrá el fondo para mover el grafo. Rueda para zoom. Clic para inspeccionar; doble clic para ocultar un nodo. Eliminar de la vista no modifica el corpus.</p>
+-      <div id="gv-canvas" class="lab-graph-canvas" role="region" aria-label="Grafo interactivo de Ágora"></div>
++        <button id="gv-hide" type="button" class="lab-btn lab-btn--ghost" disabled>Ocultar selección</button>
++        <button id="gv-restore" type="button" class="lab-btn lab-btn--ghost" disabled>Restaurar ocultos</button>
++      </div>
++      <p id="gv-usage" class="hint">Doble clic sobre un vecino: expandir sus conexiones. Otro doble clic: contraer su rama. Los focos permanecen visibles. Clic simple: propiedades a la derecha; rueda: zoom; arrastrar: mover.</p>
++      <div class="lab-graph-main">
++        <div id="gv-canvas" class="lab-graph-canvas" role="region" aria-label="Grafo interactivo de Ágora"></div>
++        <aside id="gv-inspector" class="lab-panel lab-graph-inspector" aria-label="Propiedades de nodos y aristas"><h3>Propiedades</h3><p>Seleccioná un nodo o una arista.</p></aside>
++      </div>
+       <p id="gv-status" role="status" class="hint">Preparando el visualizador…</p>
+-      <section id="gv-inspector" class="lab-panel" aria-label="Detalles de la selección"><h3>Selección</h3><p>Seleccioná un nodo o una arista para examinar sus propiedades.</p></section>
+     </section></div>`;
+-  const $ = sel => el.querySelector(sel);
+-  const status = text => { if (!closed) $('#gv-status').textContent = text; };
++
++  const status = mensaje => { if (!closed) $('#gv-status').textContent = mensaje; };
++  function renderFocos() {
++    const caja = $('#gv-foci');
++    caja.innerHTML = estado.focos.map(id => `<span class="lab-graph-focus-chip"><strong>${esc(etiqueta(id))}</strong><small>${esc(id)}</small><button type="button" data-gv-remove="${esc(id)}" title="Quitar este foco" aria-label="Quitar foco ${esc(etiqueta(id))}" ${estado.focos.length === 1 ? 'disabled' : ''}>×</button></span>`).join('');
++  }
+   function inspeccionar(item) {
+     if (closed) return;
+     const out = $('#gv-inspector');
+-    if (!item) { out.innerHTML = '<h3>Selección</h3><p>Seleccioná un nodo o arista.</p>'; return; }
+-    // No se serializan datos ajenos al corpus como HTML ejecutable.
+-    const attrs = Object.entries(item).filter(([k,v]) => !['id','label','clase'].includes(k) && v != null && v !== '');
+-    out.innerHTML = `<h3>${esc(item.label || item.tipo || item.clase)}</h3><p><strong>ID:</strong> ${esc(item.id || '—')} · ${esc(item.clase)}</p><dl class="lab-graph-properties">${attrs.map(([k,v]) => `<dt>${esc(k)}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>`;
+-    if (item.clase === 'nodo' && item.resumen) {
++    if (!item) { out.innerHTML = '<h3>Propiedades</h3><p>Seleccioná un nodo o una arista para examinar su procedencia.</p>'; return; }
++    const attrs = Object.entries(item).filter(([k,v]) => !['id','label','clase','foco','expandido','compartido'].includes(k) && v != null && v !== '');
++    out.innerHTML = `<h3>${esc(item.label || item.tipo || item.clase)}</h3>
++      <p class="lab-graph-id"><strong>ID:</strong> ${esc(item.id || '—')}<br>${esc(item.clase)}</p>
++      <dl class="lab-graph-properties">${attrs.map(([k,v]) => `<dt>${esc(k)}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>`;
++    if (item.clase === 'nodo' && !item.resumen && indice.nodos.has(item.id)) {
++      const actions = document.createElement('div');
++      actions.className = 'lab-graph-inspector-actions';
++      actions.innerHTML = `<button type="button" class="lab-btn" data-gv-sole="${esc(item.id)}">Usar como único foco</button>
++        <button type="button" class="lab-btn lab-btn--ghost" data-gv-add="${esc(item.id)}" ${estado.focos.length >= 5 || estado.focos.includes(item.id) ? 'disabled' : ''}>Añadir a los focos</button>`;
++      out.append(actions);
++    } else if (item.clase === 'nodo' && item.resumen) {
+       const button = document.createElement('button');
+       button.type = 'button'; button.className = 'lab-btn lab-btn--ghost';
+-      button.textContent = `Explorar sólo ${item.tipo}`;
+-      button.addEventListener('click', () => { modo = 'todo'; tipo = item.tipo; $('#gv-kind').value = tipo; dibujar(); });
++      button.textContent = `Ver nodos de ${item.tipo}`;
++      button.addEventListener('click', () => { modo = 'todo'; tipo = item.tipo; $('#gv-kind').value = tipo; void dibujar(); });
+       out.append(button);
+     }
++  }
++  function actualizarFocal() {
++    const sub = obtenerSubgrafoFocal(estado);
++    viewer?.actualizarElementos(sub.elementos);
++    renderFocos();
++    status(`${sub.estadisticas.nodos} nodos · ${sub.estadisticas.aristas} aristas · ${sub.estadisticas.expandidos} nodos expandidos · ${sub.estadisticas.vecinosCompartidos} vecinos comunes a varios focos.`);
++  }
++  function dobleClick(item) {
++    if (modo !== 'focal') {
++      const nodo = viewer?.cy.getElementById(item.id);
++      nodo?.hide();
++      status('Nodo ocultado en esta vista, sin afectar el corpus.');
++      return;
++    }
++    const nuevo = alternarExpansion(estado, item.id);
++    if (nuevo === estado) {
++      status(estado.focos.includes(item.id) ? 'Los focos forman la base permanente; expandí sus vecinos.' : 'Ese nodo no está disponible para expandir.');
++      return;
++    }
++    const abriendo = nuevo.expandidos.has(item.id);
++    estado = nuevo;
++    actualizarFocal();
++    inspeccionar({ clase: 'nodo', ...indice.nodos.get(item.id).data });
++    if (!abriendo) status(`${etiqueta(item.id)}: rama contraída. Los nodos compartidos o pertenecientes a la base permanecen.`);
+   }
+   async function dibujar() {
+     const ticket = ++generation;
+     viewer?.destruir(); viewer = null;
+     $('#gv-canvas').replaceChildren();
++    const focal = modo === 'focal';
+     const agrupado = modo === 'grupos';
+-    const elements = agrupado ? resumenClasesAElementos(projection)
++    const elementos = focal ? obtenerSubgrafoFocal(estado).elementos : agrupado
++      ? resumenClasesAElementos(projection)
+       : proyeccionAElementos(projection, { tipos: tipo === 'todos' ? null : [tipo] });
+-    const stats = estadisticasElementos(elements);
+-    $('#gv-mode').textContent = agrupado ? 'Mostrar universo completo' : 'Vista por categorías';
+-    $('#gv-kind').disabled = agrupado;
++    const stats = estadisticasElementos(elementos);
++    $('#gv-focal-controls').hidden = !focal;
++    $('#gv-kind').disabled = modo !== 'todo';
++    $('#gv-hide').disabled = focal;
++    $('#gv-restore').disabled = focal;
++    $('#gv-focal-mode').className = 'lab-btn' + (focal ? '' : ' lab-btn--ghost');
++    $('#gv-group-mode').className = 'lab-btn' + (agrupado ? '' : ' lab-btn--ghost');
++    $('#gv-all-mode').className = 'lab-btn' + (modo === 'todo' ? '' : ' lab-btn--ghost');
++    $('#gv-usage').textContent = focal
++      ? 'Doble clic sobre un vecino: expandir conexiones; repetir: contraer. Focos siempre visibles. Clic: inspector lateral. Arrastre y rueda: desplazamiento y zoom.'
++      : 'Arrastrá para mover nodos o lienzo. Clic para inspeccionar; doble clic para ocultar sólo en esta vista. La vista focal permite expandir y contraer.';
++    inspeccionar(null);
++    renderFocos();
+     status(`Cargando ${stats.nodos} nodos y ${stats.aristas} vínculos…`);
+     try {
+-      const instance = await crearVisorGrafo($('#gv-canvas'), elements, {
+-        agrupado,
+-        alSeleccionar: inspeccionar,
+-        alOcultar: () => status('Nodo ocultado sólo en esta vista. Podés restaurarlo.'),
++      const instance = await crearVisorGrafo($('#gv-canvas'), elementos, {
++        agrupado, alSeleccionar: inspeccionar, alDobleClick: dobleClick,
++        alOcultar: () => status('Elemento ocultado en esta vista.'),
+       });
+       if (closed || ticket !== generation) { instance.destruir(); return; }
+       viewer = instance;
+-      status(`${stats.nodos} nodos · ${stats.aristas} vínculos visibles inicialmente. ${agrupado ? 'Vista agregada por tipos, no por conceptos.' : 'Universo documental; se conservan las aristas originales.'}`);
+-    } catch (error) {
+-      if (closed || ticket !== generation) return;
+-      status(`No se pudo cargar el visor: ${error.message}`);
+-    }
+-  }
+-  $('#gv-mode').addEventListener('click', () => { modo = modo === 'grupos' ? 'todo' : 'grupos'; tipo = 'todos'; $('#gv-kind').value = tipo; dibujar(); });
+-  $('#gv-kind').addEventListener('change', e => { tipo = e.target.value; dibujar(); });
++      if (focal) actualizarFocal();
++      else status(`${stats.nodos} nodos · ${stats.aristas} vínculos. ${agrupado ? 'Resumen de tipos, no relaciones filosóficas.' : 'Grafo documental completo o filtrado.'}`);
++    } catch (err) {
++      if (!closed && ticket === generation) status(`No se pudo cargar el visor: ${err.message}`);
++    }
++  }
++  function seleccionarFocos(focos) {
++    estado = cambiarFocos(estado, focos);
++    modo = 'focal'; tipo = 'todos'; $('#gv-kind').value = 'todos';
++    void dibujar();
++  }
++  $('#gv-focal-mode').addEventListener('click', () => { modo = 'focal'; void dibujar(); });
++  $('#gv-group-mode').addEventListener('click', () => { modo = 'grupos'; void dibujar(); });
++  $('#gv-all-mode').addEventListener('click', () => { modo = 'todo'; void dibujar(); });
++  $('#gv-kind').addEventListener('change', e => { tipo = e.target.value; void dibujar(); });
++  $('#gv-zoom-in').addEventListener('click', () => viewer?.zoom(1.6));
++  $('#gv-zoom-out').addEventListener('click', () => viewer?.zoom(1 / 1.6));
+   $('#gv-fit').addEventListener('click', () => viewer?.ajustar());
+-  $('#gv-hide').addEventListener('click', () => { viewer?.ocultarSeleccion(); status('Selección ocultada en la vista.'); });
++  $('#gv-hide').addEventListener('click', () => { viewer?.ocultarSeleccion(); status('Selección ocultada sólo en esta vista.'); });
+   $('#gv-restore').addEventListener('click', () => { viewer?.restaurar(); status('Elementos restaurados.'); });
++  $('#gv-collapse-all').addEventListener('click', () => { estado = restaurarBaseFocal(estado); actualizarFocal(); });
++  $('#gv-default-foci').addEventListener('click', () => seleccionarFocos(predeterminados));
++  $('#gv-foci').addEventListener('click', e => {
++    const b = e.target.closest('[data-gv-remove]');
++    if (b && estado.focos.length > 1) seleccionarFocos(estado.focos.filter(id => id !== b.dataset.gvRemove));
++  });
+   $('#gv-search-form').addEventListener('submit', e => {
+     e.preventDefault();
+-    const term = $('#gv-search').value.trim();
+-    const matches = buscarNodosSemanticos(projection, term, 20);
+-    $('#gv-matches').innerHTML = matches.map(n => `<button class="lab-help__item" type="button" data-gv-target="${esc(n.uid)}">${esc(n.etiqueta)} · ${esc(n.tipo)}</button>`).join('') || '<p class="hint">Sin coincidencias.</p>';
++    const matches = buscarNodosSemanticos(projection, $('#gv-search').value.trim(), 15);
++    $('#gv-matches').innerHTML = matches.map(n => `<div class="lab-graph-search-result"><span><strong>${esc(n.etiqueta)}</strong><small>${esc(n.uid)}</small></span>
++      <button type="button" class="lab-btn lab-btn--ghost" data-gv-sole="${esc(n.uid)}">Foco único</button>
++      <button type="button" class="lab-btn lab-btn--ghost" data-gv-add="${esc(n.uid)}">Añadir foco</button></div>`).join('') || '<p class="hint">No se encontraron conceptos.</p>';
+   });
+-  $('#gv-matches').addEventListener('click', async e => {
+-    const button = e.target.closest('[data-gv-target]');
+-    if (!button || !el.contains(button)) return;
+-    const id = button.dataset.gvTarget;
+-    const node = projection.nodes.find(n => n.uid === id);
+-    if (!node) return;
+-    if (modo !== 'todo' || (tipo !== 'todos' && tipo !== node.tipo)) {
+-      modo = 'todo'; tipo = 'todos'; $('#gv-kind').value = tipo;
+-      await dibujar();
+-    }
+-    if (viewer?.enfocar(id)) status(`Foco visual: ${node.etiqueta} (${node.uid}).`);
+-  });
+-  // El router monta la vista después de invocar esta factory. Dibujar con el contenedor ya visible.
++  function eventoFocos(e) {
++    const uno = e.target.closest('[data-gv-sole]');
++    const agregar = e.target.closest('[data-gv-add]');
++    if (uno && indice.nodos.has(uno.dataset.gvSole)) seleccionarFocos([uno.dataset.gvSole]);
++    if (agregar && indice.nodos.has(agregar.dataset.gvAdd)) {
++      const id = agregar.dataset.gvAdd;
++      if (estado.focos.includes(id)) { status('Ese nodo ya forma parte de los focos.'); return; }
++      if (estado.focos.length >= 5) { status('Máximo cinco focos. Quitá uno antes de añadir otro.'); return; }
++      seleccionarFocos([...estado.focos, id]);
++    }
++  }
++  $('#gv-matches').addEventListener('click', eventoFocos);
++  $('#gv-inspector').addEventListener('click', eventoFocos);
+   if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => { if (!closed) void dibujar(); });
+   else setTimeout(() => { if (!closed) void dibujar(); }, 0);
+   return { el, destroy() { closed = true; ++generation; viewer?.destruir(); viewer = null; } };
+diff --git a/public/js/lab/graphFocusExpansion.js b/public/js/lab/graphFocusExpansion.js
+new file mode 100644
+--- /dev/null
++++ b/public/js/lab/graphFocusExpansion.js
+@@ -0,0 +1,116 @@
++// Grafo focal de sólo lectura. La base contiene focos y TODAS sus aristas
++// incidentes (entrantes y salientes), pero ninguna arista entre vecinos por
++// el solo hecho de compartir vecindad. Las expansiones agregan una capa.
++// Esta lógica no depende de Cytoscape ni altera el corpus original.
++export function indexarGrafo(elementos = []) {
++  const nodos = new Map();
++  const aristas = new Map();
++  const incidentes = new Map();
++  for (const el of elementos) {
++    if (el.group !== 'nodes') continue;
++    const id = el.data?.id;
++    if (typeof id !== 'string' || nodos.has(id)) continue;
++    nodos.set(id, el);
++    incidentes.set(id, []);
++  }
++  for (const el of elementos) {
++    if (el.group !== 'edges') continue;
++    const { id, source, target } = el.data || {};
++    if (typeof id !== 'string' || aristas.has(id) || !nodos.has(source) || !nodos.has(target)) continue;
++    aristas.set(id, el);
++    incidentes.get(source).push(id);
++    if (target !== source) incidentes.get(target).push(id);
++  }
++  return { nodos, aristas, incidentes };
++}
++
++export function crearEstadoFocal(indice, focos = []) {
++  return { indice, focos: [...new Set(focos)].filter(id => indice.nodos.has(id)), expandidos: new Set() };
++}
++
++export function cambiarFocos(estado, focos) {
++  return crearEstadoFocal(estado.indice, focos);
++}
++
++const otroExtremo = (arista, id) => arista.data.source === id ? arista.data.target : arista.data.source;
++
++function calcularVisibilidad(estado) {
++  const { indice, focos, expandidos } = estado;
++  const nodos = new Set(focos);
++  const aristas = new Set();
++  const compartidos = new Map();
++  const incorporar = id => {
++    for (const eid of indice.incidentes.get(id) || []) {
++      const e = indice.aristas.get(eid);
++      aristas.add(eid);
++      nodos.add(e.data.source);
++      nodos.add(e.data.target);
++    }
++  };
++  // Los focos siempre conservan su vecindad inmediata; no son plegables.
++  for (const id of focos) {
++    incorporar(id);
++    for (const eid of indice.incidentes.get(id) || []) {
++      const vecino = otroExtremo(indice.aristas.get(eid), id);
++      if (!compartidos.has(vecino)) compartidos.set(vecino, new Set());
++      compartidos.get(vecino).add(id);
++    }
++  }
++  // Expansiones sucesivas, siempre desde nodos que ya son visibles.
++  // Cada elemento se procesa una sola vez; los ciclos son seguros.
++  const procesados = new Set();
++  let pendientes = [...nodos];
++  while (pendientes.length) {
++    const id = pendientes.pop();
++    if (procesados.has(id)) continue;
++    procesados.add(id);
++    if (!expandidos.has(id)) continue;
++    const previos = new Set(nodos);
++    incorporar(id);
++    for (const nuevo of nodos) if (!previos.has(nuevo)) pendientes.push(nuevo);
++  }
++  return { nodos, aristas, compartidos };
++}
++
++export function obtenerSubgrafoFocal(estado) {
++  const { indice, focos, expandidos } = estado;
++  const { nodos, aristas, compartidos } = calcularVisibilidad(estado);
++  const elementos = [
++    ...[...nodos].map(id => {
++      const n = indice.nodos.get(id);
++      return { ...n, data: { ...n.data, foco: focos.includes(id) ? 1 : 0,
++        expandido: expandidos.has(id) ? 1 : 0,
++        compartido: (compartidos.get(id)?.size || 0) >= 2 ? 1 : 0 } };
++    }),
++    ...[...aristas].map(id => indice.aristas.get(id)),
++  ];
++  return { elementos, nodos, aristas,
++    estadisticas: { nodos: nodos.size, aristas: aristas.size,
++      expandidos: [...expandidos].filter(id => nodos.has(id)).length,
++      vecinosCompartidos: [...compartidos].filter(([,v]) => v.size >= 2).length } };
++}
++
++export function alternarExpansion(estado, id) {
++  if (!estado.indice.nodos.has(id) || estado.focos.includes(id)) return estado;
++  const visibles = calcularVisibilidad(estado).nodos;
++  if (!visibles.has(id)) return estado;
++  const expandidos = new Set(estado.expandidos);
++  if (expandidos.has(id)) expandidos.delete(id);
++  else expandidos.add(id);
++  const siguiente = { ...estado, expandidos };
++  // Al plegar un antecesor, olvidar también las expansiones que quedaron
++  // inaccesibles. Un nodo compartido sigue abierto si aún es alcanzable.
++  let cambio = true;
++  while (cambio) {
++    cambio = false;
++    const actuales = calcularVisibilidad(siguiente).nodos;
++    for (const x of expandidos) {
++      if (!actuales.has(x)) { expandidos.delete(x); cambio = true; }
++    }
++  }
++  return siguiente;
++}
++
++export function restaurarBaseFocal(estado) {
++  return { ...estado, expandidos: new Set() };
++}
+diff --git a/public/scripts/check-visor-expansion.mjs b/public/scripts/check-visor-expansion.mjs
+new file mode 100644
+--- /dev/null
++++ b/public/scripts/check-visor-expansion.mjs
+@@ -0,0 +1,40 @@
++import assert from 'node:assert/strict';
++import { indexarGrafo, crearEstadoFocal, obtenerSubgrafoFocal, alternarExpansion, cambiarFocos, restaurarBaseFocal } from '../js/lab/graphFocusExpansion.js';
++const ns = ['a','b','c','shared','x','y','z','leaf','orphan'].map(id => ({group:'nodes',data:{id,label:id}}));
++const edges = [
++  ['1','a','shared'], ['2','b','shared'], ['3','c','x'],
++  ['4','shared','y'], ['5','y','z'], ['6','x','leaf'], ['7','z','orphan'],
++  ['8','leaf','shared'], // un ciclo: no debe producir expansión implícita
++].map(([id,source,target]) => ({group:'edges',data:{id,source,target,relacion:'prueba'}}));
++const index = indexarGrafo([...ns,...edges]);
++let s = crearEstadoFocal(index, ['a','b','c']);
++const base = obtenerSubgrafoFocal(s);
++assert.deepEqual([...base.aristas].sort(), ['1','2','3']);
++assert.deepEqual([...base.nodos].sort(), ['a','b','c','shared','x']);
++assert.equal(base.estadisticas.vecinosCompartidos, 1);
++assert.equal(base.elementos.find(e => e.data.id === 'shared').data.compartido, 1);
++assert.strictEqual(alternarExpansion(s, 'a'),s,'ningún foco puede plegarse');
++assert.strictEqual(alternarExpansion(s, 'y'),s,'no se expande un nodo invisible');
++s = alternarExpansion(s,'shared');
++assert.deepEqual([...obtenerSubgrafoFocal(s).aristas].sort(),['1','2','3','4','8']);
++assert.ok(obtenerSubgrafoFocal(s).nodos.has('leaf'));
++s = alternarExpansion(s,'y');
++assert.ok(obtenerSubgrafoFocal(s).nodos.has('z'));
++s = alternarExpansion(s,'shared');
++assert.deepEqual([...obtenerSubgrafoFocal(s).aristas].sort(),['1','2','3']);
++assert.equal(s.expandidos.size,0,'al plegar el padre, las expansiones hijas inaccesibles se olvidan');
++s = alternarExpansion(s,'x');
++assert.ok(obtenerSubgrafoFocal(s).nodos.has('leaf'));
++s = alternarExpansion(s,'leaf');
++assert.ok(obtenerSubgrafoFocal(s).nodos.has('shared'));
++s = alternarExpansion(s,'shared');
++assert.ok(obtenerSubgrafoFocal(s).nodos.has('y'));
++s = alternarExpansion(s,'x');
++assert.ok(obtenerSubgrafoFocal(s).nodos.has('y'),'el compartido conserva su expansión desde la base');
++s = restaurarBaseFocal(s);
++assert.deepEqual([...obtenerSubgrafoFocal(s).aristas].sort(),['1','2','3']);
++s = cambiarFocos(s,['c','x','missing','c']);
++assert.deepEqual(s.focos,['c','x']);
++assert.deepEqual([...obtenerSubgrafoFocal(s).aristas].sort(),['3','6']);
++assert.equal(s.expandidos.size,0);
++console.log('OK: focos múltiples, aristas dirigidas, base fija, vecinos compartidos, expansión, repliegue y limpieza de descendientes.');
+diff --git a/docs/LAB_VISOR_FOCAL_CHECKPOINT2.md b/docs/LAB_VISOR_FOCAL_CHECKPOINT2.md
+new file mode 100644
+--- /dev/null
++++ b/docs/LAB_VISOR_FOCAL_CHECKPOINT2.md
+@@ -0,0 +1,37 @@
++# Checkpoint 2 — Exploración focal expandible (Cytoscape.js)
++
++## Propósito
++
++Antes de comparar bibliotecas de visualización, probar una interacción coherente y reutilizable sobre el visor de Cytoscape del Checkpoint 1. No se toca MariaDB, el Orientador, la proyección semántica, las relaciones del corpus ni la elección futura de visor.
++
++## Contrato: base permanente y expansiones
++
++- Abre con tres focos: `concepto_estatico:phusis`, `concepto_estatico:arete`, `concepto_estatico:eudaimonia` (si existen; en caso contrario se seleccionan los nodos disponibles).
++- La **base** contiene todos esos focos y todas las aristas originales entrantes o salientes de cada uno, junto con sus extremos. No se agregan aristas entre vecinos por simple proximidad. Los vecinos compartidos por dos o más focos se distinguen con borde violeta.
++- Un **doble clic sobre un vecino** añade todas sus aristas incidentes (y los extremos) a la vista. Otro doble clic las contrae. Se pueden expandir nodos introducidos por expansiones previas.
++- Plegar un nodo elimina de la vista únicamente aristas y nodos que ya no pertenezcan a la base ni sean accesibles por otra rama expandida. Si una rama hija deja de estar visible, también se olvida su estado de expansión.
++- Los focos siempre son permanentes; su doble clic no elimina las aristas base. Se pueden sustituir o ampliar mediante el buscador o el inspector, hasta cinco focos. Cambiar focos reinicia las expansiones.
++- No se eliminan nodos ni aristas del corpus. Es un filtro de **presentación**, no una poda editorial ni una inferencia filosófica.
++
++## Diseño y zoom
++
++- La selección de cualquier nodo o arista se explica en un **panel lateral** (en pantallas estrechas, el panel pasa debajo del grafo).
++- Sensibilidad de rueda `wheelSensitivity: 0.9` (antes `0.23`) y botones ± con factor `1.6`; botón «Ajustar vista».
++- La actualización incremental mantiene las posiciones de nodos que permanecen visibles y sitúa los recién descubiertos cerca de vecinos ya visibles. No reinicia el layout a cada expansión.
++- Los otros modos del Checkpoint 1 (resumen por tipos, universo completo) siguen disponibles para comparación; allí el doble clic oculta visualmente un nodo, restaurable con el botón correspondiente.
++
++## Validación
++
++```bash
++node public/scripts/check-visor-generico.mjs
++node public/scripts/check-visor-expansion.mjs
++npm --prefix public run test:views
++```
++
++Después, abrir `/#/lab/visor-grafos` con el servidor y el bundle local de Cytoscape ya instalados. Verificar la expansión de un vecino compartido por dos focos, plegarlo, repetir en un nodo profundo y comprobar que el inspector permanece visible a la derecha en notebook.
++
++## Limitaciones deliberadas
++
++- No se habilita todavía el selector de biblioteca visual, Relate/Cypher, la persistencia de marcas didácticas ni el reconocimiento de roles.
++- En un grafo con alta densidad, expandir un nodo puede agregar muchos elementos. El usuario puede plegarlo o usar «Contraer todas las expansiones». Una futura iteración puede incorporar cupos y paginación por tipo de relación, pero nunca ocultar resultados sin indicarlo.
++- La posición incremental es aproximada; el checkpoint sirve para comparar *comportamientos de navegación*, no aún layouts sofisticados.
+diff --git a/public/css/app.css b/public/css/app.css
+--- a/public/css/app.css
++++ b/public/css/app.css
+@@ -1303,1 +1303,28 @@
+ @media (max-width: 700px) { .lab-graph-canvas { min-height: 420px; } .lab-graph-properties { grid-template-columns: 1fr; } }
++
++/* Checkpoint 2: panel lateral del visor + focos y capas reversibles. */
++.lab-graph-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(248px, 300px); gap: 14px; align-items: start; }
++.lab-graph-main .lab-graph-canvas { min-width: 0; min-height: 590px; }
++.lab-graph-inspector { min-width: 0; max-height: 590px; overflow: auto; overflow-wrap: anywhere; }
++.lab-graph-inspector h3 { margin-top: 0; }
++.lab-graph-inspector .lab-graph-properties { display: grid; grid-template-columns: 1fr; gap: 3px; }
++.lab-graph-inspector .lab-graph-properties dt { margin-top: 8px; }
++.lab-graph-inspector .lab-graph-properties dd { overflow-wrap: anywhere; }
++.lab-graph-inspector-actions { display: grid; gap: 8px; margin-top: 20px; }
++.lab-graph-inspector-actions button { white-space: normal; }
++.lab-graph-id { overflow-wrap: anywhere; font-size: .88rem; }
++.lab-graph-focal-controls { margin: 12px 0 18px; }
++.lab-graph-focal-controls[hidden] { display: none; }
++.lab-graph-foci { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
++.lab-graph-focus-chip { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; border: 1px solid var(--border, #bac6cf); border-radius: 9px; padding: 6px 9px; }
++.lab-graph-focus-chip small { font-size: .72rem; overflow-wrap: anywhere; opacity: .75; }
++.lab-graph-focus-chip button { cursor: pointer; border: 0; background: transparent; font-size: 1.2rem; padding: 0 5px; color: inherit; }
++.lab-graph-focus-chip button:disabled { cursor: not-allowed; opacity: .3; }
++.lab-graph-search-result { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 9px; padding: 7px 0; border-bottom: 1px solid var(--border, #bbc6ce); }
++.lab-graph-search-result > span { flex: 1 1 190px; min-width: 0; }
++.lab-graph-search-result small { display: block; font-size: .75rem; opacity: .75; overflow-wrap: anywhere; }
++@media (max-width: 850px) {
++  .lab-graph-main { grid-template-columns: minmax(0, 1fr); }
++  .lab-graph-main .lab-graph-canvas { min-height: 430px; }
++  .lab-graph-inspector { max-height: 300px; }
++}

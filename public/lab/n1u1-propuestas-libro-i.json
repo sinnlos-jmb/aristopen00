@@ -1,0 +1,514 @@
+{
+  "schema": "agora.lab.n1u1.propuestas.v0",
+  "fuente": {
+    "origen": "exportacion /api/labo/lectura - tags.unidades; sin acceso ni modificación de MariaDB",
+    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
+    "exportado": "2026-11-19T18:35:02.804Z",
+    "sha256_archivo": "ce288e1a0306c6dfb2c652e08220dcd5546214e01ac752246cbfae8011ebc733"
+  },
+  "criterios": {
+    "no_es_corpus": "Este archivo contiene propuestas editoriales no incorporadas al tagueo. Cargar siempre las entidades canónicas desde la API con su revisión.",
+    "tipos_arista_estructural": [
+      "contiene",
+      "articula"
+    ],
+    "relaciones_filosoficas_automaticas": false,
+    "norma_traduccion": "virtud completa en una vida entera",
+    "aristas_entre_macrounidades": "pendientes_de_revision_editorial"
+  },
+  "macrounidades_propuestas": [
+    {
+      "id": "macro:I-V",
+      "capitulos": "I.1–5",
+      "titulo": "Planteamiento de la investigación práctica",
+      "problema": "¿Qué bien buscamos en nuestras acciones, y cómo debe investigarse?",
+      "resultado": "La felicidad recibe un nombre compartido, pero su contenido sigue abierto a examen.",
+      "unit_ids": [
+        "proemio",
+        "metodo",
+        "felicidad_opiniones",
+        "modos_vida"
+      ],
+      "cantidad_unidades": 4,
+      "cantidad_subunidades": 38,
+      "estado": "propuesta_editorial_versión_lab"
+    },
+    {
+      "id": "macro:VI-VII",
+      "capitulos": "I.6–7",
+      "titulo": "Crítica y determinación del bien humano",
+      "problema": "¿Cómo determinar el bien humano sin reducirlo a una Idea universal?",
+      "resultado": "El argumento del érgon formula el bien humano como actividad del alma conforme a la virtud completa en una vida entera.",
+      "unit_ids": [
+        "idea_bien",
+        "forma_fin",
+        "ergon",
+        "esbozo_metodo"
+      ],
+      "cantidad_unidades": 4,
+      "cantidad_subunidades": 47,
+      "estado": "propuesta_editorial_versión_lab"
+    },
+    {
+      "id": "macro:VIII-XII",
+      "capitulos": "I.8–12",
+      "titulo": "Examen y determinaciones de la felicidad",
+      "problema": "¿Cómo se sostiene y precisa la definición frente a las opiniones, la fortuna y la vida entera?",
+      "resultado": "Se examinan su concordancia con las opiniones, sus condiciones, su estabilidad y su carácter digno de honor.",
+      "unit_ids": [
+        "confirmacion",
+        "adquisicion",
+        "solon",
+        "elogio"
+      ],
+      "cantidad_unidades": 4,
+      "cantidad_subunidades": 68,
+      "estado": "propuesta_editorial_versión_lab"
+    },
+    {
+      "id": "macro:XIII",
+      "capitulos": "I.13",
+      "titulo": "El alma y la transición hacia las virtudes",
+      "problema": "¿Qué distinciones del alma son necesarias para estudiar la virtud humana?",
+      "resultado": "Se distingue la participación en el logos y se prepara la investigación de las virtudes.",
+      "unit_ids": [
+        "alma_virtudes"
+      ],
+      "cantidad_unidades": 1,
+      "cantidad_subunidades": 22,
+      "estado": "propuesta_editorial_versión_lab"
+    }
+  ],
+  "momentos_propuestos_I_V": [
+    {
+      "id": "n1u:proemio:I",
+      "unidad_id": "proemio",
+      "orden": "I",
+      "titulo": "Fines de las acciones y pluralidad del bien",
+      "sub_ids": [
+        "1094a1-3",
+        "1094a3-6",
+        "1094a6-9"
+      ],
+      "explicacion": "La investigación comienza por la tendencia hacia el bien, distingue actividad y obra, y reconoce la pluralidad de fines.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:proemio:II",
+      "unidad_id": "proemio",
+      "orden": "II",
+      "titulo": "Jerarquía de actividades y fines",
+      "sub_ids": [
+        "1094a9-16",
+        "1094a16-18"
+      ],
+      "explicacion": "La subordinación de actividades permite ordenar los fines; la diferencia entre obra y actividad no cambia ese orden.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:proemio:III",
+      "unidad_id": "proemio",
+      "orden": "III",
+      "titulo": "El fin último como problema práctico",
+      "sub_ids": [
+        "1094a18-22",
+        "1094a22-24"
+      ],
+      "explicacion": "La condición de un fin querido por sí y la analogía del arquero justifican indagarlo, sin dar por demostrada su existencia.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:proemio:IV",
+      "unidad_id": "proemio",
+      "orden": "IV",
+      "titulo": "El bien humano y la política",
+      "sub_ids": [
+        "1094a24-26",
+        "1094a26-b3",
+        "1094b4-7",
+        "1094b7-10",
+        "1094b10-11"
+      ],
+      "explicacion": "La pregunta por el bien y su saber rector conduce a la política, al bien humano y al bien de la ciudad.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:metodo:I",
+      "unidad_id": "metodo",
+      "orden": "I",
+      "titulo": "El rigor correspondiente a la materia",
+      "sub_ids": [
+        "1094b11-14",
+        "1094b14-19",
+        "1094b19-22",
+        "1094b22-27"
+      ],
+      "explicacion": "La variabilidad de lo noble, lo justo y los bienes exige una exposición en esbozo y un rigor proporcional al objeto.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:metodo:II",
+      "unidad_id": "metodo",
+      "orden": "II",
+      "titulo": "Quién puede escuchar provechosamente",
+      "sub_ids": [
+        "1094b27-1095a2",
+        "1095a2-6",
+        "1095a6-11"
+      ],
+      "explicacion": "La educación, la experiencia y el gobierno de los deseos condicionan la utilidad de una investigación orientada a la acción.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:metodo:III",
+      "unidad_id": "metodo",
+      "orden": "III",
+      "titulo": "Cierre y transición del proemio",
+      "sub_ids": [
+        "1095a11-13"
+      ],
+      "explicacion": "El cierre remite a los tres asuntos iniciales y prepara la reanudación de la pregunta por la felicidad.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:felicidad_opiniones:I",
+      "unidad_id": "felicidad_opiniones",
+      "orden": "I",
+      "titulo": "La pregunta retomada y el acuerdo nominal",
+      "sub_ids": [
+        "1095a14-17",
+        "1095a17-20"
+      ],
+      "explicacion": "La política pregunta por el bien más alto; la mayoría coincide en llamarlo felicidad y asociarlo con vivir bien y obrar bien.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:felicidad_opiniones:II",
+      "unidad_id": "felicidad_opiniones",
+      "orden": "II",
+      "titulo": "Divergencias sobre qué es la felicidad",
+      "sub_ids": [
+        "1095a20-26",
+        "1095a26-28",
+        "1095a28-30"
+      ],
+      "explicacion": "Aparecen respuestas distintas, incluida la Idea del bien, y se delimita qué opiniones merece la pena investigar.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:felicidad_opiniones:III",
+      "unidad_id": "felicidad_opiniones",
+      "orden": "III",
+      "titulo": "Punto de partida y formación del oyente",
+      "sub_ids": [
+        "1095a30-b4",
+        "1095b4-8",
+        "1095b8-13"
+      ],
+      "explicacion": "La investigación parte de lo conocido para nosotros; la educación y el ejemplo de Hesíodo precisan sus condiciones.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:modos_vida:I",
+      "unidad_id": "modos_vida",
+      "orden": "I",
+      "titulo": "Las vidas propuestas y la vida de disfrute",
+      "sub_ids": [
+        "1095b14-16",
+        "1095b16-17",
+        "1095b17-19",
+        "1095b19-22"
+      ],
+      "explicacion": "La discusión de las opiniones se hace visible en los modos de vida; se presenta y cuestiona la vida de placer.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:modos_vida:II",
+      "unidad_id": "modos_vida",
+      "orden": "II",
+      "titulo": "El honor y la virtud en la vida política",
+      "sub_ids": [
+        "1095b22-23",
+        "1095b23-26",
+        "1095b26-30",
+        "1095b30-1096a3"
+      ],
+      "explicacion": "Del honor se pasa a la virtud, pero poseer una disposición sin ejercerla tampoco basta para la felicidad.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:modos_vida:III",
+      "unidad_id": "modos_vida",
+      "orden": "III",
+      "titulo": "La vida contemplativa queda diferida",
+      "sub_ids": [
+        "1096a4-5"
+      ],
+      "explicacion": "La tercera vida se menciona y se deja para un examen posterior.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "n1u:modos_vida:IV",
+      "unidad_id": "modos_vida",
+      "orden": "IV",
+      "titulo": "La riqueza como fin subordinado",
+      "sub_ids": [
+        "1096a5-10"
+      ],
+      "explicacion": "La vida de negocios y la riqueza son examinadas como medios buscados por otra cosa.",
+      "voz": "nuestra",
+      "estado": "propuesta_no_validada"
+    }
+  ],
+  "resumen_inventario": [
+    {
+      "id": "proemio",
+      "titulo": "Proemio: el bien y la política",
+      "tramos": [
+        [
+          "1094a1",
+          "1094b11"
+        ]
+      ],
+      "resumen": "Todo lo que hacemos busca algún bien. Los fines se ordenan unos bajo otros, y tiene que haber uno último, querido por sí mismo: el bien supremo. El saber que se ocupa de él es la política, porque dirige a todos los demás.",
+      "n_subunidades": 12,
+      "n_momentos_registrados": 0,
+      "n_relaciones_conceptuales": 29,
+      "n_remisiones_mapa": 0,
+      "n_sub_estado_corchete": 1
+    },
+    {
+      "id": "metodo",
+      "titulo": "Método: el rigor y el oyente",
+      "tramos": [
+        [
+          "1094b11",
+          "1095a13"
+        ]
+      ],
+      "resumen": "La ética no puede ser exacta como la matemática: habla en esbozo y de lo que pasa por lo general. Y no sirve a cualquiera: quien la escucha necesita experiencia y vivir según la razón, porque su fin es actuar, no solo saber.",
+      "n_subunidades": 8,
+      "n_momentos_registrados": 0,
+      "n_relaciones_conceptuales": 12,
+      "n_remisiones_mapa": 4,
+      "n_sub_estado_corchete": 0
+    },
+    {
+      "id": "felicidad_opiniones",
+      "titulo": "La felicidad: el nombre, las opiniones y el punto de partida",
+      "tramos": [
+        [
+          "1095a14",
+          "1095b13"
+        ]
+      ],
+      "resumen": "Todos llaman felicidad al bien más alto y dicen que es vivir bien y obrar bien. Pero no coinciden en qué es: unos dicen placer, riqueza u honor; los platónicos, un bien en sí. Para examinarlo hay que partir de lo que nos es conocido, y por eso hace falta haber sido bien criado.",
+      "n_subunidades": 8,
+      "n_momentos_registrados": 0,
+      "n_relaciones_conceptuales": 10,
+      "n_remisiones_mapa": 1,
+      "n_sub_estado_corchete": 0
+    },
+    {
+      "id": "modos_vida",
+      "titulo": "Los tres modos de vida",
+      "tramos": [
+        [
+          "1095b14",
+          "1096a10"
+        ]
+      ],
+      "resumen": "Lo que cada uno entiende por el bien se ve en la vida que lleva. Tres vidas sobresalen: la de disfrute, la política y la contemplativa. El placer es un bien de bestias; el honor depende de quien lo da; la virtud se puede tener durmiendo; la riqueza es útil y se busca por otra cosa. La vida contemplativa queda para más adelante.",
+      "n_subunidades": 10,
+      "n_momentos_registrados": 0,
+      "n_relaciones_conceptuales": 15,
+      "n_remisiones_mapa": 3,
+      "n_sub_estado_corchete": 0
+    },
+    {
+      "id": "idea_bien",
+      "titulo": "Crítica de la Idea del bien",
+      "tramos": [
+        [
+          "1096a11",
+          "1097a14"
+        ]
+      ],
+      "resumen": "Aristóteles examina el bien universal y cómo se dice. No hay una Idea común: el bien se dice con anterior y posterior, en todas las categorías y por muchas ciencias; lo en sí y lo eterno no agregan bondad; y aun los bienes por sí tienen definiciones distintas. ¿Cómo se dice, entonces? Desde uno, hacia uno o por analogía: la cuestión queda para otra filosofía. Aunque la Idea existiera, no sería realizable: el bien que se busca es el que se realiza, y el médico mira la salud de este hombre.",
+      "n_subunidades": 17,
+      "n_momentos_registrados": 6,
+      "n_relaciones_conceptuales": 21,
+      "n_remisiones_mapa": 19,
+      "n_sub_estado_corchete": 0
+    },
+    {
+      "id": "forma_fin",
+      "titulo": "La forma del fin: completo y autosuficiente",
+      "tramos": [
+        [
+          "1097a15",
+          "1097b21"
+        ]
+      ],
+      "resumen": "Antes de decir qué es la felicidad, se fija la forma del bien buscado: es el fin de todo lo realizable, completo (se elige siempre por sí y nunca por otra cosa) y autosuficiente (basta por sí solo para hacer digna de elección la vida).",
+      "n_subunidades": 11,
+      "n_momentos_registrados": 4,
+      "n_relaciones_conceptuales": 5,
+      "n_remisiones_mapa": 18,
+      "n_sub_estado_corchete": 0
+    },
+    {
+      "id": "ergon",
+      "titulo": "Argumento del érgon",
+      "tramos": [
+        [
+          "1097b22",
+          "1098a20"
+        ]
+      ],
+      "resumen": "De la pregunta por qué es la felicidad a su definición. Por analogía con los artífices y los órganos se busca la función propia del hombre; descartado lo común (vivir, sentir), queda la vida práctica de lo que tiene razón, tomada en ejercicio. El bien humano es actividad del alma según la virtud, y en una vida entera.",
+      "n_subunidades": 11,
+      "n_momentos_registrados": 4,
+      "n_relaciones_conceptuales": 15,
+      "n_remisiones_mapa": 19,
+      "n_sub_estado_corchete": 1
+    },
+    {
+      "id": "esbozo_metodo",
+      "titulo": "Esbozo y método",
+      "tramos": [
+        [
+          "1098a20",
+          "1098b8"
+        ]
+      ],
+      "resumen": "La definición es un bosquejo: el tiempo y otros la completarán. Se recuerda el rigor según la materia (el carpintero y el geómetra), se advierte que no en todo hay que pedir la causa y se distingue cómo se alcanzan los principios, que valen más de la mitad del todo.",
+      "n_subunidades": 8,
+      "n_momentos_registrados": 3,
+      "n_relaciones_conceptuales": 1,
+      "n_remisiones_mapa": 15,
+      "n_sub_estado_corchete": 0
+    },
+    {
+      "id": "confirmacion",
+      "titulo": "Confirmación por las opiniones",
+      "tramos": [
+        [
+          "1098b9",
+          "1099b8"
+        ]
+      ],
+      "resumen": "La definición se prueba también con lo que se dice de la felicidad. Concuerda con la división de los bienes y con el «vivir bien y obrar bien», y recoge lo que unos y otros buscan en ella: la virtud, pero en ejercicio y no solo como disposición; el placer, que no se le agrega como un amuleto, porque las acciones según la virtud son placenteras por sí mismas; y los bienes exteriores, que necesita como instrumentos. La felicidad es lo mejor, lo más noble y lo más placentero: las mejores actividades, o la mejor de ellas.",
+      "n_subunidades": 17,
+      "n_momentos_registrados": 7,
+      "n_relaciones_conceptuales": 13,
+      "n_remisiones_mapa": 30,
+      "n_sub_estado_corchete": 0
+    },
+    {
+      "id": "adquisicion",
+      "titulo": "Cómo se adquiere la felicidad",
+      "tramos": [
+        [
+          "1099b9",
+          "1100a9"
+        ]
+      ],
+      "resumen": "La pregunta por cómo llega la felicidad distingue aprendizaje, habituación y práctica de destino divino y fortuna. Aun adquirida mediante la virtud, la felicidad es divina y ampliamente compartible. La argumentación la identifica con cierta actividad del alma según la virtud; los demás bienes son necesarios o instrumentales. La política forma ciudadanos para lo noble, pero la actividad y una vida entera excluyen de la felicidad al niño y hacen problemática la vida de Príamo.",
+      "n_subunidades": 14,
+      "n_momentos_registrados": 6,
+      "n_relaciones_conceptuales": 3,
+      "n_remisiones_mapa": 6,
+      "n_sub_estado_corchete": 0
+    },
+    {
+      "id": "solon",
+      "titulo": "Solón y la vida entera",
+      "tramos": [
+        [
+          "1100a10",
+          "1101b9"
+        ]
+      ],
+      "resumen": "En I.10 la pregunta de Solón conduce a considerar la felicidad de los vivos, la firmeza de la actividad virtuosa y la incidencia de la fortuna. En I.11 se examina si las vicisitudes de descendientes y amigos afectan a los difuntos y se concluye que su eventual influencia no altera su felicidad.",
+      "n_subunidades": 28,
+      "n_momentos_registrados": 10,
+      "n_relaciones_conceptuales": 0,
+      "n_remisiones_mapa": 0,
+      "n_sub_estado_corchete": 0
+    },
+    {
+      "id": "elogio",
+      "titulo": "La felicidad: ¿elogiable u honorable?",
+      "tramos": [
+        [
+          "1101b10",
+          "1102a4"
+        ]
+      ],
+      "resumen": "La felicidad no se cuenta entre las capacidades ni se elogia como la virtud: se proclama bienaventurada, como algo digno de honor y completo. El capítulo examina el carácter referencial del elogio, la defensa del placer de Eudoxo y la felicidad como principio y causa de los bienes.",
+      "n_subunidades": 9,
+      "n_momentos_registrados": 4,
+      "n_relaciones_conceptuales": 0,
+      "n_remisiones_mapa": 0,
+      "n_sub_estado_corchete": 0
+    },
+    {
+      "id": "alma_virtudes",
+      "titulo": "Partes del alma y división de las virtudes",
+      "tramos": [
+        [
+          "1102a5",
+          "1103a10"
+        ],
+        [
+          "1098a3",
+          "1098a5"
+        ]
+      ],
+      "resumen": "La felicidad como actividad del alma según virtud completa conduce al examen político del alma, a la distinción de sus partes y a la división entre virtudes dianoéticas y éticas.",
+      "n_subunidades": 22,
+      "n_momentos_registrados": 8,
+      "n_relaciones_conceptuales": 0,
+      "n_remisiones_mapa": 0,
+      "n_sub_estado_corchete": 0
+    }
+  ],
+  "validaciones": {
+    "unidades": 13,
+    "subunidades": 175,
+    "unidades_articuladas": 9,
+    "momentos_registrados": 52,
+    "subunidades_con_momento_registrado": 137,
+    "subunidades_sin_momento_registrado": 38,
+    "relaciones_conceptuales_en_subunidades": 124,
+    "remisiones_mapa": 115,
+    "remisiones_mapa_validas": 115,
+    "referencias_mapa_por_tipo": {
+      "sub": 58,
+      "unidad": 28,
+      "super": 29
+    },
+    "estados_textuales": {
+      "seguro": 173,
+      "corchete": 2
+    },
+    "estados_editoriales": {
+      "unidades_propuesto": 13,
+      "subunidades_propuesto": 175
+    }
+  }
+}

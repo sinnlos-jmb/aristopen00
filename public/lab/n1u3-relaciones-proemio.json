@@ -1,0 +1,103 @@
+{
+  "schema": "agora.lab.n1u3.relaciones_argumentativas.v1",
+  "fuente": {
+    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
+    "unidad_id": "proemio",
+    "base": "Exportación de etiquetas de N1-U.2, identificadores y títulos; verificar cada interpretación con la lectura bilingüe de la revisión activa"
+  },
+  "estado": "propuesta_no_validada",
+  "criterio": "Hipótesis de articulación entre subunidades; las aristas no se derivan del orden textual, ni de las remisiones mapa, ni de relaciones conceptuales de MariaDB",
+  "nota": "La subunidad 1094b10-11 queda sin arista propuesta en esta primera ronda. La ausencia de arista no implica independencia argumentativa.",
+  "relaciones": [
+    {
+      "id": "r01",
+      "de": "1094a1-3",
+      "a": "1094a3-6",
+      "nombre": "distingue formas de fin",
+      "tipo": "especifica",
+      "fundamento": "La afirmación inicial de la orientación al bien se precisa mediante la diferencia entre la actividad y su producto: no se introduce otro bien supremo, sino una distinción en la forma del fin.",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "r02",
+      "de": "1094a3-6",
+      "a": "1094a6-9",
+      "nombre": "abre pluralidad de fines",
+      "tipo": "multiplica",
+      "fundamento": "La distinción de fines de actividades y obras prepara el reconocimiento de que los fines son múltiples, según las artes y acciones consideradas.",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "r03",
+      "de": "1094a6-9",
+      "a": "1094a9-16",
+      "nombre": "ordena fines",
+      "tipo": "ordena",
+      "fundamento": "De la pluralidad de fines se pasa a una relación de subordinación entre artes y actividades; pluralidad no equivale a ausencia de orden.",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "r04",
+      "de": "1094a9-16",
+      "a": "1094a16-18",
+      "nombre": "acota la jerarquía",
+      "tipo": "acota",
+      "fundamento": "La distinción entre actividad y obra no altera la prioridad de los fines rectores: esta subunidad matiza el argumento de subordinación.",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "r05",
+      "de": "1094a9-16",
+      "a": "1094a18-22",
+      "nombre": "plantea el fin último",
+      "tipo": "plantea",
+      "fundamento": "La jerarquía de fines habilita la pregunta condicional por un fin querido por sí mismo. La arista no presupone que Aristóteles haya demostrado ya su existencia.",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "r06",
+      "de": "1094a18-22",
+      "a": "1094a22-24",
+      "nombre": "motiva su búsqueda",
+      "tipo": "motiva",
+      "fundamento": "El problema del fin último recibe una motivación práctica con la imagen de los arqueros y el blanco: conocer el fin orienta la acción.",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "r07",
+      "de": "1094a22-24",
+      "a": "1094a24-26",
+      "nombre": "formula el programa",
+      "tipo": "formula",
+      "fundamento": "La comparación con el blanco conduce a precisar qué es el bien buscado y a qué ciencia corresponde estudiarlo.",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "r08",
+      "de": "1094a24-26",
+      "a": "1094a26-b3",
+      "nombre": "identifica el saber rector",
+      "tipo": "identifica",
+      "fundamento": "El programa de determinar la ciencia del bien se responde provisionalmente con la política como saber arquitectónico respecto de otras capacidades.",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "r09",
+      "de": "1094a26-b3",
+      "a": "1094b4-7",
+      "nombre": "determina el bien humano",
+      "tipo": "determina",
+      "fundamento": "El carácter rector de la política permite presentar su fin como comprensivo de los otros fines y caracterizarlo como bien humano.",
+      "estado": "propuesta_no_validada"
+    },
+    {
+      "id": "r10",
+      "de": "1094b4-7",
+      "a": "1094b7-10",
+      "nombre": "amplía la escala política",
+      "tipo": "amplia",
+      "fundamento": "La referencia al bien humano abre la comparación entre el bien de un individuo y el bien de la ciudad, sin confundir sus escalas.",
+      "estado": "propuesta_no_validada"
+    }
+  ]
+}

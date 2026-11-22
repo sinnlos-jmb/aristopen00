@@ -1,0 +1,367 @@
+diff --git a/docs/EXPERIMENTO_RECONOCIMIENTO_V1.md b/docs/EXPERIMENTO_RECONOCIMIENTO_V1.md
+new file mode 100644
+index 0000000..b0564e6
+--- /dev/null
++++ b/docs/EXPERIMENTO_RECONOCIMIENTO_V1.md
+@@ -0,0 +1,58 @@
++# Ágora · Laboratorio — Preguntas de control (etapa 1)
++
++## Propósito
++
++Observar **por qué** una pregunta activa determinados conceptos e intenciones antes de evaluar el texto de respuesta. Este parche extiende el **Inspector del motor** que ya existía; no duplica sus tablas de ranking ni crea un segundo chatbot.
++
++Se compara la salida efectiva de `analyze()` con **cinco expectativas editoriales provisionales**. Los resultados están calculados en la interfaz al cargar el Inspector. El botón **Inspeccionar** ejecuta la pregunta real en `simulate()`, dejando visibles el diagnóstico de FAQ, los descartes, el margen, el plan y la vista previa ya ofrecidos por el laboratorio. La exportación JSON de una prueba guiada incluye `questionAudit`.
++
++## Alcance y límites
++
++- `public/js/lab/questionCases.js`: casos y evaluación pura, sin dependencias de MariaDB ni efectos secundarios.
++- `public/js/views/labQuestionBench.js`: tabla de contraste que reutiliza CSS existente.
++- `public/js/views/lab.js`: incorpora tabla y botón de inspección, reutilizando el flujo del inspector.
++- `public/scripts/check-question-diagnostic.mjs`: test de regresión y de discrepancia intencional.
++- `e2e/tests/preguntas-control.spec.mjs`: prueba de Chromium (escritorio y móvil) con la fixture de Playwright existente.
++- `public/package.json`: `npm run test:questions`, y las verificaciones también se incluyen en `test:views`.
++
++**No se cambian** `analyze.js`, `detect.js`, `bot.js`, FAQs, datos de MariaDB, traducciones o trayectos.
++
++La comparación observa solo reconocimiento léxico e intención: un resultado de «Coincide» **no prueba** que la FAQ seleccionada, la respuesta o el trayecto sean correctos. El campo `primaryMode: null` expresa **criterio no fijado**, no la expectativa de que el motor no detecte un modo. Los términos que no aparecen como activadores no deben declararse «desconocidos para el bot completo»: otros mecanismos de detección pueden intervenir posteriormente.
++
++## Resultado de referencia al preparar el parche
++
++| Pregunta | Expectativa | Resultado de `analyze()` | Evaluación |
++|---|---|---|---|
++| ¿Qué es la naturaleza? | phusis / definir | phusis / definir | coincide |
++| ¿Qué es la phýsis? | phusis / definir | sin concepto / definir | diverge |
++| ¿Qué significa areté? | arete / definir | arete / definir | coincide |
++| ¿Cómo se relacionan naturaleza y virtud? | phusis, arete / relacionar | phusis, arete / relacionar | coincide |
++| ¿La felicidad es contemplación? | eudaimonia, theoria / modo pendiente | eudaimonia, theoria / sin modo | coincide en lo evaluado |
++
++La discrepancia de `phýsis` está **documentada, no corregida**: será útil para evaluar la normalización y los sinónimos cuando discutamos el léxico.
++
++## Cómo probar
++
++Desde la carpeta `public`:
++
++```sh
++npm run test:questions
++npm run test:views
++```
++
++Luego abrir `#/lab/motor` y pulsar **Inspeccionar** en una pregunta de control. En un PR, GitHub Actions ejecutará el nuevo caso de Playwright en escritorio y móvil. **Esa ejecución todavía no se ha realizado en este entorno**.
++
++## Fase posterior: dos FAQ curadas
++
++Mantener **separados** los criterios y resultados:
++
++1. Identificación de la pregunta: forma, conceptos, modo y selección de FAQ.
++2. Construcción del trayecto: nodos seleccionados, aristas, dirección, relaciones, referencias textuales, fuentes y voz editorial.
++3. Justificación: por qué se aceptó una conexión y por qué se descartaron alternativas, tanto cuando el recorrido coincide como cuando diverge de la FAQ curada.
++4. Resultado discursivo: calidad de la respuesta producida, **sin usarla como sustituto de la evaluación lógica**.
++
++Las FAQ curadas no se importan ni se alteran en esta primera etapa. Sus trayectos tampoco se toman como una verdad mecánica que el motor deba copiar; serán casos de contraste editorial y discusión.
++
++## Compatibilidad y verificación
++
++El parche fue montado sobre una copia reconstruida de los archivos previamente compartidos, con las refactorizaciones del Laboratorio y de utilidades aplicadas. El HEAD remoto de GitHub no estuvo accesible desde este entorno. Antes de aplicarlo en otra versión, ejecutar `git apply --check` y validar la suite de Playwright del PR.
+diff --git a/e2e/tests/preguntas-control.spec.mjs b/e2e/tests/preguntas-control.spec.mjs
+new file mode 100644
+index 0000000..f3ef3c6
+--- /dev/null
++++ b/e2e/tests/preguntas-control.spec.mjs
+@@ -0,0 +1,15 @@
++import { test, expect } from '@playwright/test';
++
++test('Laboratorio documenta una divergencia léxica y deja inspeccionar la decisión del motor', async ({ page }) => {
++  const errors = [];
++  page.on('pageerror', error => errors.push(error.message));
++  await page.goto('/#/lab/motor', { waitUntil: 'domcontentloaded' });
++  await expect(page.locator('#lab-question-bench')).toBeVisible();
++  await expect(page.locator('#lab-question-bench')).toContainText('¿Qué es la phýsis?');
++  await page.locator('[data-question-case="physis-acentuada"]').click();
++  await expect(page.locator('#lab-input')).toHaveValue('¿Qué es la phýsis?');
++  await expect(page.locator('#lab-json')).toContainText('"questionAudit"');
++  await expect(page.locator('#lab-json')).toContainText('"missing"');
++  await expect(page.locator('#lab-diagnosis')).toContainText('Decisión del detector');
++  expect(errors).toEqual([]);
++});
+diff --git a/public/js/lab/questionCases.js b/public/js/lab/questionCases.js
+new file mode 100644
+index 0000000..db247d9
+--- /dev/null
++++ b/public/js/lab/questionCases.js
+@@ -0,0 +1,74 @@
++import { analyze } from './analyze.js';
++
++// Hipótesis editoriales de prueba. No son verdades del corpus ni trayectos prescriptivos.
++// En una fase posterior se podrán añadir referencias a FAQ curadas y criterios de recorrido.
++export const QUESTION_CASES = Object.freeze([
++  {
++    id: 'naturaleza',
++    pregunta: '¿Qué es la naturaleza?',
++    expected: { conceptIds: ['phusis'], primaryMode: 'definir' },
++    criterio: '«Naturaleza» debe activar phusis en una pregunta de definición.',
++  },
++  {
++    id: 'physis-acentuada',
++    pregunta: '¿Qué es la phýsis?',
++    expected: { conceptIds: ['phusis'], primaryMode: 'definir' },
++    criterio: 'La grafía transliterada acentuada debería reconocerse igual que «naturaleza».',
++  },
++  {
++    id: 'arete',
++    pregunta: '¿Qué significa areté?',
++    expected: { conceptIds: ['arete'], primaryMode: 'definir' },
++    criterio: 'Reconocimiento del término griego transliterado e intención definitoria.',
++  },
++  {
++    id: 'relacion',
++    pregunta: '¿Cómo se relacionan naturaleza y virtud?',
++    expected: { conceptIds: ['phusis', 'arete'], primaryMode: 'relacionar' },
++    criterio: 'Identificar ambos términos y priorizar relación frente al «cómo» genérico.',
++  },
++  {
++    id: 'contemplacion',
++    pregunta: '¿La felicidad es contemplación?',
++    expected: { conceptIds: ['eudaimonia', 'theoria'], primaryMode: null },
++    criterio: 'Se verifica la detección conceptual; la interpretación de una pregunta polar queda abierta.',
++  },
++]);
++
++// Compara reconocimiento léxico y de intención, no corrección filológica ni calidad del diálogo.
++// Aceptar un análisis externo facilita contrastar la salida de simulate() sin volver a procesar.
++export function evaluateQuestionCase(questionCase, analysis = analyze(questionCase.pregunta)) {
++  const expectedIds = [...new Set(questionCase.expected.conceptIds)];
++  const foundIds = [...new Set(analysis.conceptos.map(c => c.id))];
++  const missing = expectedIds.filter(id => !foundIds.includes(id));
++  const unexpected = foundIds.filter(id => !expectedIds.includes(id));
++  const expectedMode = questionCase.expected.primaryMode;
++  const modeEvaluated = expectedMode !== null && expectedMode !== undefined;
++  const actualMode = analysis.primaryMode?.id || null;
++  const modeMatches = modeEvaluated ? expectedMode === actualMode : null;
++  const conceptMatches = missing.length === 0 && unexpected.length === 0;
++
++  return {
++    id: questionCase.id,
++    pregunta: questionCase.pregunta,
++    criterio: questionCase.criterio,
++    expected: { conceptIds: expectedIds, primaryMode: expectedMode },
++    observed: {
++      normalized: analysis.normalized,
++      conceptIds: foundIds,
++      // Las palabras son evidencias que analyze() reporta, no una explicación semántica de su elección.
++      triggers: analysis.conceptos.map(c => ({ word: c.word, conceptId: c.id })),
++      modes: analysis.modos.map(m => m.id),
++      primaryMode: actualMode,
++    },
++    checks: {
++      conceptMatches,
++      missing,
++      unexpected,
++      modeEvaluated,
++      modeMatches,
++      agrees: conceptMatches && modeMatches !== false,
++    },
++    level: 'reconocimiento_lexico',
++  };
++}
+diff --git a/public/js/views/lab.js b/public/js/views/lab.js
+index b710426..c052f1b 100644
+--- a/public/js/views/lab.js
++++ b/public/js/views/lab.js
+@@ -1,6 +1,8 @@
+ import { renderCatalogHeader, renderCatalogCard } from './shared.js';
+ import { renderTrajectoriesView } from './labTrajectoriesView.js';
+ import { renderAuditView } from './labAuditView.js';
++import { renderQuestionBench } from './labQuestionBench.js';
++import { QUESTION_CASES, evaluateQuestionCase } from '../lab/questionCases.js';
+ import { simulate } from '../lab/simulate.js';
+ import { buildAllTrajectories } from '../lab/trajectories.js';
+ import { esc } from '../ui.js';
+@@ -108,6 +110,7 @@ export function createLabView(App, opts = {}) {
+ 
+   function renderExp1() {
+     return `
++    ${renderQuestionBench()}
+     <section class="lab-card">
+     <h2>Entrada</h2>
+     <p class="hint">Probá una pregunta para inspeccionar conceptos, intención, selección de FAQ y el recorrido real del diálogo.</p>
+@@ -127,7 +130,7 @@ export function createLabView(App, opts = {}) {
+     <div class="lab-empty">—</div>
+     </div>
+     </div>
+-    <div id="lab-diagnosis" class="lab-diagnostics" aria-live="polite"></div>
++    <div id="lab-diagnosis" class="lab-diagnostics" aria-live="polite" tabindex="-1"></div>
+     <div class="lab-panel lab-panel--spaced">
+     <div class="lab-panel__label">Salida estructurada</div>
+     <div class="lab-toolbar"><button type="button" class="lab-btn lab-btn--ghost" id="lab-copy">Copiar JSON</button><button type="button" class="lab-btn lab-btn--ghost" id="lab-export">Exportar prueba</button><button type="button" class="lab-btn lab-btn--ghost" id="lab-export-history">Exportar historial</button><button type="button" class="lab-btn lab-btn--ghost" id="lab-clear-history">Borrar historial</button></div>
+@@ -248,10 +251,13 @@ function render() {
+     const helpEl     = el.querySelector('#lab-help');
+     const historyEl  = el.querySelector('#lab-history');
+ 
+-    function renderResult(simulation) {
+-      latestResult = simulation;
++    function renderResult(simulation, questionCase = null) {
+       const diagnostic = simulation.diagnosis;
+       const result = diagnostic.analysis;
++      // La evaluación editorial se añade solo a una prueba dirigida, sin cambiar simulate() ni el motor.
++      latestResult = questionCase
++        ? { ...simulation, questionAudit: evaluateQuestionCase(questionCase, result) }
++        : simulation;
+       conceptsEl.innerHTML = `<div class="lab-panel__label">Conceptos detectados</div>${
+       result.conceptos.length
+       ? result.conceptos.map(c => `<span class="lab-chip">${esc(c.word)} <small>→ ${esc(c.id)}</small></span>`).join('')
+@@ -262,7 +268,7 @@ function render() {
+       ? result.modos.map(m => `<span class="lab-chip lab-chip--mode">${esc(m.label)} <small>${esc(m.id)}${m.id === diagnostic.primaryMode ? ' · principal' : ' · secundario'}</small></span>`).join('')
+       : '<div class="lab-empty">Ningún modo reconocido.</div>'
+       }`;
+-      jsonEl.textContent = JSON.stringify(simulation, null, 2);
++      jsonEl.textContent = JSON.stringify(latestResult, null, 2);
+       const labels = { safe: 'Coincidencia segura', weak: 'Coincidencia débil · concepto', ambiguous: 'Pregunta ambigua', none: 'Sin resultado' };
+       const selected = diagnostic.candidates.find(c => c.id === diagnostic.goal?.id && diagnostic.goal?.type === 'faq');
+       el.querySelector('#lab-diagnosis').innerHTML = `
+@@ -326,13 +332,29 @@ function render() {
+       }).join('') || '<p class="lab-empty">Todavía no hay pruebas.</p>';
+     }
+ 
++    function runQuestion(text, questionCase = null) {
++      const result = simulate(S, text);
++      renderResult(result, questionCase);
++      pushHistory(text, latestResult);
++    }
++
++    el.querySelector('#lab-question-bench').addEventListener('click', e => {
++      const button = e.target.closest('[data-question-case]');
++      if (!button) return;
++      const item = QUESTION_CASES.find(c => c.id === button.dataset.questionCase);
++      if (!item) return;
++      input.value = item.pregunta;
++      runQuestion(item.pregunta, item);
++      const diagnosisPanel = el.querySelector('#lab-diagnosis');
++      diagnosisPanel?.focus({ preventScroll: true });
++      diagnosisPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
++    });
++
+     form.addEventListener('submit', (e) => {
+       e.preventDefault();
+       const text = input.value.trim();
+       if (!text) return;
+-      const result = simulate(S, text);
+-      renderResult(result);
+-      pushHistory(text, result);
++      runQuestion(text);
+     });
+ 
+     el.querySelector('#lab-clear').addEventListener('click', () => {
+@@ -351,16 +373,16 @@ function render() {
+       if (!btn) return;
+       input.value = btn.dataset.example;
+       input.focus();
+-      const result = simulate(S, input.value);
+-      renderResult(result);
+-      pushHistory(input.value, result);
++      runQuestion(input.value);
+     });
+ 
+     historyEl.addEventListener('click', e => {
+       const item = e.target.closest('[data-history]');
+       if (!item) return;
+       input.value = item.dataset.history;
+-      renderResult(simulate(S, input.value));
++      const previous = history.find(h => h.text === input.value);
++      const previousCase = QUESTION_CASES.find(c => c.id === previous?.result?.questionAudit?.id) || null;
++      renderResult(simulate(S, input.value), previousCase);
+       lastQuestion = input.value;
+       writeSession('last-question', lastQuestion);
+     });
+diff --git a/public/js/views/labQuestionBench.js b/public/js/views/labQuestionBench.js
+new file mode 100644
+index 0000000..0159d3f
+--- /dev/null
++++ b/public/js/views/labQuestionBench.js
+@@ -0,0 +1,34 @@
++import { esc } from '../ui.js';
++import { QUESTION_CASES, evaluateQuestionCase } from '../lab/questionCases.js';
++
++export function renderQuestionBench() {
++  const evaluations = QUESTION_CASES.map(item => evaluateQuestionCase(item));
++  const agreements = evaluations.filter(e => e.checks.agrees).length;
++  const rows = evaluations.map(e => {
++    const expectedMode = e.expected.primaryMode || '— (no evaluado)';
++    const observedMode = e.observed.primaryMode || '—';
++    const conceptStatus = e.checks.conceptMatches ? 'Coincide' : `Diverge: faltan ${e.checks.missing.join(', ') || '—'}; sobran ${e.checks.unexpected.join(', ') || '—'}`;
++    const modeStatus = e.checks.modeEvaluated
++      ? (e.checks.modeMatches ? 'Coincide' : 'Diverge')
++      : 'Sin criterio editorial todavía';
++    const triggerWords = e.observed.triggers.map(t => `${t.word} → ${t.conceptId}`).join(' · ') || 'Ninguno';
++    return `<tr>
++      <td><strong>${esc(e.pregunta)}</strong><p class="hint">${esc(e.criterio)}</p></td>
++      <td>${esc(e.expected.conceptIds.join(', '))}<br><small>Modo: ${esc(expectedMode)}</small></td>
++      <td>${esc(e.observed.conceptIds.join(', ') || 'Ninguno')}<br><small>Modo: ${esc(observedMode)}</small><br><small>Activadores: ${esc(triggerWords)}</small></td>
++      <td>${esc(conceptStatus)}<br><small>${esc(modeStatus)}</small></td>
++      <td><button type="button" class="lab-btn lab-btn--ghost" data-question-case="${esc(e.id)}">Inspeccionar</button></td>
++    </tr>`;
++  }).join('');
++
++  return `<section class="lab-card" id="lab-question-bench">
++    <h2>Preguntas de control · etapa 1</h2>
++    <p class="hint">${agreements} de ${evaluations.length} coinciden con los criterios provisorios de reconocimiento.
++    Esta comparación examina solo <code>analyze()</code>: no mide verdad filosófica, calidad de respuesta ni acierto del trayecto.</p>
++    <div class="lab-ranking-wrap"><table class="lab-ranking">
++      <thead><tr><th>Pregunta y criterio</th><th>Esperado</th><th>Detectado</th><th>Evaluación</th><th>Detalle</th></tr></thead>
++      <tbody>${rows}</tbody>
++    </table></div>
++    <p class="hint">«Inspeccionar» carga la pregunta en el Inspector del motor para ver su decisión de FAQ, alternativas y plan; esas fases no se puntúan en esta etapa.</p>
++  </section>`;
++}
+diff --git a/public/package.json b/public/package.json
+index b1d6026..6ad03fb 100644
+--- a/public/package.json
++++ b/public/package.json
+@@ -1,6 +1,7 @@
+ {
+   "type": "module",
+   "scripts": {
+-    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs"
++    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs",
++    "test:questions": "node scripts/check-question-diagnostic.mjs"
+   }
+ }
+diff --git a/public/scripts/check-question-diagnostic.mjs b/public/scripts/check-question-diagnostic.mjs
+new file mode 100644
+index 0000000..80bed21
+--- /dev/null
++++ b/public/scripts/check-question-diagnostic.mjs
+@@ -0,0 +1,34 @@
++// Pruebas del experimento editorial: registran divergencias sin arreglar el léxico del motor.
++import assert from 'node:assert/strict';
++import { QUESTION_CASES, evaluateQuestionCase } from '../js/lab/questionCases.js';
++import { renderQuestionBench } from '../js/views/labQuestionBench.js';
++import { analyze } from '../js/lab/analyze.js';
++
++const byId = id => evaluateQuestionCase(QUESTION_CASES.find(item => item.id === id));
++const nature = byId('naturaleza');
++assert.equal(nature.checks.agrees, true);
++assert.deepEqual(nature.observed.triggers, [{ word: 'naturaleza', conceptId: 'phusis' }]);
++
++const physis = byId('physis-acentuada');
++assert.equal(physis.checks.agrees, false);
++assert.deepEqual(physis.checks.missing, ['phusis']);
++assert.equal(physis.observed.primaryMode, 'definir');
++
++const relation = byId('relacion');
++assert.equal(relation.checks.agrees, true);
++assert.equal(relation.observed.primaryMode, 'relacionar');
++
++const polar = byId('contemplacion');
++assert.equal(polar.checks.modeEvaluated, false);
++assert.equal(polar.checks.modeMatches, null);
++assert.deepEqual(polar.observed.conceptIds, ['eudaimonia', 'theoria']);
++
++assert.deepEqual(byId('arete').observed.conceptIds, ['arete']);
++assert.equal(analyze('¿Qué es la phýsis?').normalized, 'que es la physis');
++
++const html = renderQuestionBench();
++assert.match(html, /Preguntas de control/);
++assert.match(html, /data-question-case="physis-acentuada"/);
++assert.match(html, /Diverge/);
++assert.doesNotMatch(html, /<style|\sstyle=/i);
++console.log('OK: 5 preguntas de control, expectativas y divergencias explícitas (sin alterar el motor).');

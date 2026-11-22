@@ -1,6 +1,7 @@
 import { esc } from '../ui.js';
 import { resolveCitation } from './text.js';
 import { chapterNavigation, renderChapter } from './render.js';
+import { controlesTamanoLector, actualizarLectura, cambiarTamanoLector } from './fontPreferences.js';
 
 export function createPassageModal(App) {
   const dialog = document.createElement('dialog');
@@ -16,6 +17,8 @@ export function createPassageModal(App) {
   dialog.addEventListener('cancel', () => { if (opener?.isConnected) opener.focus(); });
   dialog.addEventListener('click', e => {
     if (e.target === dialog || e.target.closest('[data-reader-close]')) { close(); return; }
+    const adjustment = e.target.closest('[data-reader-font-step]');
+    if (adjustment) { cambiarTamanoLector(dialog, Number(adjustment.dataset.readerFontStep)); return; }
     const direction = e.target.closest('[data-reader-direction]');
     if (direction && book) {
       const index = book.chapters.findIndex(c => c.number === chapterNumber);
@@ -31,10 +34,11 @@ export function createPassageModal(App) {
     const target = passage?.chapter === chapterNumber ? passage : null;
     dialog.innerHTML = `<header class="reader-modal-head"><div><h2 id="reader-modal-title" tabindex="-1">Libro ${esc(book.id)} · Capítulo ${chapterNumber}</h2>
       <p>${target ? `${esc(target.title)} · ${esc(target.id)}` : esc(book.title)}</p></div><button type="button" data-reader-close aria-label="Cerrar lectura">×</button></header>
-      ${chapterNavigation(book, chapterNumber)}
+      <div class="reader-modal-bar">${chapterNavigation(book, chapterNumber)}${controlesTamanoLector()}</div>
       ${target?.approximate ? '<p class="reader-anchor-note">Este pasaje aún no tiene subdivisión tagueada. Se resalta el párrafo completo localizado por las marcas Bekker del original.</p>' : ''}
       ${target && (!target.es.length || !target.gr.length) ? '<p class="reader-anchor-note">El fragmento exacto se resalta en la lengua con ancla disponible; la otra columna conserva el párrafo paralelo completo.</p>' : ''}
       <div class="reader-modal-body" tabindex="0" aria-label="Texto del capítulo en castellano y griego">${renderChapter(chapter, target)}</div>`;
+    actualizarLectura(dialog);
     dialog.querySelector('#reader-modal-title').focus();
     const body = dialog.querySelector('.reader-modal-body');
     body.scrollTop = 0;

@@ -1,0 +1,2308 @@
+{
+  "version": 1,
+  "versionCorpus": "tags v7.0",
+  "semantica": {
+    "identidad": "Mismo ID estático y funcional: misma entidad conceptual, facetas documentales distintas.",
+    "remision": "remite_a: vínculo editorial explícito, no identidad automática.",
+    "evidencia": "Tag de párrafo o subunidad: índice documental; no prueba por sí solo una relación filosófica."
+  },
+  "resumen": {
+    "conceptosEstaticos": 221,
+    "nodosFuncionales": 67,
+    "identidadesCompartidas": 58,
+    "soloEstaticos": 163,
+    "soloFuncionales": 9,
+    "categoriasFuncionales": 6,
+    "remisionesExplicitas": 38,
+    "aristasFuncionales": 80,
+    "unidades": 13,
+    "subunidades": 175,
+    "parrafosEtiquetados": 52,
+    "faqs": 31,
+    "conceptosClaveSubunidad": 608,
+    "relacionesSubunidad": 124,
+    "destinosReferencianArista": 60,
+    "estadosParrafo": {
+      "propuesto": 52
+    },
+    "nivelesTag": {
+      "central": 154,
+      "presente": 340,
+      "mencion": 117
+    },
+    "errores": 0,
+    "revisiones": 11
+  },
+  "identidades": [
+    {
+      "id": "actividad",
+      "estatica": false,
+      "funcional": true,
+      "clase": "solo_funcional",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "energeia",
+        "energeia_actividad",
+        "ergon",
+        "zoe#praktike",
+        "analogia"
+      ]
+    },
+    {
+      "id": "actividades",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "adikia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "agalmatopoiike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "agathon",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "idea_agathou",
+        "morphe#idea"
+      ]
+    },
+    {
+      "id": "agroikia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "aidos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "aisthesis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "akolasia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "akrasia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "akribeia",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "methodos",
+        "typos",
+        "hos_epi_to_polu",
+        "hoti",
+        "dioti",
+        "katholou"
+      ]
+    },
+    {
+      "id": "akroates",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "alazoneia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "aletheia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "alogon",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "anaisthesia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "analogia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "andreia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "aneleutheria",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "anthropos",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "vivientes",
+        "idion"
+      ]
+    },
+    {
+      "id": "aorgesia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "apeiron",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "aph_henos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "aphilotimia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "arche",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "gnorimon",
+        "epagoge",
+        "aph_henos"
+      ]
+    },
+    {
+      "id": "areskeia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "arete",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "excelencia"
+      ]
+    },
+    {
+      "id": "arete_dianoetike",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "arete_ethike",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "arete_phusike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "arete_theia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "ariston",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "askesis",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "asotia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "astheneia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "atuchia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "auletike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "autarkes",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "banausia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bien_fin",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bienes",
+      "estatica": false,
+      "funcional": true,
+      "clase": "solo_funcional",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "agathon#bienes",
+        "bienes_sede",
+        "bienes_valor"
+      ]
+    },
+    {
+      "id": "bienes_categoria",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bienes_eleccion",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bienes_sede",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bienes_valor",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bios",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bios_apolaustikos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bios_politikos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bios_theoretikos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bomolochia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "boulesis",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bouleusis",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "bouleutike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "chalinopoiike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "chara",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "chaunotes",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "chrematistes",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "chresimon",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "comunidad",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "deilia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "diaita",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "dianemetike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "dikaiosune",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "dikaiosune_holike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "dikaiosune_merike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "dikastike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "diorthotike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "dioti",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "dunamis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "energeia_acto"
+      ]
+    },
+    {
+      "id": "dunamis_capacidad",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "dunamis_potencia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "duskolia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "eironeia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "ekta",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "eleos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "eleutheriotes",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "empeiria",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "en_psuche",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "endoxa",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "sunodia"
+      ]
+    },
+    {
+      "id": "energeia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "energeia_actividad",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "energeia_acto",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "enkrateia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "enkrateia_akrasia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "epagoge",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "epaineton",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "epimeleia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "episteme",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "epistemonikon",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "epithumia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "ergon",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "ergon_funcion",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "ergon_obra",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "ethnos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "ethos",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "ethos_charakter"
+      ]
+    },
+    {
+      "id": "ethos_charakter",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "euboulia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "eudaimonia",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "eugeneia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "euteknia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "eutrapelia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "eutuchia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "excelencia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "geometria",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "gnome",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "gnorimon",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "gnosis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "gumnastike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "haireton",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "hedone",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "hedone_lupe",
+        "lupe",
+        "hedu"
+      ]
+    },
+    {
+      "id": "hedone_lupe",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "hedone_psuchike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "hedone_somatike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "hedu",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "hexis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "hippike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "homonuma",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "hos_epi_to_polu",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "hoti",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "hugieia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "huphantike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "I",
+      "estatica": false,
+      "funcional": true,
+      "clase": "solo_funcional",
+      "categoriaFuncional": true,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "iatrike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "idea_agathou",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "idion",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "II",
+      "estatica": false,
+      "funcional": true,
+      "clase": "solo_funcional",
+      "categoriaFuncional": true,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "III",
+      "estatica": false,
+      "funcional": true,
+      "clase": "solo_funcional",
+      "categoriaFuncional": true,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "ischus",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "IV",
+      "estatica": false,
+      "funcional": true,
+      "clase": "solo_funcional",
+      "categoriaFuncional": true,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "kairos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "kakia",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "kakia_ethike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "kallos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "kalon",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "kata_logon",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "katholou",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "kinesis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "kitharistike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "koinonia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "logistikon",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "logon",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "logos",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "pollachos"
+      ]
+    },
+    {
+      "id": "logos_superador",
+      "estatica": false,
+      "funcional": true,
+      "clase": "solo_funcional",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "nous#lo_mejor",
+        "nous#principios"
+      ]
+    },
+    {
+      "id": "logou_relacion",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "lupe",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "makarion",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "mathesis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "me_aneu_logou",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "megaloprepeia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "megalopsuchia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "meta_logou",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "methodos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "metrion",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "mikroprepeia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "mikropsuchia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "misos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "morphe",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "naupegike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "nomos",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "nomothetike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "nous",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "oikia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "oikodomike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "oikonomia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "orektikon",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "orexis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "organa",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "orge",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "orgilotes",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "paideia",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "para_logon",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "pathos",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "philia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "philia_arete",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "philia_pathos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "philotimia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "philotimia_mesotes",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "phobos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "phronesis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "phthonos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "phusis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "phuton",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "ploutos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "poiesis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "ergon_obra"
+      ]
+    },
+    {
+      "id": "polis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "koinonia",
+        "ethnos",
+        "oikia"
+      ]
+    },
+    {
+      "id": "politike",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "politike_dunamis",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "pollachos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "pothos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "praotes",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "praxis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "prohairesis",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "bouleusis"
+      ]
+    },
+    {
+      "id": "propeteia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "pros_hen",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "psuche",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "psuche_partes",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "psuchika",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "razon_metodo",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "rhetorike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "skutike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "somatika",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "sophia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "sophrosune",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "strategike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "sumpheron",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "sunesis",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "sunodia",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "sunonuma",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "techne",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "tektonike",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "teleios",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "telos",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "pros_hen"
+      ]
+    },
+    {
+      "id": "tendencia",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "tharros",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "theion",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": [
+        "nous#sustancia"
+      ]
+    },
+    {
+      "id": "theoria",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "theriotes",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "thrasutes",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "threptikon",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "thumos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "time",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "timion",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "tyche",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "typos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "V",
+      "estatica": false,
+      "funcional": true,
+      "clase": "solo_funcional",
+      "categoriaFuncional": true,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "VI",
+      "estatica": false,
+      "funcional": true,
+      "clase": "solo_funcional",
+      "categoriaFuncional": true,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "vivientes",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "zelos",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "zoe",
+      "estatica": true,
+      "funcional": true,
+      "clase": "compartido",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    },
+    {
+      "id": "zoon",
+      "estatica": true,
+      "funcional": false,
+      "clase": "solo_estatico",
+      "categoriaFuncional": false,
+      "remisionesSalientes": []
+    }
+  ],
+  "remisiones": [
+    {
+      "origenFuncional": "telos",
+      "destino": "pros_hen",
+      "valido": true,
+      "concepto": "pros_hen",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "agathon",
+      "destino": "idea_agathou",
+      "valido": true,
+      "concepto": "idea_agathou",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "agathon",
+      "destino": "morphe#idea",
+      "valido": true,
+      "concepto": "morphe",
+      "sentido": "idea",
+      "motivo": null
+    },
+    {
+      "origenFuncional": "bienes",
+      "destino": "agathon#bienes",
+      "valido": true,
+      "concepto": "agathon",
+      "sentido": "bienes",
+      "motivo": null
+    },
+    {
+      "origenFuncional": "bienes",
+      "destino": "bienes_sede",
+      "valido": true,
+      "concepto": "bienes_sede",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "bienes",
+      "destino": "bienes_valor",
+      "valido": true,
+      "concepto": "bienes_valor",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "hedone",
+      "destino": "hedone_lupe",
+      "valido": true,
+      "concepto": "hedone_lupe",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "hedone",
+      "destino": "lupe",
+      "valido": true,
+      "concepto": "lupe",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "hedone",
+      "destino": "hedu",
+      "valido": true,
+      "concepto": "hedu",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "anthropos",
+      "destino": "vivientes",
+      "valido": true,
+      "concepto": "vivientes",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "anthropos",
+      "destino": "idion",
+      "valido": true,
+      "concepto": "idion",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "dunamis",
+      "destino": "energeia_acto",
+      "valido": true,
+      "concepto": "energeia_acto",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "arete",
+      "destino": "excelencia",
+      "valido": true,
+      "concepto": "excelencia",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "ethos",
+      "destino": "ethos_charakter",
+      "valido": true,
+      "concepto": "ethos_charakter",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "actividad",
+      "destino": "energeia",
+      "valido": true,
+      "concepto": "energeia",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "actividad",
+      "destino": "energeia_actividad",
+      "valido": true,
+      "concepto": "energeia_actividad",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "actividad",
+      "destino": "ergon",
+      "valido": true,
+      "concepto": "ergon",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "actividad",
+      "destino": "zoe#praktike",
+      "valido": true,
+      "concepto": "zoe",
+      "sentido": "praktike",
+      "motivo": null
+    },
+    {
+      "origenFuncional": "actividad",
+      "destino": "analogia",
+      "valido": true,
+      "concepto": "analogia",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "poiesis",
+      "destino": "ergon_obra",
+      "valido": true,
+      "concepto": "ergon_obra",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "prohairesis",
+      "destino": "bouleusis",
+      "valido": true,
+      "concepto": "bouleusis",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "logos",
+      "destino": "pollachos",
+      "valido": true,
+      "concepto": "pollachos",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "akribeia",
+      "destino": "methodos",
+      "valido": true,
+      "concepto": "methodos",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "akribeia",
+      "destino": "typos",
+      "valido": true,
+      "concepto": "typos",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "akribeia",
+      "destino": "hos_epi_to_polu",
+      "valido": true,
+      "concepto": "hos_epi_to_polu",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "akribeia",
+      "destino": "hoti",
+      "valido": true,
+      "concepto": "hoti",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "akribeia",
+      "destino": "dioti",
+      "valido": true,
+      "concepto": "dioti",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "akribeia",
+      "destino": "katholou",
+      "valido": true,
+      "concepto": "katholou",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "arche",
+      "destino": "gnorimon",
+      "valido": true,
+      "concepto": "gnorimon",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "arche",
+      "destino": "epagoge",
+      "valido": true,
+      "concepto": "epagoge",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "arche",
+      "destino": "aph_henos",
+      "valido": true,
+      "concepto": "aph_henos",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "endoxa",
+      "destino": "sunodia",
+      "valido": true,
+      "concepto": "sunodia",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "polis",
+      "destino": "koinonia",
+      "valido": true,
+      "concepto": "koinonia",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "polis",
+      "destino": "ethnos",
+      "valido": true,
+      "concepto": "ethnos",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "polis",
+      "destino": "oikia",
+      "valido": true,
+      "concepto": "oikia",
+      "sentido": null,
+      "motivo": null
+    },
+    {
+      "origenFuncional": "theion",
+      "destino": "nous#sustancia",
+      "valido": true,
+      "concepto": "nous",
+      "sentido": "sustancia",
+      "motivo": null
+    },
+    {
+      "origenFuncional": "logos_superador",
+      "destino": "nous#lo_mejor",
+      "valido": true,
+      "concepto": "nous",
+      "sentido": "lo_mejor",
+      "motivo": null
+    },
+    {
+      "origenFuncional": "logos_superador",
+      "destino": "nous#principios",
+      "valido": true,
+      "concepto": "nous",
+      "sentido": "principios",
+      "motivo": null
+    }
+  ],
+  "hallazgos": [
+    {
+      "nivel": "revision",
+      "codigo": "FAQ_PASAJE_SIN_SUBUNIDAD",
+      "ubicacion": "faq:faq.bios.golondrina",
+      "detalle": "Pasaje «u:solon» no corresponde a subunidad en este bundle; revisar el tipo de ancla."
+    },
+    {
+      "nivel": "revision",
+      "codigo": "FAQ_PASAJE_SIN_SUBUNIDAD",
+      "ubicacion": "faq:faq.ergon.humano",
+      "detalle": "Pasaje «u:ergon» no corresponde a subunidad en este bundle; revisar el tipo de ancla."
+    },
+    {
+      "nivel": "revision",
+      "codigo": "FAQ_PASAJE_SIN_SUBUNIDAD",
+      "ubicacion": "faq:faq.eudaimonia.opiniones",
+      "detalle": "Pasaje «u:modos_vida» no corresponde a subunidad en este bundle; revisar el tipo de ancla."
+    },
+    {
+      "nivel": "revision",
+      "codigo": "FAQ_PASAJE_SIN_SUBUNIDAD",
+      "ubicacion": "faq:faq.idea.prakton",
+      "detalle": "Pasaje «u:idea_bien» no corresponde a subunidad en este bundle; revisar el tipo de ancla."
+    },
+    {
+      "nivel": "revision",
+      "codigo": "GRIEGO_COMPARTIDO_DIFERENTE",
+      "ubicacion": "concepto:ariston",
+      "detalle": "El término griego difiere entre las dos representaciones: revisar sin fusionar definiciones."
+    },
+    {
+      "nivel": "revision",
+      "codigo": "GRIEGO_COMPARTIDO_DIFERENTE",
+      "ubicacion": "concepto:endoxa",
+      "detalle": "El término griego difiere entre las dos representaciones: revisar sin fusionar definiciones."
+    },
+    {
+      "nivel": "revision",
+      "codigo": "GRIEGO_COMPARTIDO_DIFERENTE",
+      "ubicacion": "concepto:ergon_funcion",
+      "detalle": "El término griego difiere entre las dos representaciones: revisar sin fusionar definiciones."
+    },
+    {
+      "nivel": "revision",
+      "codigo": "GRIEGO_COMPARTIDO_DIFERENTE",
+      "ubicacion": "concepto:ethos",
+      "detalle": "El término griego difiere entre las dos representaciones: revisar sin fusionar definiciones."
+    },
+    {
+      "nivel": "revision",
+      "codigo": "GRIEGO_COMPARTIDO_DIFERENTE",
+      "ubicacion": "concepto:makarion",
+      "detalle": "El término griego difiere entre las dos representaciones: revisar sin fusionar definiciones."
+    },
+    {
+      "nivel": "revision",
+      "codigo": "GRIEGO_COMPARTIDO_DIFERENTE",
+      "ubicacion": "concepto:orektikon",
+      "detalle": "El término griego difiere entre las dos representaciones: revisar sin fusionar definiciones."
+    },
+    {
+      "nivel": "revision",
+      "codigo": "GRIEGO_COMPARTIDO_DIFERENTE",
+      "ubicacion": "concepto:threptikon",
+      "detalle": "El término griego difiere entre las dos representaciones: revisar sin fusionar definiciones."
+    }
+  ]
+}

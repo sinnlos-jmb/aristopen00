@@ -1,0 +1,321 @@
+diff --git a/docs/LAB_N1U9_NAVEGACION_ENTRE_FICHAS.md b/docs/LAB_N1U9_NAVEGACION_ENTRE_FICHAS.md
+new file mode 100644
+index 0000000..5d58da8
+--- /dev/null
++++ b/docs/LAB_N1U9_NAVEGACION_ENTRE_FICHAS.md
+@@ -0,0 +1,23 @@
++# Ágora · N1-U.9 · Navegación entre fichas
++
++Se aplica sobre N1-U.8. Conserva siete fichas y ocho relaciones editoriales de N1-U.7, sin alterar MariaDB, las FAQ publicadas, sus trayectos, ni las subunidades.
++
++## Cambios
++
++1. `wheelSensitivity` efectivo **0.60**, solicitado para rueda y trackpad. Los límites `minZoom`/`maxZoom` permanecen iguales. Se conserva la constante histórica `ZOOM_SENSITIVITY_TRIPLE` de N1-U.8 para comparación.
++2. Cada ficha dispone de una sección compacta y plegable **Conexiones con otras fichas (N)** en su inspector. Presenta solo aristas curatoriales realmente registradas en el recurso de N1-U.7; distingue dirección, nombre, extremo y explicación.
++3. **Abrir ficha** navega directamente al otro extremo de esa arista; **Ver relación en la red** devuelve a la red con la arista seleccionada para inspección.
++4. **← Anterior** aparece después de navegar desde una ficha a otra mediante sus relaciones. El botón **Red de fichas** devuelve al mapa y resalta la ficha de origen, si existe. No se agregan nodos, subgrafos ni capas visuales permanentes.
++5. El selector modal de fichas, el inspector, la navegación de pasajes bilingües y el encuadre conservado permanecen disponibles.
++
++## Instalación
++
++```powershell
++git apply --check "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u9.patch"
++git apply "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u9.patch"
++node public/scripts/check-lab-arquitectura-n1u9.mjs
++```
++
++**Prueba sugerida:** abrí «¿Qué es la felicidad?» desde la red, desplegá sus conexiones, seguí «Argumento del érgon», probá «Anterior», y desde una conexión elegí «Ver relación en la red». Repetí con «Partes del alma» → «Tipos de virtudes». Comprobá el zoom con rueda.
++
++**Validación:** pruebas estáticas, de datos, escape HTML y aplicación del parche sobre la reconstrucción local de N1-U.8. La validación visual en tu instalación y MariaDB activa sigue pendiente.
+diff --git a/public/css/lab-arquitectura-n1u2.css b/public/css/lab-arquitectura-n1u2.css
+index 0c0e16a..60c60b6 100644
+--- a/public/css/lab-arquitectura-n1u2.css
++++ b/public/css/lab-arquitectura-n1u2.css
+@@ -163,3 +163,19 @@
+   .arch-picker-options { grid-template-columns: 1fr; grid-auto-rows: 80px; }
+   .arch-picker-head { padding: 12px; }
+ }
++
++/* N1-U.9 · Vecindad curatorial: compacta, separada de las inferencias textuales. */
++.arch-fichas-nav [data-arch-previous] { min-width: 96px; }
++.arch-conexiones-ficha { margin: 0 0 12px; border: 1px solid var(--border,#bacdd0); border-radius: 8px; padding: 9px; background: var(--bg-elevated,#fff); }
++.arch-conexiones-ficha > summary { font-weight: 700; font-size: .84rem; cursor: pointer; }
++.arch-conexiones-ficha > summary span { color: var(--text-muted,#62747c); font-weight: 400; }
++.arch-conexiones-ficha > p { font-size: .75rem; margin: 8px 0; }
++.arch-conexiones-list { max-height: 350px; overflow-y: auto; display: grid; gap: 7px; }
++.arch-conexion-item { border-top: 1px solid var(--border,#d5e0e4); padding: 8px 0 4px; }
++.arch-conexion-item p { margin: 3px 0; font-size: .8rem; line-height: 1.42; }
++.arch-conexion-item small { color: var(--text-muted,#62747c); font-size: .7rem; }
++.arch-conexion-item .arch-conexion-title { font-weight: 600; }
++.arch-conexion-item .arch-conexion-exp { color: var(--text-muted,#4b626e); }
++.arch-conexion-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
++.arch-conexion-actions button { border: 1px solid var(--border,#aebfc6); border-radius: 6px; background: var(--bg-elevated,#fff); color: inherit; padding: 5px 8px; font: inherit; font-size: .76rem; cursor: pointer; }
++.arch-conexion-actions button:hover,.arch-conexion-actions button:focus-visible { border-color: #317e74; outline: 2px solid #317e74; outline-offset: 1px; }
+diff --git a/public/js/lab/architectureFichaNavigation.js b/public/js/lab/architectureFichaNavigation.js
+new file mode 100644
+index 0000000..ab6a267
+--- /dev/null
++++ b/public/js/lab/architectureFichaNavigation.js
+@@ -0,0 +1,33 @@
++// N1-U.9 · Navegación entre fichas por relaciones editoriales explícitas.
++// No crea aristas, no usa tagueo y no toca FAQ ni trayectos en MariaDB.
++const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({
++  '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
++})[c]);
++
++export function conexionesDeFicha(fichas, red, fichaId) {
++  if (!fichas?.porId?.has(fichaId) || !red?.relaciones || fichas.revision !== red.revision) return [];
++  return red.relaciones.filter(r => r.desde === fichaId || r.hacia === fichaId).map(r => {
++    const sale = r.desde === fichaId;
++    const otroId = sale ? r.hacia : r.desde;
++    const otro = fichas.porId.get(otroId);
++    if (!otro || !red.porId.has(r.id)) throw new Error(`Conexión de ficha no resuelta: ${r.id}`);
++    return Object.freeze({ id:r.id, otroId, titulo:otro.titulo, sale, nombre:r.nombre, explicacion:r.explicacion });
++  });
++}
++
++export function conexionesFichaHtml(fichas, red, fichaId) {
++  const vecinas = conexionesDeFicha(fichas, red, fichaId);
++  if (!vecinas.length) return '';
++  return `<details class="arch-conexiones-ficha" data-arch-conexiones>
++    <summary>Conexiones con otras fichas <span>(${vecinas.length})</span></summary>
++    <p class="arch-muted">Relaciones editoriales propuestas. La dirección de la flecha no implica una deducción.</p>
++    <div class="arch-conexiones-list">${vecinas.map(v => `<div class="arch-conexion-item">
++      <p><small>${v.sale ? 'Desde esta ficha →' : '→ Hacia esta ficha'}</small> <strong>${esc(v.nombre)}</strong></p>
++      <p class="arch-conexion-title">${esc(v.titulo)}</p>
++      <p class="arch-conexion-exp">${esc(v.explicacion)}</p>
++      <div class="arch-conexion-actions">
++        <button type="button" data-arch-related-go="${esc(v.otroId)}" data-arch-related-id="${esc(v.id)}">Abrir ficha</button>
++        <button type="button" data-arch-related-map="${esc(v.id)}">Ver relación en la red</button>
++      </div></div>`).join('')}</div>
++  </details>`;
++}
+diff --git a/public/js/lab/architectureUiControls.js b/public/js/lab/architectureUiControls.js
+index a0c6913..025e036 100644
+--- a/public/js/lab/architectureUiControls.js
++++ b/public/js/lab/architectureUiControls.js
+@@ -1,6 +1,7 @@
+ // N1-U.8 · Ajustes de interacción, sin cambios editoriales ni persistencia.
+ export const ZOOM_SENSITIVITY_ANTERIOR = 0.16;
+ export const ZOOM_SENSITIVITY_TRIPLE = ZOOM_SENSITIVITY_ANTERIOR * 3;
++export const ZOOM_SENSITIVITY_ACTUAL = 0.60; // N1-U.9 · solicitado para rueda/trackpad.
+ const escapar = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+ })[char]);
+diff --git a/public/js/views/labArchitectureView.js b/public/js/views/labArchitectureView.js
+index fecb735..865e7e8 100644
+--- a/public/js/views/labArchitectureView.js
++++ b/public/js/views/labArchitectureView.js
+@@ -7,7 +7,8 @@ import { construirCapasProemio, elementosCapaBasica, elementosCapaDetallada } fr
+ import { construirFichasArquitectura, elementosFichaFAQ, fichaIntroHtml, inspectorFichaFAQHtml } from '../lab/architectureCards.js';
+ import { construirPuentesExplicativos, elementosPuentes, inspectorPuentesHtml } from '../lab/architectureBridges.js';
+ import { construirAmpliacionFichas, elementosRedFichas, inspectorRedFichasHtml } from '../lab/architecturePilotNetwork.js';
+-import { ZOOM_SENSITIVITY_TRIPLE, opcionesModalFichasHtml } from '../lab/architectureUiControls.js';
++import { ZOOM_SENSITIVITY_ACTUAL, opcionesModalFichasHtml } from '../lab/architectureUiControls.js';
++import { conexionesFichaHtml } from '../lab/architectureFichaNavigation.js';
+ import { localizarSubunidadEnBiblioteca, representarLecturaContextual } from '../lab/graphPassageReader.js';
+ 
+ const safe = x => esc(String(x ?? ''));
+@@ -212,7 +213,7 @@ export async function createLabArchitectureView(App) {
+   css.rel = 'stylesheet'; css.href = '/css/lab-arquitectura-n1u2.css'; css.dataset.agoraLabArquitectura = '1';
+   document.head.append(css);
+   el.innerHTML = `<div class="arch-page">
+-    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.8 · Fichas y grafo · Solo consulta</span></nav>
++    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.9 · Fichas conectadas · Solo consulta</span></nav>
+     <h1>Fichas explicativas del Libro I</h1>
+     <p class="arch-intro">Comenzá por una red de preguntas filosóficas y explorá los pasajes que fundamentan cada explicación. La virtud completa en una vida entera.</p>
+     <p class="arch-status" role="status" aria-live="polite">Cargando la revisión editorial…</p>
+@@ -220,6 +221,7 @@ export async function createLabArchitectureView(App) {
+       <div class="arch-fichas-nav" role="group" aria-label="Navegación por fichas">
+         <button type="button" data-arch-picker-open aria-haspopup="dialog">Elegir ficha…</button>
+         <span class="arch-ficha-actual" data-arch-current-ficha aria-live="polite">Vista general · siete fichas</span>
++        <button type="button" data-arch-previous hidden aria-label="Volver a la ficha anterior">← Anterior</button>
+         <button type="button" data-arch-network aria-pressed="true">Red de fichas</button>
+       </div>
+       <dialog class="arch-picker-dialog" aria-labelledby="arch-picker-title">
+@@ -272,6 +274,8 @@ export async function createLabArchitectureView(App) {
+   const state = { macroId: null, unidadId: null, momentoId: null, subId: null };
+   let model = null, rels = null, capas = null, fichas = null, puentes = null, redFichas = null, fichaActiva = null, fichaPasoId = null, fichaEnlaceId = null;
+   let redVisible = true, redFichaSeleccionada = null, redEnlaceSeleccionado = null;
++  const historialFichas = [];
++  let conexionesAbiertas = false;
+   let marcoAbierto = false, ultimoGrafo = null;
+   let perspectiva = 'orientacion', puenteSeleccionado = null;
+   let modo = 'momentos', relacionId = null, relacionSubId = null;
+@@ -305,6 +309,28 @@ export async function createLabArchitectureView(App) {
+     relacionId = null; relacionSubId = null; moduloId = null; enlaceId = null;
+     dibujar();
+   }
++  function abrirFicha(id, origen = 'selector') {
++    if (!fichas?.porId.has(id)) return;
++    if (origen === 'selector') historialFichas.length = 0;
++    if (origen === 'relacion' && fichaActiva && fichaActiva !== id) historialFichas.push(fichaActiva);
++    marcoAbierto = false; conexionesAbiertas = false;
++    redVisible = false; fichaActiva = id;
++    fichaPasoId = null; fichaEnlaceId = null; puenteSeleccionado = null; perspectiva = 'orientacion';
++    if (id === 'proemio') {
++      const macro = model.macros.find(m => m.unidades.some(u => u.id === 'proemio'));
++      if (!macro) return;
++      Object.assign(state, { macroId: macro.id, unidadId: 'proemio', momentoId: null, subId: null });
++      modo = 'modulos'; relacionId = null; relacionSubId = null; moduloId = null; enlaceId = null;
++    }
++    dibujar();
++  }
++  function abrirRed(fichaId = null, enlaceId = null) {
++    redVisible = true; fichaActiva = null; marcoAbierto = false;
++    historialFichas.length = 0;
++    redFichaSeleccionada = fichaId && fichas?.porId.has(fichaId) ? fichaId : null;
++    redEnlaceSeleccionado = enlaceId && redFichas?.porId.has(enlaceId) ? enlaceId : null;
++    dibujar();
++  }
+   function dibujar() {
+     if (!model || destroyed) return;
+     const ctx = selected();
+@@ -316,6 +342,9 @@ export async function createLabArchitectureView(App) {
+     const argumentativo = disponible && modo === 'relaciones';
+     $('.arch-perspectivas').hidden = redVisible || !ficha;
+     $('[data-arch-network]').setAttribute('aria-pressed', String(redVisible));
++    const volverFicha = $('[data-arch-previous]');
++    volverFicha.hidden = redVisible || !ficha || !historialFichas.length;
++    if (!volverFicha.hidden) volverFicha.title = `Volver a ${fichas.porId.get(historialFichas.at(-1))?.titulo || 'ficha anterior'}`;
+     $('[data-arch-current-ficha]').textContent = redVisible ? 'Vista general · siete fichas'
+       : ficha ? ficha.titulo : 'Archivo estructural del Libro I';
+     for (const b of el.querySelectorAll('[data-arch-perspectiva]')) b.setAttribute('aria-pressed', String(b.dataset.archPerspectiva === perspectiva));
+@@ -339,6 +368,11 @@ export async function createLabArchitectureView(App) {
+       : faq ? inspectorFichaFAQHtml(faq, model, fichaPasoId, fichaEnlaceId)
+       : sintetico ? inspectorModulosHtml(model, capas, moduloId, enlaceId)
+       : argumentativo ? inspectorRelacionesHtml(model, rels, relacionId, relacionSubId) : inspectorHtml(model, state);
++    if (ficha && !redVisible) {
++      inspector.insertAdjacentHTML('afterbegin', conexionesFichaHtml(fichas, redFichas, ficha.id));
++      const d = inspector.querySelector('[data-arch-conexiones]');
++      if (d) { d.open = conexionesAbiertas; d.addEventListener('toggle', () => { conexionesAbiertas = d.open; }); }
++    }
+     $('[data-arch-back="macro"]').hidden = !!ficha || !ctx.macro;
+     $('[data-arch-back="unidad"]').hidden = !!ficha || !ctx.unidad;
+     $('[data-arch-back="momento"]').hidden = !!ficha || !ctx.momento;
+@@ -422,22 +456,34 @@ export async function createLabArchitectureView(App) {
+       if (fichas && !picker.open) picker.showModal();
+       return;
+     }
+-    if (event.target.closest('[data-arch-network]')) { redVisible = true; fichaActiva = null; marcoAbierto = false; redFichaSeleccionada = null; redEnlaceSeleccionado = null; dibujar(); return; }
++    if (event.target.closest('[data-arch-network]')) { abrirRed(fichaActiva); return; }
++    if (event.target.closest('[data-arch-previous]')) {
++      const anterior = historialFichas.pop();
++      if (anterior && fichas?.porId.has(anterior)) abrirFicha(anterior, 'retorno');
++      return;
++    }
++    const relGo = event.target.closest('[data-arch-related-go]');
++    if (relGo && fichaActiva) {
++      const r = redFichas?.porId.get(relGo.dataset.archRelatedId);
++      if (r && [r.desde, r.hacia].includes(fichaActiva) &&
++          (r.desde === fichaActiva ? r.hacia : r.desde) === relGo.dataset.archRelatedGo) {
++        abrirFicha(relGo.dataset.archRelatedGo, 'relacion');
++      }
++      return;
++    }
++    const relMap = event.target.closest('[data-arch-related-map]');
++    if (relMap && fichaActiva) {
++      const r = redFichas?.porId.get(relMap.dataset.archRelatedMap);
++      if (r && (r.desde === fichaActiva || r.hacia === fichaActiva)) abrirRed(null, r.id);
++      return;
++    }
+     if (event.target.closest('[data-arch-red-list]')) { redFichaSeleccionada = null; redEnlaceSeleccionado = null; dibujar(); return; }
+     const redLink = event.target.closest('[data-arch-red-link]');
+     if (redLink && redFichas?.porId.has(redLink.dataset.archRedLink)) { redEnlaceSeleccionado = redLink.dataset.archRedLink; redFichaSeleccionada = null; redVisible = true; fichaActiva = null; dibujar(); return; }
+     const cardButton = event.target.closest('[data-arch-card]');
+     if (cardButton && fichas?.porId.has(cardButton.dataset.archCard)) {
+-      const id = cardButton.dataset.archCard;
+       if (picker.open) picker.close();
+-      marcoAbierto = false; redVisible = false; fichaActiva = id; fichaPasoId = null; fichaEnlaceId = null; puenteSeleccionado = null; perspectiva = 'orientacion';
+-      if (id === 'proemio') {
+-        const macro = model.macros.find(m => m.unidades.some(u => u.id === 'proemio'));
+-        if (!macro) return;
+-        Object.assign(state, { macroId: macro.id, unidadId: 'proemio', momentoId: null, subId: null });
+-        modo = 'modulos'; relacionId = null; relacionSubId = null; moduloId = null; enlaceId = null;
+-      }
+-      dibujar(); return;
++      abrirFicha(cardButton.dataset.archCard); return;
+     }
+     const perspectiveButton = event.target.closest('[data-arch-perspectiva]');
+     if (perspectiveButton && fichaActiva) {
+@@ -575,7 +621,7 @@ export async function createLabArchitectureView(App) {
+       const cytoscape = await cargarCytoscape();
+       if (destroyed) return { el, destroy() {} };
+       cy = cytoscape({ container: graph, elements: [], style: graphStyle(), layout: { name: 'preset' },
+-        minZoom: 0.22, maxZoom: 2.5, wheelSensitivity: ZOOM_SENSITIVITY_TRIPLE, boxSelectionEnabled: false });
++        minZoom: 0.22, maxZoom: 2.5, wheelSensitivity: ZOOM_SENSITIVITY_ACTUAL, boxSelectionEnabled: false });
+       cy.on('tap', 'node', event => {
+         const n = event.target;
+         if (redVisible && n.data('tipo') === 'ficha_red') { redFichaSeleccionada = n.data('key'); redEnlaceSeleccionado = null; dibujar(); return; }
+diff --git a/public/scripts/check-lab-arquitectura-n1u8.mjs b/public/scripts/check-lab-arquitectura-n1u8.mjs
+index 41ae56d..ae33875 100644
+--- a/public/scripts/check-lab-arquitectura-n1u8.mjs
++++ b/public/scripts/check-lab-arquitectura-n1u8.mjs
+@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
+ import { readFileSync } from 'node:fs';
+ import { fileURLToPath } from 'node:url';
+ import { dirname, resolve } from 'node:path';
+-import { ZOOM_SENSITIVITY_ANTERIOR, ZOOM_SENSITIVITY_TRIPLE, opcionesModalFichasHtml } from '../js/lab/architectureUiControls.js';
++import { ZOOM_SENSITIVITY_ANTERIOR, ZOOM_SENSITIVITY_TRIPLE, ZOOM_SENSITIVITY_ACTUAL, opcionesModalFichasHtml } from '../js/lab/architectureUiControls.js';
+ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+ const view = readFileSync(resolve(root, 'js/views/labArchitectureView.js'), 'utf8');
+ const css = readFileSync(resolve(root, 'css/lab-arquitectura-n1u2.css'), 'utf8');
+@@ -11,7 +11,8 @@ const cards = readFileSync(resolve(root, 'js/lab/architectureCards.js'), 'utf8')
+ const fixture = JSON.parse(readFileSync(resolve(root, 'lab/n1u7-fichas-red-piloto.json'), 'utf8'));
+ assert.equal(ZOOM_SENSITIVITY_TRIPLE, ZOOM_SENSITIVITY_ANTERIOR * 3);
+ assert(Math.abs(ZOOM_SENSITIVITY_TRIPLE - .48) < 1e-12);
+-assert.match(view, /wheelSensitivity:\s*ZOOM_SENSITIVITY_TRIPLE/);
++assert.equal(ZOOM_SENSITIVITY_ACTUAL, .60);
++assert.match(view, /wheelSensitivity:\s*ZOOM_SENSITIVITY_ACTUAL/);
+ assert.match(view, /minZoom:\s*0\.22,\s*maxZoom:\s*2\.5/);
+ assert.match(view, /data-arch-picker-open/);
+ assert.match(view, /<dialog\s+class="arch-picker-dialog"/);
+diff --git a/public/scripts/check-lab-arquitectura-n1u9.mjs b/public/scripts/check-lab-arquitectura-n1u9.mjs
+new file mode 100644
+index 0000000..147161e
+--- /dev/null
++++ b/public/scripts/check-lab-arquitectura-n1u9.mjs
+@@ -0,0 +1,43 @@
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import { ZOOM_SENSITIVITY_ACTUAL } from '../js/lab/architectureUiControls.js';
++import { conexionesDeFicha, conexionesFichaHtml } from '../js/lab/architectureFichaNavigation.js';
++import { construirModeloArquitectura } from '../js/lab/architectureModel.js';
++import { construirRelacionesProemio } from '../js/lab/architectureRelations.js';
++import { construirCapasProemio } from '../js/lab/architectureLayers.js';
++import { construirFichasArquitectura } from '../js/lab/architectureCards.js';
++import { construirPuentesExplicativos } from '../js/lab/architectureBridges.js';
++import { construirAmpliacionFichas } from '../js/lab/architecturePilotNetwork.js';
++const read = p => JSON.parse(fs.readFileSync(new URL(p, import.meta.url),'utf8'));
++const model = construirModeloArquitectura(read('./fixtures/n1u2-unidades.json'),read('../lab/n1u1-propuestas-libro-i.json'));
++const rels = construirRelacionesProemio(model,read('../lab/n1u3-relaciones-proemio.json'));
++const capas = construirCapasProemio(model,rels,read('../lab/n1u4-modulos-proemio.json'));
++const fichasBase = construirFichasArquitectura(model,capas,read('../lab/n1u5-fichas-explicativas.json'));
++const puentesBase = construirPuentesExplicativos(model,fichasBase,read('../lab/n1u6-puentes-explicativos.json'));
++const {fichas,red} = construirAmpliacionFichas(model,fichasBase,puentesBase,read('../lab/n1u7-fichas-red-piloto.json'));
++assert.equal(ZOOM_SENSITIVITY_ACTUAL,.60);
++let total = 0;
++for(const f of fichas.fichas){
++  const cs=conexionesDeFicha(fichas,red,f.id);
++  assert.deepEqual(cs.map(c=>c.id),red.relaciones.filter(r=>r.desde===f.id||r.hacia===f.id).map(r=>r.id));
++  for (const c of cs) { assert(fichas.porId.has(c.otroId)); assert(red.porId.has(c.id)); }
++  total+=cs.length;
++  const html=conexionesFichaHtml(fichas,red,f.id);
++  assert.equal((html.match(/data-arch-related-go=/g)||[]).length,cs.length);
++  assert.equal((html.match(/data-arch-related-map=/g)||[]).length,cs.length);
++}
++assert.equal(total,16,'cada una de ocho aristas tiene dos extremos');
++assert.equal(conexionesDeFicha(fichas,red,'sin-ficha').length,0);
++const sample = { revision: red.revision, relaciones: [{id:'x<svg',desde:'proemio',hacia:'faq.lab.ergon',nombre:'<script>peligro</script>',explicacion:'<img src=x onerror=alert(1)>'}], porId: new Map() };
++sample.porId.set(sample.relaciones[0].id,sample.relaciones[0]);
++const safe = conexionesFichaHtml(fichas,sample,'proemio');
++assert(!safe.includes('<script>')&&!safe.includes('<img')&&!safe.includes('<svg'));
++assert(safe.includes('&lt;script&gt;')&&safe.includes('data-arch-related-id="x&lt;svg"'));
++const view=fs.readFileSync(new URL('../js/views/labArchitectureView.js',import.meta.url),'utf8');
++assert.match(view,/wheelSensitivity:\s*ZOOM_SENSITIVITY_ACTUAL/);
++assert.match(view,/data-arch-previous/);
++assert.match(view,/data-arch-related-go/);
++assert.match(view,/data-arch-related-map/);
++assert.match(view,/conexionesFichaHtml\(fichas, redFichas, ficha.id\)/);
++assert.match(view,/historialFichas\.pop\(\)/);
++console.log('N1-U.9 OK · zoom 0.60 · 7 fichas · 8 aristas · 16 conexiones direccionadas · navegación, retornos y escape HTML.');

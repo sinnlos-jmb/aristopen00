@@ -1,0 +1,611 @@
+diff --git a/public/js/main.js b/public/js/main.js
+--- a/public/js/main.js
++++ b/public/js/main.js
+@@ -13,5 +13,6 @@
+ import { createReadingView } from './views/reading.js';
+ import { createGraphCatalogView, createGraphView, GRAPHS } from './views/graphs.js';
+ import { createLabView, createLabCatalogView, EXPERIMENTS } from './views/lab.js';
+ import { createLabOrientadorView } from './views/labOrientadorView.js';
++import { createLabSemanticExplorerView } from './views/labSemanticExplorerView.js';
+ 
+@@ -63,5 +64,6 @@
+     ...Object.fromEntries(Object.keys(GRAPHS).map(id => [`/grafos/${id}`, () => createGraphView(id)])),
+     ...Object.fromEntries(Object.keys(EXPERIMENTS).map(id => [`/lab/${id}`, () => createLabView(App, { exp: id })])),
+     '/lab/orientador': () => createLabOrientadorView(App),
++    '/lab/semantica': () => createLabSemanticExplorerView(App),
+   },
+   notFound: () => createLandingView(App),
+diff --git a/public/js/views/lab.js b/public/js/views/lab.js
+--- a/public/js/views/lab.js
++++ b/public/js/views/lab.js
+@@ -14,3 +14,8 @@
+ // Catálogo de experimentos para la maqueta grid
+ export const EXPERIMENTS = Object.freeze({
++  semantica: {
++    id: 'semantica', tab: 5, title: 'Explorador semántico',
++    desc: 'Inspeccioná árboles, relaciones, tags y FAQ; exportá una proyección Cypher para Relate.',
++    tag: 'Experimento 5', icon: '🔎', featured: false
++  },
+   orientador: {
+diff --git a/docs/LAB_EXPLORADOR_SEMANTICO_V1.md b/docs/LAB_EXPLORADOR_SEMANTICO_V1.md
+new file mode 100644
+index 0000000..0e4b3e0
+--- /dev/null
++++ b/docs/LAB_EXPLORADOR_SEMANTICO_V1.md
+@@ -0,0 +1,63 @@
++# Ágora — Laboratorio: Explorador semántico V1
++
++## Objetivo y aislamiento
++
++Crear una proyección **experimental y sólo de lectura** de `App.S` (derivado de `/api/contenido`, cuya fuente de verdad es MariaDB) para explorar estructuras antes de añadir inferencias o generación de respuestas.
++
++Nueva ruta: `/#/lab/semantica`. Se conserva el Orientador V2 como piloto separado; ni los tags ni las FAQ se editan desde este experimento. Si Relate no está instalado, el explorador de JavaScript sigue funcionando.
++
++## Modelo de la proyección
++
++Clases de nodo: `concepto_estatico`, `nodo_funcional`, `unidad`, `subunidad`, `parrafo`, `faq`, `definicion`. Los UIDs son nombres separados (`concepto_estatico:phusis` y `nodo_funcional:phusis` son distintos).
++
++Relaciones explícitas exportadas:
++
++- `jerarquia_estatica`, `jerarquia_funcional`: hijo a padre.
++- `arista_funcional`: dirección original `de → a`, con tipo, voz y referencia.
++- `remision_editorial`: nodo funcional hacia concepto estático, con sufijo de sentido referido **sin declarar el sentido como ficha comprobada**.
++- `pertenece_unidad`: subunidad → unidad.
++- `tag_subunidad`: subunidad → concepto citado en `conceptos_clave` (asociación editorial, NO evidencia textual detallada).
++- `tag_parrafo`: párrafo → concepto tagueado, conservando sentido `s` y nivel `n` (NO se eleva automáticamente a subunidad).
++- `definicion_de`: registro de definición → concepto correspondiente.
++- `foco_faq`: FAQ → `arbol.nodo` explícito.
++- `pasaje_faq`: FAQ → subunidad cuando el `pasajes.ref` coincide **exactamente** con el ID de una subunidad. Si es un rango Bekker no coincidente, se reporta incidencia (no se adivina correspondencia).
++
++La proyección registra extremos no resueltos en `issues`. La exploración puede seguir enlaces en ambos sentidos para descubrir vecinos, pero **muestra siempre la dirección original** de la relación. No puntúa relevancia filosófica ni genera trayectos. `sugerirConceptosSemanticos()` ofrece candidatos estructurales con su recorrido y un estado de hipótesis, sin modificar la consulta del estudiante. Es un futuro insumo del Orientador, no una integración automática.
++
++## En el navegador
++
++1. Abrir `/#/lab/semantica` (Laboratorio → Explorador semántico).
++2. Buscar `phusis`, `arete`, `eudaimonia` o un identificador; seleccionar un nodo.
++3. Alternar 1 o 2 saltos y examinar diagrama, aristas, procedencia y sugerencias exploratorias con un testigo de hasta 2 vínculos.
++4. Exportar el JSON, la vecindad seleccionada, o el Cypher compatible con Relate.
++5. Abrir «Diagnóstico de referencias no resueltas» para revisar vínculos no materializados.
++
++## Relate — experimento optativo
++
++Relate es un proyecto experimental de Neo4j Labs. Descargar una versión oficial para Windows desde https://github.com/relatedb/relate/releases/latest y comprobar `relate --help`. No se requiere instalarlo en el servidor web de Ágora.
++
++Con Ágora levantada en localhost, desde la raíz del repositorio:
++
++```bash
++node public/scripts/exportar-grafo-cypher.mjs http://localhost:3000/api/contenido agora-relate-import.cypher
++relate ./relate-agora < agora-relate-import.cypher
++relate --database ./relate-agora "MATCH (n:AgoraNodo) RETURN count(n) AS nodos"
++relate --database ./relate-agora "MATCH (a:AgoraNodo)-[r:AGORA_VINCULO]->(b:AgoraNodo) WHERE r.tipo = 'arista_funcional' RETURN a.id, r.relacion, b.id, r.referencia LIMIT 20"
++```
++
++La primera ejecución crea/actualiza sólo una proyección en Relate. Se utilizan UIDs e instrucciones `MERGE`; **no borra** otros datos preexistentes. Para pruebas limpias se recomienda un directorio nuevo. Comprobar la sintaxis exacta con la versión instalada del CLI, pues Relate aún es experimental.
++
++### Interpretación de los resultados
++
++Comparar el total en Relate con `stats.nodos` y `stats.aristas` del explorador. Revisar una relación `arista_funcional` en los dos motores y comprobar `de`, `a`, `rel`, `ref` y `voz`. Una relación por `tag_parrafo` o `tag_subunidad` no justifica por sí sola un vínculo causal. Una remisión no hace idénticos los dos nodos.
++
++## Pruebas y limitaciones
++
++Desde la raíz del proyecto:
++
++```bash
++node public/scripts/check-semantic-explorer.mjs
++npm --prefix public run test:views
++```
++
++Este incremento no instala ni ejecuta Relate de forma automática: proporciona una exportación Cypher comprobable localmente con un binario oficial. Una integración nativa/WASM o HTTP, y la unión dinámica con consultas del Orientador, se consideran incrementos posteriores.
+diff --git a/public/js/lab/semanticProjection.js b/public/js/lab/semanticProjection.js
+new file mode 100644
+index 0000000..caa1f12
+--- /dev/null
++++ b/public/js/lab/semanticProjection.js
+@@ -0,0 +1,267 @@
++// Proyección experimental, de sólo lectura, del contenido editorial de Ágora.
++// Una conexión en esta proyección expresa la procedencia indicada, NO una
++// equivalencia filosófica ni una inferencia textual automática.
++export const SEMANTIC_PROJECTION_VERSION = 1;
++
++const txt = v => v == null ? '' : String(v);
++const norm = v => txt(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
++const uid = (clase, id) => `${clase}:${txt(id)}`;
++
++export function buildSemanticProjection(S = {}) {
++  const nodes = [];
++  const edges = [];
++  const issues = [];
++  const byUid = new Map();
++
++  function node(tipo, id, etiqueta, fuente, extra = {}) {
++    if (id === null || id === undefined || id === '') return;
++    const key = uid(tipo, id);
++    if (byUid.has(key)) {
++      issues.push({ tipo: 'nodo_duplicado', uid: key, fuente });
++      return;
++    }
++    const n = {
++      uid: key, id: txt(id), tipo, etiqueta: txt(etiqueta || id), fuente,
++      griego: txt(extra.griego), referencia: txt(extra.referencia), voz: txt(extra.voz),
++    };
++    byUid.set(key, n); nodes.push(n);
++  }
++  function edge(tipo, from, to, fuente, extra = {}) {
++    if (!byUid.has(from) || !byUid.has(to)) {
++      issues.push({ tipo: 'extremo_no_resuelto', relacion: tipo, desde: from, hacia: to, fuente });
++      return;
++    }
++    edges.push({
++      uid: `vinculo:${edges.length + 1}`, tipo, desde: from, hacia: to, fuente,
++      relacion: txt(extra.relacion), referencia: txt(extra.referencia),
++      voz: txt(extra.voz), sentidoReferido: txt(extra.sentidoReferido),
++      rol: txt(extra.rol),
++    });
++  }
++  function conceptoId(id) {
++    if (byUid.has(uid('concepto_estatico', id))) return uid('concepto_estatico', id);
++    if (byUid.has(uid('nodo_funcional', id))) return uid('nodo_funcional', id);
++    return null;
++  }
++
++  // Identidades separadas: el mismo ID en los dos grafos NO fusiona nodos.
++  for (const [id, n] of Object.entries(S.N || {}))
++    node('concepto_estatico', id, n.label, 'estatico', { griego: n.gr });
++  for (const [id, n] of Object.entries(S.FN || {}))
++    node('nodo_funcional', id, n.label, 'funcional', { griego: n.gr });
++  for (const [id, u] of Object.entries(S.U || {}))
++    node('unidad', id, u.titulo, 'tags.unidades');
++  for (const [id, sub] of Object.entries(S.SUB || {}))
++    node('subunidad', id, sub.titulo, 'tags.unidades.subunidades', {
++      referencia: Array.isArray(sub.bekker) ? sub.bekker.join('–') : sub.bekker,
++    });
++  for (const [id, p] of Object.entries(S.TP || {}))
++    node('parrafo', id, `Párrafo ${id}`, 'tags.parrafos');
++  for (const [id, faq] of Object.entries(S.FAQ || {}))
++    node('faq', id, faq.pregunta, 'tags.faqs');
++  for (const [id, d] of Object.entries(S.DEF || {}))
++    node('definicion', id, d.titulo || id, 'tags.definiciones', { referencia: d.referencia?.ref });
++
++  // Estructuras jerárquicas: hijo -> padre; nunca presupone causalidad.
++  for (const [id, n] of Object.entries(S.N || {})) {
++    const ancestors = n.path;
++    if (Array.isArray(ancestors) && ancestors.length) {
++      edge('jerarquia_estatica', uid('concepto_estatico', id),
++        uid('concepto_estatico', ancestors.at(-1)), 'estatico.raices.hijos');
++    }
++  }
++  const traverseFN = (n, parentId = null) => {
++    if (!n?.id) return;
++    if (parentId) edge('jerarquia_funcional', uid('nodo_funcional', n.id),
++      uid('nodo_funcional', parentId), 'funcional.categorias.hijos');
++    for (const child of n.hijos || []) traverseFN(child, n.id);
++  };
++  for (const root of S.ftree?.categorias || []) traverseFN(root);
++
++  for (const e of S.FE || []) {
++    edge('arista_funcional', uid('nodo_funcional', e.de), uid('nodo_funcional', e.a),
++      'funcional.aristas', { relacion: e.rel, referencia: e.ref, voz: e.voz });
++  }
++  for (const [id, n] of Object.entries(S.FN || {})) {
++    for (const remision of n.remite_a || []) {
++      const [base, ...partes] = txt(remision).split('#');
++      edge('remision_editorial', uid('nodo_funcional', id), uid('concepto_estatico', base),
++        'funcional.remite_a', { sentidoReferido: partes.join('#') });
++    }
++  }
++
++  // Tag de subunidad: asociación editorial, NO prueba de contenido puntual.
++  for (const [id, sub] of Object.entries(S.SUB || {})) {
++    if (sub.unidad) edge('pertenece_unidad', uid('subunidad', id), uid('unidad', sub.unidad),
++      'tags.unidades.subunidades');
++    for (const concept of sub.conceptos_clave || []) {
++      const target = conceptoId(concept);
++      edge('tag_subunidad', uid('subunidad', id), target || uid('concepto_no_identificado', concept),
++        'tags.subunidades.conceptos_clave');
++    }
++  }
++  // Un tag de párrafo tiene su propia granularidad; no es evidencia de subunidad.
++  for (const [id, p] of Object.entries(S.TP || {})) {
++    for (const c of p.conceptos || []) {
++      if (!c?.c) continue;
++      const target = conceptoId(c.c);
++      edge('tag_parrafo', uid('parrafo', id), target || uid('concepto_no_identificado', c.c),
++        'tags.parrafos.conceptos', { sentidoReferido: c.s || '', rol: c.n || '' });
++    }
++  }
++  for (const [id, d] of Object.entries(S.DEF || {})) {
++    if (!d.concepto) continue;
++    const target = conceptoId(d.concepto);
++    edge('definicion_de', uid('definicion', id), target || uid('concepto_no_identificado', d.concepto),
++      'tags.definiciones.concepto', { referencia: d.referencia?.ref });
++  }
++  for (const [id, faq] of Object.entries(S.FAQ || {})) {
++    if (faq.arbol?.nodo) {
++      const target = conceptoId(faq.arbol.nodo);
++      edge('foco_faq', uid('faq', id), target || uid('concepto_no_identificado', faq.arbol.nodo),
++        'tags.faqs.arbol.nodo');
++    }
++    for (const pasaje of faq.pasajes || []) {
++      if (!pasaje?.ref) continue;
++      // Sólo resolvemos referencias que sean IDs de subunidad exactos.
++      // Un rango Bekker diferente no se equipara automáticamente a un ID.
++      edge('pasaje_faq', uid('faq', id), uid('subunidad', pasaje.ref),
++        'tags.faqs.pasajes', { rol: pasaje.rol });
++    }
++  }
++  const porTipo = {}, porRelacion = {};
++  for (const n of nodes) porTipo[n.tipo] = (porTipo[n.tipo] || 0) + 1;
++  for (const e of edges) porRelacion[e.tipo] = (porRelacion[e.tipo] || 0) + 1;
++  return {
++    version: SEMANTIC_PROJECTION_VERSION,
++    fuente: 'proyeccion_local_sin_mutaciones',
++    versionCorpus: txt(S.tags?.version || 'sin_version'),
++    nodes, edges, issues,
++    stats: { nodos: nodes.length, aristas: edges.length, incidencias: issues.length, porTipo, porRelacion },
++  };
++}
++
++export function buscarNodosSemanticos(graph, texto, limit = 18) {
++  const query = norm(texto);
++  if (!query) return [];
++  const score = n => {
++    const fields = [n.id, n.etiqueta, n.griego];
++    return fields.some(s => norm(s) === query) ? 3
++      : fields.some(s => norm(s).startsWith(query)) ? 2
++      : fields.some(s => norm(s).includes(query)) ? 1 : 0;
++  };
++  return (graph?.nodes || []).filter(n => score(n) > 0)
++    .sort((a, b) => score(b) - score(a) || a.etiqueta.localeCompare(b.etiqueta, 'es'))
++    .slice(0, Math.max(0, Math.min(40, Number(limit) || 18)));
++}
++
++export function explorarVecindad(graph, foco, { saltos = 1, maxNodos = 35, maxAristas = 90 } = {}) {
++  const nodes = graph?.nodes || [];
++  const edges = graph?.edges || [];
++  const index = new Map(nodes.map(n => [n.uid, n]));
++  if (!index.has(foco)) return { foco, nodos: [], aristas: [], truncado: false, error: 'Nodo inexistente' };
++  const adjacency = new Map();
++  for (const e of edges) {
++    if (!adjacency.has(e.desde)) adjacency.set(e.desde, []);
++    if (!adjacency.has(e.hacia)) adjacency.set(e.hacia, []);
++    adjacency.get(e.desde).push(e);
++    adjacency.get(e.hacia).push(e);
++  }
++  const depthLimit = Math.max(1, Math.min(2, Number(saltos) || 1));
++  const visited = new Map([[foco, 0]]);
++  const chosen = new Map();
++  const queue = [foco];
++  let truncated = false;
++  while (queue.length) {
++    const current = queue.shift();
++    if (visited.get(current) >= depthLimit) continue;
++    for (const e of adjacency.get(current) || []) {
++      const other = e.desde === current ? e.hacia : e.desde;
++      if (!visited.has(other)) {
++        if (visited.size >= maxNodos) { truncated = true; continue; }
++        visited.set(other, visited.get(current) + 1);
++        queue.push(other);
++      }
++      if (visited.has(other) && !chosen.has(e.uid)) {
++        if (chosen.size >= maxAristas) { truncated = true; continue; }
++        chosen.set(e.uid, e);
++      }
++    }
++  }
++  return {
++    foco, nodos: [...visited].map(([id, profundidad]) => ({ ...index.get(id), profundidad })),
++    aristas: [...chosen.values()], truncado: truncated, error: null,
++    advertencia: 'La vecindad atraviesa conexiones en ambas direcciones sólo para explorar; las aristas conservan dirección y procedencia.',
++  };
++}
++
++// Cypher de importación idempotente: no DROP, no inferencia, UIDs separados.
++// Producimos literales de strings JSON (válidos como literales Cypher dobles).
++export function exportarRelateCypher(graph, batchSize = 75) {
++  const atom = value => JSON.stringify(txt(value));
++  const nodeMap = n => `{uid: ${atom(n.uid)}, id: ${atom(n.id)}, tipo: ${atom(n.tipo)}, etiqueta: ${atom(n.etiqueta)}, fuente: ${atom(n.fuente)}, griego: ${atom(n.griego)}, referencia: ${atom(n.referencia)}, voz: ${atom(n.voz)}}`;
++  const edgeMap = e => `{uid: ${atom(e.uid)}, tipo: ${atom(e.tipo)}, desde: ${atom(e.desde)}, hacia: ${atom(e.hacia)}, fuente: ${atom(e.fuente)}, relacion: ${atom(e.relacion)}, referencia: ${atom(e.referencia)}, voz: ${atom(e.voz)}, sentidoReferido: ${atom(e.sentidoReferido)}, rol: ${atom(e.rol)}}`;
++  const statements = [
++    '// Ágora — proyección experimental de lectura. Generada desde /api/contenido.',
++    '// No sustituye MariaDB. No se crean relaciones filosóficas por inferencia.',
++    `// Corpus ${graph.versionCorpus} — ${graph.nodes.length} nodos / ${graph.edges.length} aristas.`,
++  ];
++  const batch = Math.max(1, Math.min(200, Number(batchSize) || 75));
++  for (let i = 0; i < graph.nodes.length; i += batch) {
++    statements.push(`UNWIND [\n  ${graph.nodes.slice(i, i + batch).map(nodeMap).join(',\n  ')}\n] AS fila\nMERGE (n:AgoraNodo {uid: fila.uid})\nSET n.id = fila.id, n.tipo = fila.tipo, n.etiqueta = fila.etiqueta, n.fuente = fila.fuente, n.griego = fila.griego, n.referencia = fila.referencia, n.voz = fila.voz;`);
++  }
++  for (let i = 0; i < graph.edges.length; i += batch) {
++    statements.push(`UNWIND [\n  ${graph.edges.slice(i, i + batch).map(edgeMap).join(',\n  ')}\n] AS fila\nMATCH (a:AgoraNodo {uid: fila.desde}), (b:AgoraNodo {uid: fila.hacia})\nMERGE (a)-[r:AGORA_VINCULO {uid: fila.uid}]->(b)\nSET r.tipo = fila.tipo, r.fuente = fila.fuente, r.relacion = fila.relacion, r.referencia = fila.referencia, r.voz = fila.voz, r.sentidoReferido = fila.sentidoReferido, r.rol = fila.rol;`);
++  }
++  return statements.join('\n\n') + '\n';
++}
++
++// Puente previsto con el Orientador: candidatos DESCRIPTIVOS, no preferencias
++// del estudiante ni afirmaciones de una relación filosófica validada.
++// Cada candidato lleva un testigo de hasta 2 vínculos reales, con dirección.
++export function sugerirConceptosSemanticos(graph, foco, limit = 8) {
++  const nodes = new Map((graph?.nodes || []).map(n => [n.uid, n]));
++  if (!nodes.has(foco)) return [];
++  const adjacency = new Map();
++  const add = (k, e) => { if (!adjacency.has(k)) adjacency.set(k, []); adjacency.get(k).push(e); };
++  for (const e of graph.edges || []) { add(e.desde, e); add(e.hacia, e); }
++  const nodoInicial = nodes.get(foco);
++  const candidatePaths = new Map();
++  const relCost = e => ({
++    arista_funcional: 1, remision_editorial: 2,
++    jerarquia_funcional: 3, jerarquia_estatica: 3,
++    definicion_de: 5, foco_faq: 5, pasaje_faq: 6,
++    tag_subunidad: 8, tag_parrafo: 9, pertenece_unidad: 10,
++  })[e.tipo] || 10;
++  const step = (e, from) => ({
++    desde: e.desde, hacia: e.hacia, tipo: e.tipo,
++    fuente: e.fuente, referencia: e.referencia, voz: e.voz,
++    recorridoEnSentidoOriginal: e.desde === from,
++  });
++  const offer = (targetUid, path, score) => {
++    const target = nodes.get(targetUid);
++    if (!target || !['concepto_estatico', 'nodo_funcional'].includes(target.tipo)) return;
++    // Una remisión entre dos representaciones del mismo concepto no es una
++    // sugerencia para cambiar de tema: pertenece a la identificación de sentidos.
++    if (target.id === nodoInicial.id) return;
++    const prev = candidatePaths.get(targetUid);
++    if (!prev || score < prev.puntuacionDeOrden) candidatePaths.set(targetUid, {
++      uid: targetUid, id: target.id, etiqueta: target.etiqueta, tipo: target.tipo,
++      recorrido: path, puntuacionDeOrden: score,
++      estado: 'candidato_para_explorar_no_relacion_validada',
++      base: path.some(e => e.tipo.startsWith('tag_')) ? 'asociacion_por_tags' : 'estructura_documental',
++    });
++  };
++  for (const e1 of adjacency.get(foco) || []) {
++    const middle = e1.desde === foco ? e1.hacia : e1.desde;
++    offer(middle, [step(e1, foco)], relCost(e1));
++    for (const e2 of adjacency.get(middle) || []) {
++      const target = e2.desde === middle ? e2.hacia : e2.desde;
++      if (target === foco || e1.uid === e2.uid) continue;
++      offer(target, [step(e1, foco), step(e2, middle)], 20 + relCost(e1) + relCost(e2));
++    }
++  }
++  return [...candidatePaths.values()]
++    .sort((a, b) => a.puntuacionDeOrden - b.puntuacionDeOrden || a.etiqueta.localeCompare(b.etiqueta, 'es'))
++    .slice(0, Math.max(0, Math.min(20, Number(limit) || 8)));
++}
+diff --git a/public/js/views/labSemanticExplorerView.js b/public/js/views/labSemanticExplorerView.js
+new file mode 100644
+index 0000000..974ff8b
+--- /dev/null
++++ b/public/js/views/labSemanticExplorerView.js
+@@ -0,0 +1,139 @@
++import { esc } from '../ui.js';
++import { buildSemanticProjection, buscarNodosSemanticos, explorarVecindad, exportarRelateCypher, sugerirConceptosSemanticos } from '../lab/semanticProjection.js';
++
++const downloadText = (contenido, nombre, mime = 'text/plain;charset=utf-8') => {
++  const blob = new Blob([contenido], { type: mime });
++  const url = URL.createObjectURL(blob);
++  const a = document.createElement('a');
++  a.href = url; a.download = nombre; document.body.append(a); a.click(); a.remove();
++  setTimeout(() => URL.revokeObjectURL(url), 1000);
++};
++
++// Una visualización pequeña, dirigida y puramente documental.
++// No representa conexiones inferidas ni altera el modelo.
++function vistaRadial(graph, vicinity) {
++  const center = { x: 320, y: 185 };
++  const direct = vicinity.aristas.filter(e => e.desde === vicinity.foco || e.hacia === vicinity.foco);
++  const ids = [...new Set(direct.map(e => e.desde === vicinity.foco ? e.hacia : e.desde))].slice(0, 10);
++  if (!ids.length) return '<p class="hint">Sin aristas directas en la proyección disponible.</p>';
++  const index = new Map(graph.nodes.map(n => [n.uid, n]));
++  const coords = new Map(ids.map((id, i) => {
++    const a = 2 * Math.PI * i / ids.length - Math.PI / 2;
++    return [id, { x: center.x + 235 * Math.cos(a), y: center.y + 133 * Math.sin(a) }];
++  }));
++  const lines = direct.filter(e => coords.has(e.desde === vicinity.foco ? e.hacia : e.desde))
++    .slice(0, 36).map(e => {
++      const outward = e.desde === vicinity.foco;
++      const p = coords.get(outward ? e.hacia : e.desde);
++      const dx = p.x - center.x, dy = p.y - center.y, d = Math.hypot(dx, dy);
++      const sx = center.x + dx / d * 37, sy = center.y + dy / d * 23;
++      const ex = p.x - dx / d * 38, ey = p.y - dy / d * 24;
++      const x1 = outward ? sx : ex, y1 = outward ? sy : ey;
++      const x2 = outward ? ex : sx, y2 = outward ? ey : sy;
++      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="currentColor" stroke-opacity="0.44" stroke-width="1.6" marker-end="url(#agora-sem-arrow)"><title>${esc(e.tipo)} · ${esc(e.relacion || e.fuente)}</title></line>`;
++    }).join('');
++  const labels = [...coords].map(([id, p]) => {
++    const n = index.get(id);
++    const label = n?.etiqueta || id;
++    return `<g><title>${esc(label)} · ${esc(n?.tipo || '')}</title><rect x="${p.x-47}" y="${p.y-22}" width="94" height="44" rx="8" fill="var(--surface, #ece8e1)" stroke="currentColor" stroke-opacity=".24"/><text x="${p.x}" y="${p.y+4}" text-anchor="middle" font-size="11" fill="currentColor">${esc(label.length > 15 ? label.slice(0, 14) + '…' : label)}</text></g>`;
++  }).join('');
++  const focus = index.get(vicinity.foco);
++  return `<div style="overflow-x:auto"><svg viewBox="0 0 640 370" style="width:100%;min-width:440px;max-height:380px" role="img" aria-label="Vecinos directos de ${esc(focus?.etiqueta || vicinity.foco)}; las flechas indican dirección de aristas">
++    <defs><marker id="agora-sem-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6Z" fill="currentColor"/></marker></defs>
++    ${lines}${labels}
++    <rect x="270" y="159" width="100" height="52" rx="10" fill="var(--gold, #a78a50)" fill-opacity=".15" stroke="currentColor" stroke-width="1.7"/>
++    <text x="320" y="181" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">${esc((focus?.etiqueta || '').slice(0, 15))}</text>
++    <text x="320" y="197" text-anchor="middle" font-size="9" fill="currentColor">foco</text>
++  </svg></div>`;
++}
++
++// Laboratorio separado del Orientador: ninguna consulta edita grafos ni MariaDB.
++export function createLabSemanticExplorerView(App = null) {
++  const el = document.createElement('div');
++  el.className = 'view-lab scrollable has-scroll';
++  const graph = buildSemanticProjection(App?.S || {});
++  let foco = graph.nodes.find(n => n.uid === 'concepto_estatico:phusis')?.uid || graph.nodes[0]?.uid || null;
++  let search = '';
++  let hops = 1;
++  let message = '';
++  const index = new Map(graph.nodes.map(n => [n.uid, n]));
++  const label = id => index.get(id)?.etiqueta || id;
++  const types = graph.stats.porTipo;
++  const rels = graph.stats.porRelacion;
++
++  function render() {
++    const resultados = buscarNodosSemanticos(graph, search, 18);
++    const vec = foco ? explorarVecindad(graph, foco, { saltos: hops }) : null;
++    const edges = vec?.aristas || [];
++    const sugerencias = foco ? sugerirConceptosSemanticos(graph, foco, 8) : [];
++    el.innerHTML = `<div class="lab__inner">
++      <nav class="lab-nav"><a class="btn btn--ghost btn--sm" href="#/lab">← Laboratorio</a></nav>
++      <header class="lab-exp__header"><h1 class="lab-exp__title">Explorador semántico · Experimento 5</h1></header>
++      <section class="lab-card" id="lab-semantic-explorer">
++        <h2>Una proyección documental del corpus</h2>
++        <p class="hint">Exploración experimental de los árboles, el grafo funcional, los tags y las FAQ. Las relaciones se conservan con su dirección y fuente. No se infiere identidad ni respaldo textual a partir de una vecindad.</p>
++        <div class="lab-panel"><h3>Inventario del grafo</h3>
++          <p><strong>${graph.stats.nodos}</strong> nodos · <strong>${graph.stats.aristas}</strong> vínculos · <strong>${graph.stats.incidencias}</strong> incidencias de referencias</p>
++          <p class="hint">Versión corpus: ${esc(graph.versionCorpus)} · Clases: ${Object.entries(types).map(([k,v]) => `${esc(k)} (${v})`).join(' · ') || '—'}</p>
++          <p class="hint">Relaciones: ${Object.entries(rels).map(([k,v]) => `${esc(k)} (${v})`).join(' · ') || '—'}</p>
++          <div class="lab-toolbar"><button type="button" class="lab-btn lab-btn--ghost" id="sem-export-json">Exportar proyección JSON</button><button type="button" class="lab-btn lab-btn--ghost" id="sem-export-cypher">Exportar importación Cypher</button></div>
++          <p class="hint">Cypher se importa en Relate por separado. Este experimento funciona sin Relate instalado.</p>
++        </div>
++        <div class="lab-panel">
++          <h3>Buscar concepto o elemento</h3>
++          <form id="sem-search-form" class="lab-form">
++            <label for="sem-search">Etiqueta, identificador o término griego</label>
++            <input class="lab-input" id="sem-search" type="search" maxlength="200" value="${esc(search)}" placeholder="Ej.: phusis, virtud, felicidad" />
++            <button class="lab-btn" type="submit">Buscar</button>
++          </form>
++          <div id="sem-results" class="lab-help">${resultados.map(n => `<button type="button" class="lab-help__item" data-sem-focus="${esc(n.uid)}">${esc(n.etiqueta)} <small>· ${esc(n.uid)} · ${esc(n.fuente)}</small></button>`).join('') || (search ? '<p class="hint">No se encontraron nodos con ese término.</p>' : '')}</div>
++          <p class="hint">Ejemplos: <button type="button" class="btn btn--ghost btn--sm" data-sem-query="phusis">phýsis</button> <button type="button" class="btn btn--ghost btn--sm" data-sem-query="arete">areté</button> <button type="button" class="btn btn--ghost btn--sm" data-sem-query="eudaimonia">eudaimonía</button></p>
++        </div>
++        ${vec ? `<div class="lab-panel">
++          <h3>Vecindad de ${esc(label(foco))}</h3>
++          <p class="hint">Nodo: ${esc(foco)} · Clase: ${esc(index.get(foco)?.tipo)} · Fuente: ${esc(index.get(foco)?.fuente)}</p>
++          <label for="sem-hops">Profundidad exploratoria</label>
++          <select class="lab-input" id="sem-hops"><option value="1" ${hops === 1 ? 'selected' : ''}>1 salto</option><option value="2" ${hops === 2 ? 'selected' : ''}>2 saltos</option></select>
++          ${vistaRadial(graph, vec)}
++          <p class="hint">Esquema: muestra hasta 10 vecinos directos. El listado siguiente conserva más relaciones y sus fuentes. Recorrer en ambos sentidos para descubrir nodos NO invierte filosóficamente las aristas.</p>
++          <p>${vec.nodos.length} nodos visibles · ${edges.length} vínculos${vec.truncado ? ' · resultado limitado por seguridad' : ''}</p>
++          <div class="lab-help">${vec.nodos.filter(n => n.uid !== foco).slice(0, 24).map(n => `<button class="lab-help__item" type="button" data-sem-focus="${esc(n.uid)}">${esc(n.etiqueta)} <small>· distancia ${n.profundidad} · ${esc(n.tipo)}</small></button>`).join('')}</div>
++          <h3>Conceptos para explorar a continuación</h3>
++          <p class="hint">Estas sugerencias muestran caminos de procedencia de hasta 2 vínculos. Son opciones de investigación, NO respuestas ni relaciones filosóficas validadas; las asociaciones por tags se identifican aparte.</p>
++          <div class="lab-help">${sugerencias.map(s => `<button type="button" class="lab-help__item" data-sem-focus="${esc(s.uid)}">${esc(s.etiqueta)} <small>· ${esc(s.base)} · vía ${esc(s.recorrido.map(e => e.tipo + (e.recorridoEnSentidoOriginal ? ' →' : ' ←')).join(' / '))}</small></button>`).join('') || '<p class="hint">No hay conceptos candidatos en un radio de dos vínculos.</p>'}</div>
++          <h3>Relaciones y procedencia</h3>
++          <div style="overflow:auto"><table class="lab-table" style="width:100%"><thead><tr><th>Desde → hacia</th><th>Tipo / relación</th><th>Fuente</th><th>Ref. / voz / sentido</th></tr></thead>
++            <tbody>${edges.map(e => `<tr><td>${esc(label(e.desde))} → ${esc(label(e.hacia))}</td><td>${esc(e.tipo)}${e.relacion ? ` · ${esc(e.relacion)}` : ''}</td><td>${esc(e.fuente)}</td><td>${esc([e.referencia, e.voz, e.sentidoReferido, e.rol].filter(Boolean).join(' · ') || '—')}</td></tr>`).join('') || '<tr><td colspan="4">Sin aristas documentadas.</td></tr>'}</tbody></table></div>
++          <div class="lab-toolbar"><button type="button" class="lab-btn lab-btn--ghost" id="sem-export-selection">Exportar vecindad JSON</button></div>
++        </div>` : '<p class="lab-panel">No se encontraron nodos en el corpus cargado.</p>'}
++        <details class="lab-panel"><summary>Diagnóstico de referencias no resueltas (${graph.issues.length})</summary>
++          <p class="hint">Una incidencia se declara; nunca se completa una arista inventando un nodo o un pasaje.</p>
++          <pre class="lab-json">${esc(JSON.stringify(graph.issues.slice(0, 120), null, 2))}</pre>
++          ${graph.issues.length > 120 ? '<p class="hint">Mostrando solo 120 incidencias; exportá el JSON para ver todas.</p>' : ''}
++        </details>
++        <p id="sem-status" role="status">${esc(message)}</p>
++      </section></div>`;
++    bind();
++  }
++  function bind() {
++    el.querySelector('#sem-search-form')?.addEventListener('submit', e => {
++      e.preventDefault(); search = el.querySelector('#sem-search').value.trim(); render();
++    });
++    el.querySelectorAll('[data-sem-query]').forEach(b => b.addEventListener('click', () => {
++      search = b.dataset.semQuery; render();
++    }));
++    el.querySelectorAll('[data-sem-focus]').forEach(b => b.addEventListener('click', () => {
++      foco = b.dataset.semFocus; search = ''; render();
++    }));
++    el.querySelector('#sem-hops')?.addEventListener('change', e => { hops = Number(e.target.value); render(); });
++    el.querySelector('#sem-export-json')?.addEventListener('click', () => downloadText(
++      JSON.stringify(graph, null, 2), 'agora-proyeccion-semantica-v1.json', 'application/json;charset=utf-8'));
++    el.querySelector('#sem-export-cypher')?.addEventListener('click', () => downloadText(
++      exportarRelateCypher(graph), 'agora-relate-import.cypher'));
++    el.querySelector('#sem-export-selection')?.addEventListener('click', () => downloadText(
++      JSON.stringify(explorarVecindad(graph, foco, { saltos: hops }), null, 2),
++      'agora-vecindad-semantica.json', 'application/json;charset=utf-8'));
++  }
++  render();
++  return { el, destroy() { foco = null; } };
++}
+diff --git a/public/scripts/check-semantic-explorer.mjs b/public/scripts/check-semantic-explorer.mjs
+new file mode 100644
+index 0000000..3fe764b
+--- /dev/null
++++ b/public/scripts/check-semantic-explorer.mjs
+@@ -0,0 +1,57 @@
++import assert from 'node:assert/strict';
++import { buildSemanticProjection, buscarNodosSemanticos, explorarVecindad, exportarRelateCypher, sugerirConceptosSemanticos } from '../js/lab/semanticProjection.js';
++const S = {
++  tags: { version: 'fixture-1' },
++  N: { phusis: { label: 'Naturaleza', gr: 'φύσις', path: [] }, arete: { label: 'Virtud', path: ['phusis'] }, techne: { label: 'Arte', path: [] } },
++  FN: { phusis: { label: 'Naturaleza funcional', remite_a: ['phusis#principio'] }, arete: { label: 'Excelencia funcional', remite_a: ['arete'] } },
++  ftree: { categorias: [{ id: 'phusis', hijos: [{ id: 'arete' }] }] },
++  FE: [{ de: 'phusis', a: 'arete', rel: 'contrasta', ref: 'EN I', voz: 'comentarista' }],
++  U: { u1: { id: 'u1', titulo: 'Unidad primera' } },
++  SUB: { sub1: { id: 'sub1', titulo: 'Subunidad uno', unidad: 'u1', bekker: ['1094a1', '1094a3'], conceptos_clave: ['phusis', 'sin_nodo'] } },
++  TP: { 1: { parrafo: 1, conceptos: [{ c: 'phusis', s: 'principio', n: 'central' }] } },
++  FAQ: { 'faq.1': { id: 'faq.1', pregunta: '¿Qué es la naturaleza?', arbol: { nodo: 'phusis' }, pasajes: [{ ref: 'sub1', rol: 'responde' }, { ref: 'rango_diferente', rol: 'amplia' }] } },
++  DEF: { d1: { id: 'd1', concepto: 'phusis', titulo: 'Definición', referencia: { ref: '1094a1' } } },
++};
++const g = buildSemanticProjection(S);
++assert.equal(g.version, 1);
++assert.equal(g.nodes.filter(n => n.id === 'phusis').length, 2, 'no fusionar homónimos');
++const check = (tipo, desde, hacia) => {
++  const e = g.edges.find(e => e.tipo === tipo && e.desde === desde && e.hacia === hacia);
++  assert.ok(e, `Falta ${tipo}: ${desde} → ${hacia}`); return e;
++};
++assert.equal(check('arista_funcional', 'nodo_funcional:phusis', 'nodo_funcional:arete').referencia, 'EN I');
++assert.equal(check('remision_editorial', 'nodo_funcional:phusis', 'concepto_estatico:phusis').sentidoReferido, 'principio');
++check('jerarquia_estatica', 'concepto_estatico:arete', 'concepto_estatico:phusis');
++check('jerarquia_funcional', 'nodo_funcional:arete', 'nodo_funcional:phusis');
++check('tag_subunidad', 'subunidad:sub1', 'concepto_estatico:phusis');
++check('tag_parrafo', 'parrafo:1', 'concepto_estatico:phusis');
++check('foco_faq', 'faq:faq.1', 'concepto_estatico:phusis');
++check('pasaje_faq', 'faq:faq.1', 'subunidad:sub1');
++check('definicion_de', 'definicion:d1', 'concepto_estatico:phusis');
++assert.ok(g.issues.some(i => i.hacia === 'concepto_no_identificado:sin_nodo'));
++assert.ok(g.issues.some(i => i.hacia === 'subunidad:rango_diferente'));
++assert.ok(!g.nodes.some(n => n.uid === 'concepto_no_identificado:sin_nodo'), 'no inventar nodos');
++assert.ok(buscarNodosSemanticos(g, 'NATURALEZA').length >= 2);
++const view = explorarVecindad(g, 'concepto_estatico:phusis');
++assert.ok(view.aristas.some(e => e.tipo === 'remision_editorial'));
++assert.ok(view.aristas.some(e => e.tipo === 'tag_parrafo'));
++assert.ok(!view.aristas.some(e => e.tipo === 'arista_funcional'), 'en 1 salto no inferir identidad de nodos');
++assert.ok(explorarVecindad(g, 'concepto_estatico:phusis', { saltos: 2 }).nodos.some(n => n.uid === 'nodo_funcional:arete'));
++assert.equal(explorarVecindad(g, 'nada').error, 'Nodo inexistente');
++const suggestions = sugerirConceptosSemanticos(g, 'concepto_estatico:phusis');
++assert.ok(suggestions.some(s => s.uid === 'nodo_funcional:arete'));
++const sampleSuggestion = suggestions.find(s => s.uid === 'nodo_funcional:arete');
++assert.equal(sampleSuggestion.recorrido.length, 2);
++assert.deepEqual(sampleSuggestion.recorrido.map(e => e.tipo), ['remision_editorial', 'arista_funcional']);
++assert.equal(sampleSuggestion.estado, 'candidato_para_explorar_no_relacion_validada');
++assert.deepEqual(buildSemanticProjection(S).edges, g.edges);
++const cypher = exportarRelateCypher(g, 2);
++assert.match(cypher, /MERGE \(n:AgoraNodo/);
++assert.match(cypher, /AGORA_VINCULO/);
++assert.match(cypher, /"remision_editorial"/);
++assert.match(cypher, /"principio"/);
++assert.match(cypher, /"EN I"/);
++assert.doesNotMatch(cypher, /DROP|DETACH DELETE/);
++const special = buildSemanticProjection({ N: { quote: { label: 'O\'Brien "dos" \\ y fin' } } });
++assert.match(exportarRelateCypher(special), /O'Brien \\"dos\\" \\\\ y fin/);
++console.log('OK: proyección, jerarquías, tags, FAQ, dirección, incidencias, búsqueda y exportación Cypher.');
+diff --git a/public/scripts/exportar-grafo-cypher.mjs b/public/scripts/exportar-grafo-cypher.mjs
+new file mode 100644
+index 0000000..c23a2a4
+--- /dev/null
++++ b/public/scripts/exportar-grafo-cypher.mjs
+@@ -0,0 +1,26 @@
++// Uso: node public/scripts/exportar-grafo-cypher.mjs [URL_API] [RUTA_SALIDA]
++// Sólo lee /api/contenido; nunca toca la base editorial.
++import { writeFile } from 'node:fs/promises';
++import { buildStore } from '../js/store.js';
++import { buildSemanticProjection, exportarRelateCypher } from '../js/lab/semanticProjection.js';
++const api = process.argv[2] || 'http://localhost:3000/api/contenido';
++const output = process.argv[3] || 'agora-relate-import.cypher';
++try {
++  const response = await fetch(api, { signal: AbortSignal.timeout(15000) });
++  if (!response.ok) throw new Error(`API devolvió HTTP ${response.status}`);
++  const data = await response.json();
++  if (!data?.tags?.unidades || !data?.tags?.faqs || !data?.funcional || !data?.estatico)
++    throw new Error('La respuesta no cumple el contrato de /api/contenido');
++  const S = buildStore(data.tags, {
++    funcional: data.funcional, estatico: data.estatico,
++    manual: data.manual, argumentos: data.argumentos, trayectos: data.trayectos,
++  });
++  const graph = buildSemanticProjection(S);
++  await writeFile(output, exportarRelateCypher(graph), 'utf8');
++  console.log(`Archivo: ${output}`);
++  console.log(`Nodos: ${graph.stats.nodos} | vínculos: ${graph.stats.aristas} | incidencias: ${graph.stats.incidencias}`);
++  if (graph.issues.length) console.log('Revisá las incidencias en el Explorador; no se inventaron extremos.');
++} catch (error) {
++  console.error('No se pudo exportar el grafo:', error.message);
++  process.exitCode = 1;
++}

@@ -1,0 +1,66 @@
+/* N1-U.14 · Tipografía y columnas de lectura. Se carga DESPUÉS de app.css. */
+.reading-catalog,
+.reader-modal,
+.lab-architecture .arch-reader {
+  --agora-reader-font-size:18px;
+  --agora-reader-mono:"DejaVu Sans Mono","Noto Sans Mono","FreeMono",Consolas,"Liberation Mono","Courier New",monospace;
+}
+/* Ambos lectores usan el mismo orden: castellano, griego. */
+.reading-catalog .reader-columns,
+.reading-catalog .reader-columns-head,
+.reader-modal .reader-columns,
+.reader-modal .reader-columns-head,
+.lab-architecture .arch-reader .reader-columns,
+.lab-architecture .arch-reader .reader-columns-head {
+  display:grid;
+  grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);
+  column-gap:clamp(12px,2vw,30px);
+}
+.reading-catalog .reader-text,
+.reader-modal .reader-text,
+.lab-architecture .arch-reader .reader-text {
+  font-family:var(--agora-reader-mono);
+  font-size:var(--agora-reader-font-size);
+  line-height:1.8;
+  text-align:justify;
+  text-align-last:start;
+  hyphens:auto;
+  white-space:pre-wrap;
+  overflow-wrap:break-word;
+  word-break:normal;
+  font-variant-ligatures:none;
+  min-width:0;
+}
+/* El tamaño local del Lab (N1-U.12) se conserva: el usuario puede ajustarlo allí. */
+.lab-architecture .arch-reader .reader-text { font-size:var(--arch-reader-font,var(--agora-reader-font-size)); }
+.reading-catalog .reader-text[lang="el"],
+.reader-modal .reader-text[lang="el"] { font-family:var(--agora-reader-mono); font-size:var(--agora-reader-font-size); line-height:1.8; }
+.agora-reader-tools {display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;font:500 12px/1.4 var(--f-body,system-ui);}
+.agora-reader-tools button {min-width:33px;min-height:33px;cursor:pointer;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:inherit;}
+.agora-reader-tools button:disabled {opacity:.4;cursor:default;}
+.agora-reader-tools output {min-width:42px;text-align:center;font-variant-numeric:tabular-nums;}
+.agora-reading-controls {display:flex;justify-content:flex-end;gap:12px;align-items:center;margin:0 0 1rem;}
+.reader-modal .reader-modal-bar {display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding:6px 1.5rem;}
+.reader-modal .reader-modal-bar > .reader-navigation {padding:0;border:0;flex:1 1 320px;}
+.reader-modal .reader-modal-bar > .agora-reader-tools {margin-left:auto;}
+@media (max-width:750px) {
+  .reading-catalog .reader-columns,
+  .reader-modal .reader-columns,
+  .lab-architecture .arch-reader .reader-columns {grid-template-columns:minmax(0,1fr);row-gap:1rem;}
+  .reading-catalog .reader-columns-head,
+  .reader-modal .reader-columns-head,
+  .lab-architecture .arch-reader .reader-columns-head {display:none;}
+  .reader-text[lang="el"]::before {content:"Griego";display:block;text-align:left;font:600 12px/1.5 system-ui,sans-serif;opacity:.7;margin-bottom:4px;}
+  .reader-text[lang="es"]::before {content:"Castellano";display:block;text-align:left;font:600 12px/1.5 system-ui,sans-serif;opacity:.7;margin-bottom:4px;}
+}
+
+/* Puente compacto de búsqueda; no reduce el área de Cytoscape. */
+.agora-fichas-search {margin:.35rem 0 .65rem;padding:.4rem .65rem;border:1px solid var(--border);border-radius:8px;}
+.agora-fichas-search > summary {cursor:pointer;font-size:.9rem;}
+.agora-fichas-search-form {display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.65rem 0;}
+.agora-fichas-search-form input {flex:1 1 210px;min-width:0;padding:.45rem .6rem;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);}
+.agora-fichas-search-form button,.agora-fichas-search-list button {border:1px solid var(--border);border-radius:5px;padding:.45rem .65rem;background:var(--surface);color:var(--text);cursor:pointer;}
+.agora-fichas-search-note {font-size:.8rem;color:var(--muted);line-height:1.5;}
+.agora-fichas-search-list {padding:0 0 0 1.4rem;margin:.5rem 0;}
+.agora-fichas-search-list li {margin:.4rem 0;}
+.agora-fichas-search-list small {display:block;color:var(--muted);font-size:.75rem;}

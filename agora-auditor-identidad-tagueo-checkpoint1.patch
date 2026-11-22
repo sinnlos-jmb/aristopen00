@@ -1,0 +1,454 @@
+diff --git a/docs/AUDITOR_IDENTIDAD_CHECKPOINT1.md b/docs/AUDITOR_IDENTIDAD_CHECKPOINT1.md
+new file mode 100644
+index 0000000..f4382f1
+--- /dev/null
++++ b/docs/AUDITOR_IDENTIDAD_CHECKPOINT1.md
+@@ -0,0 +1,61 @@
++# Ágora · Auditor de identidad y tagueo — Checkpoint 1
++
++## Propósito y alcance
++
++Auditoría complementaria, solo lectura, para estudiar la correspondencia entre el árbol estático, el grafo funcional y las etiquetas del corpus. Se concentra en la **identidad canónica** y en la **integridad de referencias**; nunca convierte una vecindad en evidencia filosófica.
++
++Archivos:
++- `public/js/lab/identityTaggingAudit.js`: función pura `auditarIdentidadYTagueo(bundle)`.
++- `public/scripts/auditar-identidad-tagueo.mjs`: CLI que consulta `/api/contenido` o lee un bundle JSON.
++- `public/scripts/check-identidad-tagueo.mjs`: prueba sin DB ni red.
++- `docs/CONTRATO_TAGUEO_PROXIMOS_CAPITULOS_V1.md`: convenciones editoriales y pendientes de arquitectura multilibro.
++
++No añade rutas, tablas, dependencias npm ni cambios a la V2 del Orientador o al visor. Tampoco modifica el validador existente: `public/tagueo/js/validar.js` sigue siendo imprescindible para revisar anclas, tramos y otras reglas del texto bilingüe.
++
++## Uso
++
++Desde la raíz de Ágora, con la API funcionando:
++
++```bash
++node public/scripts/check-identidad-tagueo.mjs
++node public/scripts/auditar-identidad-tagueo.mjs --url http://localhost:3000/api/contenido --out auditoria-identidad.json
++```
++
++O con una exportación JSON **completa** del bundle de `/api/contenido`:
++
++```bash
++node public/scripts/auditar-identidad-tagueo.mjs --file contenido.json --out auditoria-identidad.json --strict
++```
++
++`--strict` devuelve código de salida 1 si hay errores estructurales; **no** falla por revisiones editoriales. Salida JSON: `resumen`, `identidades`, `remisiones`, `hallazgos`. Si falla una lectura/red, código 2.
++
++## Línea base histórica (volcado de MariaDB, 7 de noviembre de 2026)
++
++Se reconstruyó una vista de sus conceptos, funcional, unidades, subunidades, relaciones y tags de párrafo. El auditor encontró:
++
++| Medida | Valor |
++|---|---:|
++| Conceptos estáticos | 221 |
++| Nodos funcionales | 67 |
++| IDs compartidos | 58 |
++| Solo estáticos / solo funcionales | 163 / 9 (6 son categorías funcionales) |
++| Remisiones explícitas | 38 |
++| Aristas funcionales | 80 |
++| Unidades / subunidades / párrafos | 13 / 175 / 52 |
++| Relaciones de subunidad / destinos referidos a arista | 124 / 60 |
++| Tags por nivel `central` / `presente` / `mencion` | 154 / 340 / 117 |
++| Estados de párrafo | 52 `propuesto` |
++| Errores en las reglas de este auditor | **0** |
++| Revisiones terminológicas detectadas | **7** |
++
++**Los 7 casos para revisión editorial** corresponden a diferencias en el campo griego de conceptos compartidos: `ariston`, `endoxa`, `ergon_funcion`, `ethos`, `makarion`, `orektikon`, `threptikon`. Una diferencia ortográfica, léxica o morfológica no es necesariamente un error: comprobar el uso del texto antes de corregir.
++
++**No confundir el resultado con un corpus validado:** esta auditoría NO comprueba si los tags se ajustan a lo que dice cada pasaje; para ello se requiere lectura editorial. Tampoco ejecuta las reglas de `validar.js` sobre los textos griego/castellano. El volcado es anterior a los últimos cambios locales del repositorio.
++
++## Siguiente checkpoint propuesto
++
++1. Confirmar este informe contra la API actual de Ágora.
++2. Resolver las 7 diferencias terminológicas como equivalencia permitida, matiz o error corregible.
++3. Probar una proyección conceptual unificada en memoria para `phusis`, `arete`, `eudaimonia`, `energeia`, `techne` sin borrar facetas ni alterar IDs fuente.
++4. Ampliar la validación con una muestra editorial de párrafos y comparar resultados con el tagueo actual.
++5. Acordar el identificador multilibro antes de iniciar el próximo libro.
+diff --git a/docs/CONTRATO_TAGUEO_PROXIMOS_CAPITULOS_V1.md b/docs/CONTRATO_TAGUEO_PROXIMOS_CAPITULOS_V1.md
+new file mode 100644
+index 0000000..20362fe
+--- /dev/null
++++ b/docs/CONTRATO_TAGUEO_PROXIMOS_CAPITULOS_V1.md
+@@ -0,0 +1,84 @@
++# Ágora · Contrato provisional de tagueo — checkpoint de identidad (V1)
++
++**Propósito.** Establecer convenciones reproducibles para continuar el etiquetado de la *Ética nicomáquea*, revisar el Libro I y evitar que el visor introduzca identidades o relaciones que el corpus no afirma.
++
++**Estado:** documento de trabajo, no migración ni cambio del criterio filosófico. No modifica los esquemas de MariaDB. Los siguientes capítulos se deben trabajar con el validador existente (`public/tagueo/js/validar.js`) **más** el auditor nuevo. Ninguno reemplaza la lectura editorial.
++
++## 1. Cuatro nociones que no debemos confundir
++
++| Noción | Representación existente | Qué afirma | Qué NO afirma |
++|---|---|---|---|
++| Identidad conceptual | Igual `id` en árbol estático y funcional | Dos facetas del mismo concepto | Identidad de sus definiciones o de sus jerarquías |
++| Remisión editorial | `funcional[n].remite_a` → `concepto` o `concepto#sentido` | El nodo funcional remite deliberadamente al concepto/sentido | Equivalencia filosófica o arista causal |
++| Relación explícita | Arista funcional `de`→`a` con `rel`, `voz`, `ref`; o `subunidad.relaciones` | Hay una relación registrada con procedencia editorial | Que pueda invertirse o que la voz sea siempre Aristóteles |
++| Asociación de tag | `parrafos[].conceptos[]` y `subunidad.conceptos_clave[]` | Un concepto es pertinente al párrafo/subunidad en el nivel indicado | Que el texto respalde cualquier relación entre todos los tags |
++
++**Identificador canónico:** utilizar el ID existente del estático (ej. `phusis`, `arete`) cuando se trata del mismo concepto; el visor puede mostrarlo como una sola ficha con facetas estática y funcional. Conservar cada fuente original y sus propiedades. No materializar nodos equivalentes por similitud de etiqueta, coincidencia griega o vecindad.
++
++**Nodo funcional propio:** si se introduce una función o categoría que no es el mismo concepto, asignarle un ID propio y usar `remite_a` solo cuando exista un referente específico. `remite_a` no se requiere para los conceptos que ya comparten ID. `#sentido` identifica una ficha editorial concreta del estático. No inferir esa ficha por coincidencias léxicas.
++
++## 2. Antes de taguear un nuevo pasaje
++
++1. **Identificar el pasaje** con libro, capítulo, referencia Bekker, versión del texto griego y traducción. Conservar siempre el segmento griego efectivamente utilizado como ancla.
++2. **Reutilizar conceptos existentes** antes de crear nuevos IDs. Verificar la ficha estática, su jerarquía y sus sentidos. Si el sentido cambia, revisar si basta una ficha `sentidos[]` o si realmente hay otro concepto.
++3. **Anotar conceptos por párrafo:** cada tag conserva `c` (ID estático), `s` opcional (ID de sentido exacto) y `n` (`central`, `presente`, `mencion`). Usar `central` para un eje interpretativo del pasaje, `presente` para una presencia relevante, `mencion` para alusión marginal. No utilizar `n` como puntaje didáctico del futuro visor.
++4. **Distinguir lo implícito de lo expreso:** cuando corresponda `implicito: true`, mantener la justificación editorial. Según el validador actual, si se utiliza `via`, entonces debe haber también `ref` y `implicito: true`; no es obligatorio agregar `ref` a todos los implícitos sin `via`.
++5. **Separar voz y procedencia:** `textual` no equivale a `nuestra`; registrar como lectura nuestra lo que no afirma directamente el pasaje. Una nota con voz contextualiza un tag, pero no lo convierte en una arista funcional.
++6. **Estructurar unidades/subunidades:** indicar rangos `bekker`, anclas griega y castellana (`gr_ancla`, `es_ancla`), `conceptos_clave` y relaciones de subunidad. Estas relaciones admiten extremos de texto libre; no convertirlos automáticamente en IDs de concepto.
++7. **Vincular evidencias precisas:** las relaciones de subunidad pueden incluir `destinos` con `ref`, arista funcional (`arista`) o `hacia.faq`. Conservar el vínculo documentado y verificar sus referencias. No suponer que los tags del párrafo se aplican automáticamente a cada subunidad de su unidad.
++8. **Estado editorial:** `propuesto`, `discusion` o `confirmado` representan estados diferentes. La ausencia de errores de estructura NO cambia el estado de un tag ni confirma su validez filosófica.
++
++### Ejemplo de formato existente (ilustrativo, no una nueva anotación)
++
++```json
++{
++  "parrafo": 1,
++  "estado": "propuesto",
++  "conceptos": [
++    {"c": "agathon", "n": "central"},
++    {"c": "techne", "s": "amplio", "n": "presente"}
++  ]
++}
++```
++
++El atributo `s` debe existir realmente en la ficha `sentidos` de ese concepto. El auditor comprueba esa consistencia pero no verifica si el sentido elegido es filosóficamente apropiado al pasaje.
++
++## 3. Criterios de revisión del Libro I
++
++**Errores estructurales (bloqueantes para aprobar el checkpoint):** IDs duplicados en una misma estructura; `remite_a` a concepto/sentido inexistente; arista funcional a nodo inexistente; tag a concepto/sentido inexistente; concepto clave de subunidad sin ficha estática; destino hacia arista o FAQ inexistente; referencias de párrafo asignado a unidad sin registro de tags; `via` sin `implicito` o sin referencia. Estos casos se detectan automáticamente con el auditor y/o el validador existente.
++
++**Revisión editorial (no bloqueante automáticamente):** discrepancias de términos griegos entre fichas compartidas; funcional propio sin remisión; tags repetidos para un mismo sentido; elección de nivel `central/presente/mencion`; conceptos implícitos; `sentidos` que agrupan acepciones distintas; correspondencia entre voz textual y una afirmación; vínculos demasiado generales o excesivamente específicos. Leer el pasaje antes de corregir.
++
++**Cobertura:** comprobar distribución de niveles, estados y sentidos por capítulo; cantidad de conceptos nuevos/reutilizados; relaciones explícitas citadas frente a relaciones solo inferidas; fragmentos sin anclas o con anclas rotas (según el validador existente). Comparar contra un informe de referencia después de cada capítulo, pero nunca fijar recuentos históricos como umbral universal.
++
++**Orden de revisión:** primero referencias rotas → identidad y sentido → anclas textuales → voz/procedencia → relevancia del tag → evaluación didáctica. El orden evita marcar como redundantes relaciones que aparecen duplicadas solo por un fallo de integración.
++
++## 4. Contrato para el visor (sin implementación todavía)
++
++- **Nodo canónico:** `concepto:<id>` con propiedades `estatico` y/o `funcional` y referencias a los registros de origen.
++- **Aristas visibles por defecto:** jerarquías estáticas y aristas funcionales, con tipo, voz, dirección y fuente preservados. Las jerarquías estática y funcional NO se sustituyen entre sí.
++- **Tags y subunidades:** índices documentales consultables desde el inspector; no producir a partir de ellos nuevas aristas filosóficas.
++- **Párrafos:** agrupar por unidad; mostrarlos únicamente por acción del usuario y conservando su carácter contextual.
++- **FAQ:** puntos de entrada didáctica, con foco que puede ser estático o funcional, no necesariamente ambos.
++- **Poda didáctica:** será una tabla editorial independiente por foco y nodo, jamás una eliminación ni alteración del grafo original.
++
++## 5. Preparación para capítulos/libros posteriores
++
++**Advertencia de compatibilidad:** varias rutas y formatos actuales están especializados en el Libro I:
++
++- `public/tagueo/js/texto.js` identifica párrafos principalmente por `parrafo_nro`, sin clave de libro en `S.P`.
++- `tags.mapa.libro_tagueado` selecciona un libro para el modelo actual.
++- `src/labo/corpus-core.js` construye referencias `EN I` y un alcance `en1` específico.
++
++Por tanto, **no ampliar todavía el corpus a otros libros copiando sin cambios los números de párrafo**. Antes de iniciar el Libro II, definir una identidad textual estable, por ejemplo `(obra, libro, parrafo_local)` o un ID global, y un mecanismo de anclas Bekker que preserve la compatibilidad del Libro I. Generalizar el alcance y las referencias `EN I` en el constructor del corpus con una migración planificada y pruebas de regresión. Este checkpoint NO realiza esa migración.
++
++## 6. Ritual de checkpoint
++
++1. Capturar el bundle publicado del corpus; identificar su versión/revisión.
++2. Ejecutar el validador de tagueo existente y el auditor de identidad.
++3. Corregir errores estructurales sobre una copia/edición controlada; no modificar los datos desde el auditor.
++4. Revisar editoralmente los hallazgos `revision` leyendo el griego, traducción y Bekker.
++5. Registrar las decisiones de reinterpretación (qué se modificó, por qué, evidencia, autor/revisor cuando exista administración).
++6. Conservar el JSON de auditoría como línea base y comprobar que no aparezcan regresiones al añadir un capítulo.
++
++**Criterio de aprobación:** cero errores estructurales conocidos, todas las revisiones importantes triadas (pueden quedar justificadamente pendientes), y trazabilidad al texto en las interpretaciones críticas. No exige cero observaciones semánticas.
+diff --git a/public/js/lab/identityTaggingAudit.js b/public/js/lab/identityTaggingAudit.js
+new file mode 100644
+index 0000000..c3859aa
+--- /dev/null
++++ b/public/js/lab/identityTaggingAudit.js
+@@ -0,0 +1,199 @@
++// Auditoría documental de solo lectura: no normaliza ni reescribe el corpus.
++// Complementa, no sustituye, public/tagueo/js/validar.js.
++// Identidad compartida (mismo ID) != remisión editorial (remite_a) != evidencia textual.
++export const IDENTITY_AUDIT_VERSION = 1;
++
++const str = v => typeof v === 'string' && v.trim() ? v.trim() : null;
++const arr = v => Array.isArray(v) ? v : [];
++const plain = o => o && typeof o === 'object' && !Array.isArray(o);
++const compare = (a, b) => String(a).localeCompare(String(b), 'es');
++
++function flatten(roots, origin, findings) {
++  const nodes = new Map(), parents = new Map(), depth = new Map();
++  const active = new WeakSet();
++  function visit(n, parent, d) {
++    if (!plain(n)) { findings.push({ nivel: 'error', codigo: 'NODO_INVALIDO', ubicacion: origin, detalle: 'Se esperaba un nodo objeto.' }); return; }
++    if (active.has(n)) { findings.push({ nivel: 'error', codigo: 'CICLO_ARBOL', ubicacion: origin, detalle: 'Árbol con referencia circular.' }); return; }
++    const id = str(n.id);
++    if (!id) { findings.push({ nivel: 'error', codigo: 'ID_VACIO', ubicacion: origin, detalle: 'Nodo sin identificador.' }); return; }
++    if (nodes.has(id)) {
++      findings.push({ nivel: 'error', codigo: 'ID_DUPLICADO', ubicacion: `${origin}:${id}`, detalle: 'Identificador repetido dentro de la misma estructura.' });
++      return;
++    }
++    active.add(n);
++    nodes.set(id, n); parents.set(id, parent); depth.set(id, d);
++    for (const child of arr(n.hijos)) visit(child, id, d + 1);
++    active.delete(n);
++  }
++  for (const root of arr(roots)) visit(root, null, 0);
++  return { nodes, parents, depth };
++}
++
++function reference(raw, staticNodes) {
++  const value = str(raw);
++  if (!value) return { valido: false, concepto: null, sentido: null, motivo: 'referencia vacía' };
++  const [concepto, ...suffix] = value.split('#');
++  const sentido = suffix.length ? suffix.join('#') : null;
++  const node = staticNodes.get(concepto);
++  if (!node) return { valido: false, concepto, sentido, motivo: 'concepto inexistente en el estático' };
++  if (sentido && !arr(node.sentidos).some(s => s.id === sentido)) return { valido: false, concepto, sentido, motivo: 'sentido inexistente en ese concepto' };
++  return { valido: true, concepto, sentido, motivo: null };
++}
++
++/**
++ * @param {{tags:object,estatico:object,funcional:object}} source Bundle completo de /api/contenido.
++ * @returns {object} Informe de auditoría determinista y serializable.
++ */
++export function auditarIdentidadYTagueo(source) {
++  const bundle = source?.bundle || source;
++  if (!bundle?.estatico?.raices || !bundle?.funcional?.categorias || !bundle?.tags?.unidades || !bundle?.tags?.parrafos) {
++    throw new Error('Se necesita el bundle completo de /api/contenido (estatico, funcional y tags).');
++  }
++  const { estatico, funcional, tags } = bundle;
++  const hallazgos = [];
++  const add = (nivel, codigo, ubicacion, detalle) => hallazgos.push({ nivel, codigo, ubicacion, detalle });
++  const E = flatten(estatico.raices, 'estatico', hallazgos);
++  const F = flatten(funcional.categorias, 'funcional', hallazgos);
++  const est = E.nodes, fn = F.nodes;
++  const shared = [...fn.keys()].filter(id => est.has(id));
++  const exclusivos = [...fn.keys()].filter(id => !est.has(id));
++  const remisiones = [];
++  const aristas = arr(funcional.aristas);
++  const edgeIds = new Set();
++  const edgeRefs = new Map();
++
++  for (const [id, f] of fn) {
++    if (est.has(id) && F.depth.get(id) === 0) add('error', 'COLISION_CATEGORIA', `funcional:${id}`, 'Categoría funcional reutiliza un ID estático; comprobar su papel conceptual.');
++    for (const raw of arr(f.remite_a)) {
++      const r = reference(raw, est);
++      remisiones.push({ origenFuncional: id, destino: raw, ...r });
++      if (!r.valido) add('error', 'REMISION_INVALIDA', `funcional:${id}`, `remite_a «${raw}»: ${r.motivo}.`);
++    }
++    if (!est.has(id) && F.depth.get(id) > 0 && !arr(f.remite_a).length) {
++      add('revision', 'FUNCIONAL_SIN_ANCLA_EXPLICITA', `funcional:${id}`, 'Nodo funcional propio sin remite_a; revisar si corresponde una remisión. No implica error.');
++    }
++    if (est.has(id)) {
++      const a = est.get(id);
++      // Variación terminológica es habitual y no prueba divergencia conceptual.
++      if (str(a.gr) && str(f.gr) && a.gr.trim() !== f.gr.trim()) add('revision', 'GRIEGO_COMPARTIDO_DIFERENTE', `concepto:${id}`, 'El término griego difiere entre las dos representaciones: revisar sin fusionar definiciones.');
++    }
++  }
++  for (const [id, n] of est) {
++    const senses = new Set();
++    for (const s of arr(n.sentidos)) {
++      if (!str(s.id)) { add('error','SENTIDO_SIN_ID',`estatico:${id}`,'Un sentido carece de identificador.'); continue; }
++      if (senses.has(s.id)) add('error','SENTIDO_DUPLICADO',`estatico:${id}#${s.id}`,'Sentido repetido en el mismo concepto.');
++      senses.add(s.id);
++      for (const field of ['en','ver']) if (str(s[field])) {
++        const r = reference(s[field], est);
++        if (!r.valido) add('error','SENTIDO_REFERENCIA_INVALIDA',`estatico:${id}#${s.id}`,`${field} «${s[field]}»: ${r.motivo}.`);
++      }
++    }
++  }
++  for (const e of aristas) {
++    if (!str(e.id)) add('error','ARISTA_SIN_ID','funcional:aristas','Falta identificador de arista.');
++    else if (edgeIds.has(e.id)) add('error','ARISTA_DUPLICADA',`funcional:arista:${e.id}`,'El ID de arista se repite.');
++    if (str(e.id)) edgeIds.add(e.id);
++    for (const side of ['de','a']) if (!fn.has(e[side]) || F.depth.get(e[side]) === 0) add('error','ARISTA_EXTREMO_INVALIDO',`funcional:arista:${e.id || '?'}`,`Extremo «${side}» = «${e[side]}» no corresponde a un nodo funcional no categorial.`);
++    if (str(e.id)) edgeRefs.set(e.id, e);
++  }
++
++  const units = arr(tags.unidades), paras = arr(tags.parrafos), faqs = arr(tags.faqs);
++  const unitById = new Map(), paragraphUnits = new Map(), subById = new Map();
++  const faqIds = new Set(faqs.map(f => f.id));
++  let keyConceptCount = 0, subRelationCount = 0, linkedEdges = 0;
++  for (const u of units) {
++    if (!str(u.id)) add('error','UNIDAD_SIN_ID','tags:unidades','Unidad sin identificador.');
++    if (unitById.has(u.id)) add('error','UNIDAD_DUPLICADA',`unidad:${u.id}`,'Identificador de unidad repetido.');
++    unitById.set(u.id, u);
++    for (const p of arr(u.parrafos)) {
++      const pid = String(p);
++      const owners = paragraphUnits.get(pid) || new Set();
++      owners.add(u.id); paragraphUnits.set(pid, owners);
++    }
++    for (const s of arr(u.subunidades)) {
++      if (!str(s.id)) add('error','SUBUNIDAD_SIN_ID',`unidad:${u.id}`,'Subunidad sin identificador.');
++      if (subById.has(s.id)) add('error','SUBUNIDAD_DUPLICADA',`subunidad:${s.id}`,'ID de subunidad repetido.');
++      subById.set(s.id,{...s, unidad: u.id});
++      for (const c of arr(s.conceptos_clave)) {
++        keyConceptCount++;
++        if (!est.has(c)) add('error','CONCEPTO_CLAVE_INVALIDO',`subunidad:${s.id}`,`Concepto clave «${c}» no existe en el estático.`);
++      }
++      for (const [i,r] of arr(s.relaciones).entries()) {
++        subRelationCount++;
++        for (const [j,d] of arr(r.destinos).entries()) {
++          if (str(d.arista)) {
++            linkedEdges++;
++            if (!edgeRefs.has(d.arista)) add('error','DESTINO_ARISTA_INVALIDA',`subunidad:${s.id}:relacion:${i}:destino:${j}`,`Arista funcional «${d.arista}» inexistente.`);
++          }
++          if (str(d.hacia?.faq) && !faqIds.has(d.hacia.faq)) add('error','DESTINO_FAQ_INVALIDA',`subunidad:${s.id}:relacion:${i}:destino:${j}`,`FAQ «${d.hacia.faq}» inexistente.`);
++        }
++        // de/a pueden contener texto libre, y NO implican por sí solos identificadores erróneos.
++      }
++    }
++  }
++  const paragraphIds = new Set();
++  const status = {}, levels = {}, conceptTags = new Map();
++  for (const p of paras) {
++    const pid = String(p.parrafo ?? '');
++    if (!pid) add('error','PARRAFO_SIN_ID','tags:parrafos','Párrafo sin identificador.');
++    if (paragraphIds.has(pid)) add('error','PARRAFO_DUPLICADO',`parrafo:${pid}`,'Registro de párrafo repetido.');
++    paragraphIds.add(pid);
++    const st = p.estado || 'sin_estado'; status[st] = (status[st] || 0) + 1;
++    if (!['propuesto','confirmado','discusion'].includes(st)) add('revision','ESTADO_DESCONOCIDO',`parrafo:${pid}`,`Estado «${st}»: revisar vocabulario editorial.`);
++    const seenTags = new Set();
++    for (const [i,t] of arr(p.conceptos).entries()) {
++      const loc = `parrafo:${pid}:tag:${i+1}`;
++      if (!est.has(t.c)) { add('error','TAG_CONCEPTO_INVALIDO',loc,`Concepto «${t.c}» no existe en el árbol estático.`); continue; }
++      if (str(t.s) && !arr(est.get(t.c).sentidos).some(s => s.id === t.s)) add('error','TAG_SENTIDO_INVALIDO',loc,`Sentido «${t.c}#${t.s}» no existe en el estático.`);
++      const lv = t.n || 'sin_nivel'; levels[lv] = (levels[lv] || 0) + 1;
++      if (!['central','presente','mencion'].includes(lv)) add('revision','NIVEL_TAG_INUSUAL',loc,`Nivel «${lv}»: revisar convención.`);
++      const key = `${t.c}#${t.s || ''}`;
++      if (seenTags.has(key)) add('revision','TAG_REPETIDO',loc,`Mismo concepto/sentido «${key}» etiquetado varias veces en el párrafo.`);
++      seenTags.add(key);
++      conceptTags.set(t.c,(conceptTags.get(t.c) || 0) + 1);
++      if (t.via != null && t.implicito !== true) add('error','VIA_SIN_IMPLICITO',loc,'La vía requiere un tag marcado como implícito.');
++      if (t.implicito === true && t.via != null && (!str(t.via) || !str(t.ref))) add('error','VIA_IMPLICITA_SIN_CITA',loc,'Una vía de lectura implícita requiere texto y referencia.');
++    }
++  }
++  for (const [pid, owners] of paragraphUnits) {
++    if (!paragraphIds.has(pid)) add('error','UNIDAD_PARRAFO_SIN_TAG',`parrafo:${pid}`,`Asignado a unidad(es) ${[...owners].join(', ')}, pero falta el registro de tags.`);
++    if (owners.size > 1) add('revision','PARRAFO_MULTIPLES_UNIDADES',`parrafo:${pid}`,`Asignado a ${[...owners].join(', ')}; puede ser un solapamiento editorial.`);
++  }
++  for (const pid of paragraphIds) if (!paragraphUnits.has(pid)) add('revision','PARRAFO_SIN_UNIDAD',`parrafo:${pid}`,'Párrafo etiquetado sin unidad asignada.');
++  for (const faq of faqs) {
++    const id = faq.id || '?';
++    if (str(faq.arbol?.nodo) && !est.has(faq.arbol.nodo) && !fn.has(faq.arbol.nodo)) add('error','FAQ_FOCO_INVALIDO',`faq:${id}`,`Foco «${faq.arbol.nodo}» no existe ni en el árbol estático ni en el funcional.`);
++    for (const p of arr(faq.pasajes)) if (str(p.ref) && !subById.has(p.ref)) add('revision','FAQ_PASAJE_SIN_SUBUNIDAD',`faq:${id}`,`Pasaje «${p.ref}» no corresponde a subunidad en este bundle; revisar el tipo de ancla.`);
++  }
++
++  const identidades = [...new Set([...est.keys(),...fn.keys()])].sort(compare).map(id => ({
++    id, estatica: est.has(id), funcional: fn.has(id),
++    clase: est.has(id) && fn.has(id) ? 'compartido' : est.has(id) ? 'solo_estatico' : 'solo_funcional',
++    categoriaFuncional: fn.has(id) && F.depth.get(id) === 0,
++    remisionesSalientes: remisiones.filter(r => r.origenFuncional === id).map(r => r.destino),
++  }));
++  hallazgos.sort((a,b)=>compare(a.nivel,b.nivel)||compare(a.codigo,b.codigo)||compare(a.ubicacion,b.ubicacion));
++  return {
++    version: IDENTITY_AUDIT_VERSION,
++    versionCorpus: tags.version || 'sin_version',
++    semantica: {
++      identidad: 'Mismo ID estático y funcional: misma entidad conceptual, facetas documentales distintas.',
++      remision: 'remite_a: vínculo editorial explícito, no identidad automática.',
++      evidencia: 'Tag de párrafo o subunidad: índice documental; no prueba por sí solo una relación filosófica.'
++    },
++    resumen: {
++      conceptosEstaticos: est.size, nodosFuncionales: fn.size, identidadesCompartidas: shared.length,
++      soloEstaticos: est.size - shared.length, soloFuncionales: exclusivos.length,
++      categoriasFuncionales: [...F.depth.values()].filter(d=>d===0).length,
++      remisionesExplicitas: remisiones.length, aristasFuncionales: aristas.length,
++      unidades: units.length, subunidades: subById.size, parrafosEtiquetados: paras.length,
++      faqs: faqs.length, conceptosClaveSubunidad: keyConceptCount,
++      relacionesSubunidad: subRelationCount, destinosReferencianArista: linkedEdges,
++      estadosParrafo: status, nivelesTag: levels,
++      errores: hallazgos.filter(h=>h.nivel==='error').length,
++      revisiones: hallazgos.filter(h=>h.nivel==='revision').length
++    },
++    identidades, remisiones, hallazgos,
++  };
++}
+diff --git a/public/scripts/auditar-identidad-tagueo.mjs b/public/scripts/auditar-identidad-tagueo.mjs
+new file mode 100644
+index 0000000..b6f5a82
+--- /dev/null
++++ b/public/scripts/auditar-identidad-tagueo.mjs
+@@ -0,0 +1,49 @@
++#!/usr/bin/env node
++// Solo lectura. Obtiene el mismo bundle que usa la SPA desde /api/contenido.
++import fs from 'node:fs/promises';
++import { auditarIdentidadYTagueo } from '../js/lab/identityTaggingAudit.js';
++
++const argv = process.argv.slice(2);
++if (argv.includes('--help') || argv.includes('-h')) {
++  console.log(`Uso:
++  node public/scripts/auditar-identidad-tagueo.mjs [--url http://localhost:3000/api/contenido] [--out informe.json] [--strict]
++  node public/scripts/auditar-identidad-tagueo.mjs --file bundle-contenido.json [--out informe.json]
++
++--strict: termina con código 1 solo si hay errores estructurales, no por revisiones editoriales.
++El informe nunca escribe en MariaDB.`);
++  process.exit(0);
++}
++function value(flag, fallback = null) {
++  const i = argv.indexOf(flag);
++  return i === -1 ? fallback : argv[i + 1];
++}
++if (['--file','--url','--out'].some(flag => argv.includes(flag) && !value(flag))) {
++  console.error('Falta el valor de --file, --url o --out.');process.exit(2);
++}
++try {
++  let source;
++  if (value('--file')) source = JSON.parse(await fs.readFile(value('--file'), 'utf8'));
++  else {
++    const url = value('--url', 'http://localhost:3000/api/contenido');
++    const response = await fetch(url, { headers: {Accept: 'application/json'}, signal: AbortSignal.timeout(15000) });
++    if (!response.ok) throw new Error(`GET ${url}: HTTP ${response.status}`);
++    source = await response.json();
++  }
++  const result = auditarIdentidadYTagueo(source);
++  const r = result.resumen;
++  console.log(`Auditoría de identidad y tagueo v${result.version} · ${result.versionCorpus}`);
++  console.log(`Estático ${r.conceptosEstaticos} | funcional ${r.nodosFuncionales} | compartidos ${r.identidadesCompartidas} | remisiones ${r.remisionesExplicitas}`);
++  console.log(`Párrafos ${r.parrafosEtiquetados} | unidades ${r.unidades} | subunidades ${r.subunidades} | relaciones de subunidad ${r.relacionesSubunidad}`);
++  console.log(`Estados: ${JSON.stringify(r.estadosParrafo)} | niveles: ${JSON.stringify(r.nivelesTag)}`);
++  console.log(`Errores estructurales: ${r.errores} | revisiones editoriales: ${r.revisiones}`);
++  for (const h of result.hallazgos.slice(0, 40)) console.log(`- [${h.nivel}] ${h.codigo} @ ${h.ubicacion}: ${h.detalle}`);
++  if (result.hallazgos.length > 40) console.log(`... ${result.hallazgos.length - 40} hallazgos más; usar --out para ver todos.`);
++  if (value('--out')) {
++    await fs.writeFile(value('--out'), JSON.stringify(result,null,2) + '\n', 'utf8');
++    console.log(`Informe JSON: ${value('--out')}`);
++  }
++  if (argv.includes('--strict') && r.errores) process.exitCode = 1;
++} catch (err) {
++  console.error(`No se completó la auditoría: ${err.message}`);
++  process.exitCode = 2;
++}
+diff --git a/public/scripts/check-identidad-tagueo.mjs b/public/scripts/check-identidad-tagueo.mjs
+new file mode 100644
+index 0000000..e869ed4
+--- /dev/null
++++ b/public/scripts/check-identidad-tagueo.mjs
+@@ -0,0 +1,31 @@
++import assert from 'node:assert/strict';
++import { auditarIdentidadYTagueo } from '../js/lab/identityTaggingAudit.js';
++
++const input = () => ({
++  estatico:{raices:[{id:'phusis',label:'Naturaleza',gr:'φύσις',sentidos:[{id:'origen'}],hijos:[{id:'techne',label:'Técnica'}]}]},
++  funcional:{categorias:[{id:'I',label:'Categoría',hijos:[{id:'phusis',label:'Naturaleza',gr:'φύσις'},{id:'energeia',label:'Actividad',remite_a:['phusis#origen']}]}],aristas:[{id:'e1',de:'phusis',a:'energeia',rel:'produce',voz:'textual',ref:'EN I'}]},
++  tags:{version:'test',unidades:[{id:'u1',parrafos:[1],subunidades:[{id:'s1',conceptos_clave:['phusis'],relaciones:[{de:'expresión libre',rel:'hace',a:'techne',destinos:[{arista:'e1'}]}]}]}],parrafos:[{parrafo:1,estado:'propuesto',conceptos:[{c:'phusis',s:'origen',n:'central'}]}],faqs:[{id:'faq1',arbol:{nodo:'energeia'}}]},
++});
++const baseline = auditarIdentidadYTagueo(input());
++assert.equal(baseline.resumen.conceptosEstaticos,2);
++assert.equal(baseline.resumen.identidadesCompartidas,1);
++assert.equal(baseline.resumen.remisionesExplicitas,1);
++assert.equal(baseline.resumen.errores,0,'No exigir remite_a a un ID compartido; FAQ puede apuntar a funcional; extremos pueden ser texto libre.');
++assert.equal(baseline.identidades.find(x=>x.id==='phusis').clase,'compartido');
++assert.equal(baseline.remisiones[0].sentido,'origen');
++assert.equal(baseline.resumen.destinosReferencianArista,1);
++const mutation = input();
++mutation.funcional.categorias[0].hijos[1].remite_a=['phusis#inexistente'];
++mutation.funcional.aristas[0].a='inexistente';
++mutation.tags.parrafos[0].conceptos.push({c:'techne',s:'no_existe',n:'central',via:'ver',implicito:true});
++mutation.tags.unidades[0].subunidades[0].conceptos_clave.push('otro');
++mutation.tags.unidades[0].subunidades[0].relaciones[0].destinos[0].arista='otra_arista';
++const r = auditarIdentidadYTagueo(mutation);
++const codes = new Set(r.hallazgos.filter(h=>h.nivel==='error').map(h=>h.codigo));
++for (const k of ['REMISION_INVALIDA','ARISTA_EXTREMO_INVALIDO','TAG_SENTIDO_INVALIDO','CONCEPTO_CLAVE_INVALIDO','DESTINO_ARISTA_INVALIDA','VIA_IMPLICITA_SIN_CITA']) assert.ok(codes.has(k),`Debe detectar ${k}`);
++assert.ok(r.resumen.errores >= 6);
++const copy = input();copy.estatico.raices[0].gr='φύσις (otra forma)';
++const alt = auditarIdentidadYTagueo(copy);
++assert.equal(alt.resumen.errores,0);
++assert.ok(alt.hallazgos.some(h=>h.codigo==='GRIEGO_COMPARTIDO_DIFERENTE'&&h.nivel==='revision'));
++console.log('OK: identidades compartidas, remisiones, corpus editorial, referencias y clasificación no destructiva.');

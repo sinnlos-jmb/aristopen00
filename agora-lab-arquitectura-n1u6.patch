@@ -1,0 +1,565 @@
+diff --git a/docs/LAB_N1U6_PUENTES_EXPLICATIVOS.md b/docs/LAB_N1U6_PUENTES_EXPLICATIVOS.md
+new file mode 100644
+index 0000000..e93945f
+--- /dev/null
++++ b/docs/LAB_N1U6_PUENTES_EXPLICATIVOS.md
+@@ -0,0 +1,43 @@
++# Ágora · N1-U.6 · Puentes explicativos entre fichas y arquitectura textual
++
++## Decisión de diseño
++
++El punto de entrada del lector es la **ficha filosófica** (Proemio, «¿Qué es la ética?», «¿Cómo se dice el bien?»). La base canónica (`macrounidades propuestas → unidades registradas → subunidades`) queda como **archivo de respaldo** y nunca como menú de navegación obligatorio.
++
++Tres perspectivas secuenciales, no tres grafos superpuestos:
++
++1. **Contexto en el Libro I**: la ficha como nodo principal; enlaces explícitamente seleccionados hacia ciertas macrounidades propuestas y unidades registradas. Las etiquetas describen *por qué la ficha remite* a esas partes. No se representa todo el árbol estructural ni se deriva un puente de una coincidencia de tags.
++2. **Diagrama explicativo**: Proemio conserva sus dos resoluciones argumentativas N1-U.4 (síntesis y detalle con relaciones N1-U.3 hipotéticas); las FAQ muestran sus trayectos editoriales publicados, cuyas flechas representan orden de los pasos, **no** deducción. La estructura textual anterior se visita desde un acceso secundario «Archivo estructural del Libro I».
++3. **Pasajes de apoyo**: solo vínculos explícitos **ficha → pasaje**; no se conectan automáticamente las subunidades a sus unidades. Las subunidades siguen conservando su pertenencia canónica en la API, accesible por otros medios. Un clic abre la lectura bilingüe de la subunidad validada contra el paquete de lectura activo.
++
++El vocabulario de enlaces es editorial (`rol` y `explicacion`), no el de relaciones lógicas universalmente inferidas. Es posible que una ficha atraviese macrounidades y unidades diferentes. La ficha no reemplaza ni altera las FAQ, los trayectos publicados, las referencias Bekker, los tags ni el corpus de MariaDB.
++
++## Primera selección manual de conexiones
++
++- **Proemio**: macro I–V, unidad `proemio`; cuatro pasajes: `1094a1-3`, `1094a18-22`, `1094a26-b3`, `1094b7-10`.
++- **FAQ Ética**: macros I–V y VIII–XII; unidades `proemio`, `metodo`, `felicidad_opiniones`, `confirmacion`; los seis anclajes ya elegidos en su trayecto publicado.
++- **FAQ sobre el bien**: macros VI–VII y VIII–XII; unidades `idea_bien`, `confirmacion`; los cuatro anclajes ya elegidos en su trayecto publicado. La salida hacia `confirmacion` **no** demuestra la interpretación del bien por analogía.
++
++Las vinculaciones a macrounidades son **propuestas editoriales** porque la propia división en macrounidades es propuesta; la identidad de las unidades y subunidades y sus relaciones de pertenencia proviene del modelo canónico. Los textos de las fichas son borradores genéricos, pendientes de contrastación con la bibliografía secundaria.
++
++## Artefactos
++
++- `public/lab/n1u6-puentes-explicativos.json`: declaraciones de puentes por ficha, con `rol` y justificación revisables.
++- `public/js/lab/architectureBridges.js`: validación pura de identidad, revisión y correspondencia de anclajes, más grafos e inspector HTML seguro.
++- `public/js/views/labArchitectureView.js`: navegación guiada por ficha y selección de perspectivas.
++- `public/css/lab-arquitectura-n1u2.css`: controles de tres perspectivas y estilos de aristas, manteniendo los modos antiguos.
++- `public/scripts/check-lab-arquitectura-n1u6.mjs`: pruebas sin DB de cobertura, ausencia de enlaces automáticos, procedencia, revisión y escape HTML.
++
++## Prueba en Windows
++
++Con N1-U.5 instalado:
++
++```powershell
++ git apply --check "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u6.patch"
++ git apply "$env:USERPROFILE\Downloads\agora-lab-arquitectura-n1u6.patch"
++ node public/scripts/check-lab-arquitectura-n1u6.mjs
++```
++
++Abrir `/#/lab/arquitectura`: la ficha Proemio y su contexto deben mostrarse inicialmente. Seleccionar las otras dos fichas, alternar entre **Contexto**, **Diagrama** y **Pasajes**, y comprobar que los enlaces tienen comentarios distintos según su función. En Pasajes, inspeccionar un nodo y abrir lectura bilingüe. Luego volver al archivo estructural (acceso secundario) y comprobar que el mapa tradicional continúa disponible.
++
++**Límites:** la prueba local opera sobre el fixture N1-U.2 y el dump editorial del 7 de noviembre de 2026; la visualización con Cytoscape real y una MariaDB activa aún requiere validación en la instalación del usuario. En esta etapa, las FAQ de los archivos no se vuelven a consultar dinámicamente en MariaDB para verificar sus versiones publicadas.
+diff --git a/public/css/lab-arquitectura-n1u2.css b/public/css/lab-arquitectura-n1u2.css
+index ca36730..508d767 100644
+--- a/public/css/lab-arquitectura-n1u2.css
++++ b/public/css/lab-arquitectura-n1u2.css
+@@ -88,3 +88,10 @@
+ .arch-ficha-intro__body > details { margin: 12px 0 3px; font-size: .84rem; color: var(--text-muted, #526875); }
+ .arch-ficha-intro__body > details summary { cursor: pointer; }
+ @media (max-width: 650px) { .arch-fichas-nav button { flex: 1 1 140px; } .arch-ficha-intro { padding: 12px; } }
++
++/* N1-U.6 · La ficha precede al acceso a estructura; los puentes tienen su propia semántica. */
++.arch-perspectivas { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 13px; }
++.arch-perspectivas[hidden] { display: none !important; }
++.arch-perspectivas button { border: 1px solid var(--border, #b6c8cd); background: var(--bg-elevated, #fff); color: inherit; border-radius: 8px; padding: 9px 13px; cursor: pointer; font: inherit; font-size: .9rem; }
++.arch-perspectivas button[aria-pressed="true"] { border-color: #2d6968; background: #e5f2ef; color: #20534e; font-weight: 700; }
++@media (max-width: 650px) { .arch-perspectivas button { flex: 1 1 100%; } }
+diff --git a/public/js/lab/architectureBridges.js b/public/js/lab/architectureBridges.js
+new file mode 100644
+index 0000000..1f0e904
+--- /dev/null
++++ b/public/js/lab/architectureBridges.js
+@@ -0,0 +1,93 @@
++// N1-U.6 · La ficha es la entrada; macro/unidad/subunidad son contexto y respaldo.
++// Los vínculos son selección editorial explícita, no uniones automáticas ni nuevas aristas canónicas.
++const safe = value => String(value ?? '').replace(/[&<>"']/g, char => ({
++  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
++})[char]);
++const fail = message => { throw new Error(`Puentes de fichas: ${message}`); };
++const clean = x => typeof x === 'string' && !!x.trim();
++
++export function construirPuentesExplicativos(modelo, fichas, recurso) {
++  if (recurso?.schema !== 'agora.lab.n1u6.puentes.v1' || recurso.estado !== 'borrador_editorial_para_curaduria') fail('esquema o estado incorrectos');
++  if (!modelo?.revision || recurso.fuente?.revision !== modelo.revision || fichas?.revision !== modelo.revision ||
++      recurso.fuente?.fichas_schema !== 'agora.lab.n1u5.fichas.v1') fail('revisión o ficha fuente distintas');
++  if (!Array.isArray(recurso.puentes) || recurso.puentes.length !== fichas.fichas.length) fail('falta un puente por ficha');
++  const porFicha = new Map(), macroPorId = new Map(modelo.macros.map(m => [m.id, m]));
++  for (const p of recurso.puentes) {
++    const ficha = fichas.porId.get(p?.ficha_id);
++    if (!ficha || porFicha.has(p.ficha_id)) fail('ficha ausente o duplicada');
++    const macros = p.contextos?.macros, unidades = p.contextos?.unidades;
++    if (!Array.isArray(macros) || !macros.length || !Array.isArray(unidades) || !unidades.length || !Array.isArray(p.apoyos) || !p.apoyos.length) fail('faltan contextos o apoyos');
++    const vistos = new Set();
++    for (const m of macros) {
++      if (!macroPorId.has(m.id) || !clean(m.rol) || !clean(m.explicacion) || vistos.has(`m:${m.id}`)) fail(`macrounidad incorrecta de ${p.ficha_id}`);
++      vistos.add(`m:${m.id}`);
++    }
++    for (const u of unidades) {
++      if (!modelo.unidades.has(u.id) || !clean(u.rol) || !clean(u.explicacion) || vistos.has(`u:${u.id}`)) fail(`unidad incorrecta de ${p.ficha_id}`);
++      if (!macros.some(m => macroPorId.get(m.id).unidades.some(x => x.id === u.id))) fail(`unidad sin macrounidad de contexto: ${u.id}`);
++      vistos.add(`u:${u.id}`);
++    }
++    for (const a of p.apoyos) {
++      const sub = modelo.subs.get(a.sub_id);
++      if (!sub || !clean(a.rol) || !clean(a.explicacion) || vistos.has(`s:${a.sub_id}`)) fail(`apoyo textual incorrecto: ${a.sub_id}`);
++      if (!unidades.some(u => u.id === sub.unidad)) fail(`apoyo sin unidad contextual seleccionada: ${a.sub_id}`);
++      vistos.add(`s:${a.sub_id}`);
++    }
++    if (ficha.tipo === 'faq') {
++      // Para las FAQ piloto, reutilizamos SOLO los anclajes escogidos para el trayecto publicado.
++      if (p.apoyos.length !== ficha.pasos.length || p.apoyos.some((a, i) => a.sub_id !== ficha.pasos[i].sub_id || a.paso_id !== ficha.pasos[i].id)) fail(`los anclajes de la FAQ ${p.ficha_id} no coinciden con el trayecto`);
++    } else if (p.apoyos.some(a => a.paso_id || modelo.subs.get(a.sub_id).unidad !== 'proemio')) fail('el Proemio solo admite sus apoyos curatoriales');
++    porFicha.set(p.ficha_id, Object.freeze({ ...p }));
++  }
++  return Object.freeze({ revision: modelo.revision, porFicha, fichas });
++}
++
++export function elementosPuentes(modelo, fichas, puentes, fichaId, vista, seleccion = {}) {
++  if (!['orientacion', 'apoyos'].includes(vista)) fail('vista desconocida');
++  if (modelo.revision !== puentes.revision || fichas.revision !== puentes.revision) fail('revisión distinta');
++  const ficha = fichas.porId.get(fichaId), p = puentes.porFicha.get(fichaId);
++  if (!ficha || !p) fail('ficha sin puentes');
++  const ids = [], nodes = [{ group: 'nodes', data: { id: `puente:ficha:${fichaId}`, tipo: 'ficha_central', key: fichaId, label: ficha.titulo, seleccionado: seleccion.id === 'ficha' ? 1 : 0 }, position: { x: 130, y: 340 } }];
++  const edges = [];
++  const add = (kind, item, i, total, label, x) => {
++    const id = `${kind}:${item.id || item.sub_id}`;
++    const tipo = ({ macro: 'macro_referida', unidad: 'unidad_referida', sub: 'subunidad_referida' })[kind];
++    nodes.push({ group: 'nodes', data: { id: `puente:${fichaId}:${id}`, tipo, key: id, label, seleccionado: seleccion.id === id ? 1 : 0 }, position: { x, y: 120 + i * (total > 4 ? 150 : 190) } });
++    edges.push({ group: 'edges', data: { id: `puente-arista:${fichaId}:${id}`, key: id, source: `puente:ficha:${fichaId}`, target: `puente:${fichaId}:${id}`, tipo: kind === 'sub' ? 'respaldo_textual' : 'contexto_ficha', label: item.rol, seleccionado: seleccion.id === id ? 1 : 0 } });
++    ids.push(id);
++  };
++  if (vista === 'orientacion') {
++    const contexts = [...p.contextos.macros.map(m => ({ kind: 'macro', item: m })), ...p.contextos.unidades.map(u => ({ kind: 'unidad', item: u }))];
++    contexts.forEach(({ kind, item }, i) => {
++      const macro = kind === 'macro' ? modelo.macros.find(m => m.id === item.id) : null;
++      const title = kind === 'macro' ? `${macro.capitulos} · ${macro.titulo}` : modelo.unidades.get(item.id).titulo;
++      add(kind, item, i, contexts.length, `${title}\n${item.rol}`, kind === 'macro' ? 530 : 940);
++    });
++  } else {
++    p.apoyos.forEach((a, i) => {
++      const s = modelo.subs.get(a.sub_id);
++      add('sub', a, i, p.apoyos.length, `${s.titulo}\n${a.sub_id}`, 650);
++    });
++  }
++  return [...nodes, ...edges];
++}
++
++export function inspectorPuentesHtml(modelo, fichas, puentes, fichaId, vista, seleccionado = null) {
++  const ficha = fichas.porId.get(fichaId), p = puentes.porFicha.get(fichaId);
++  if (!ficha || !p) fail('no existe ficha');
++  const source = vista === 'orientacion' ? [
++    ...p.contextos.macros.map(x => ({ ...x, key: `macro:${x.id}`, tipo: 'Macrounidad propuesta', titulo: modelo.macros.find(m => m.id === x.id)?.titulo || x.id, ref: modelo.macros.find(m => m.id === x.id)?.capitulos })),
++    ...p.contextos.unidades.map(x => ({ ...x, key: `unidad:${x.id}`, tipo: 'Unidad registrada', titulo: modelo.unidades.get(x.id)?.titulo || x.id, ref: x.id })),
++  ] : p.apoyos.map(x => ({ ...x, key: `sub:${x.sub_id}`, tipo: 'Pasaje de apoyo', titulo: modelo.subs.get(x.sub_id)?.titulo || x.sub_id, ref: x.sub_id }));
++  const active = source.find(x => x.key === seleccionado);
++  const intro = vista === 'orientacion' ? 'Estos vínculos sitúan la ficha en el Libro I. Son asociaciones editoriales seleccionadas expresamente; no se derivan del árbol de subunidades.' : 'Los pasajes se vinculan directamente con la ficha según una decisión editorial. El lector puede verificar cada apoyo en griego y castellano. No se dibujan enlaces automáticos hacia su unidad.';
++  const html = `<div class="arch-inspector-heading"><span class="arch-chip arch-chip--propuesto">Puentes explicativos · borrador</span></div>
++    <h2>${safe(active?.titulo || ficha.titulo)}</h2>
++    ${active ? `<p class="arch-muted">${safe(active.tipo)} · ${safe(active.ref)}</p><h3>Función en esta ficha</h3><p><strong>${safe(active.rol)}</strong>. ${safe(active.explicacion)}</p>
++      ${active.sub_id ? `<button class="arch-primary" type="button" data-arch-read="${safe(active.sub_id)}">Leer el pasaje bilingüe</button>` : ''}
++      ${active.key.startsWith('unidad:') ? `<button class="arch-minor" type="button" data-arch-go-unit="${safe(active.id)}">Explorar la unidad en el archivo estructural</button>` : ''}` : `<p>${safe(intro)}</p>`}
++    <h3>${vista === 'orientacion' ? 'Ubicaciones relevantes' : 'Evidencias seleccionadas'} (${source.length})</h3>
++    <div class="arch-nav-list">${source.map(x => `<button type="button" data-arch-bridge="${safe(x.key)}"><strong>${safe(x.titulo)}</strong><small>${safe(x.rol)} · ${safe(x.ref)}</small></button>`).join('')}</div>
++    <p class="arch-muted">${vista === 'orientacion' ? 'La inclusión de una unidad en una macrounidad es un hecho estructural separado del sentido explicativo del puente.' : 'El enlace no afirma una deducción: identifica un pasaje que fundamenta, matiza o plantea el problema de esta ficha.'}</p>`;
++  return html;
++}
+diff --git a/public/js/views/labArchitectureView.js b/public/js/views/labArchitectureView.js
+index 3baff2f..9f38d33 100644
+--- a/public/js/views/labArchitectureView.js
++++ b/public/js/views/labArchitectureView.js
+@@ -5,6 +5,7 @@ import { construirModeloArquitectura, obtenerContexto, elementosArquitectura } f
+ import { construirRelacionesProemio, elementosRelacionesProemio } from '../lab/architectureRelations.js';
+ import { construirCapasProemio, elementosCapaBasica, elementosCapaDetallada } from '../lab/architectureLayers.js';
+ import { construirFichasArquitectura, elementosFichaFAQ, fichaIntroHtml, inspectorFichaFAQHtml } from '../lab/architectureCards.js';
++import { construirPuentesExplicativos, elementosPuentes, inspectorPuentesHtml } from '../lab/architectureBridges.js';
+ import { localizarSubunidadEnBiblioteca, representarLecturaContextual } from '../lab/graphPassageReader.js';
+ 
+ const safe = x => esc(String(x ?? ''));
+@@ -166,6 +167,10 @@ function graphStyle() {
+     { selector: 'node[tipo = "unidad"]', style: { 'background-color': '#e5ebff', 'border-color': '#627bb2', 'width': 232 } },
+     { selector: 'node[tipo = "momento"]', style: { 'background-color': '#f6eedb', 'border-color': '#b08f46', 'width': 242, 'height': 76 } },
+     { selector: 'node[tipo = "subunidad"]', style: { 'background-color': '#f4f0ff', 'border-color': '#9c85b6', 'width': 230, 'height': 78, 'font-size': 12 } },
++    { selector: 'node[tipo = "ficha_central"]', style: { 'background-color': '#d6eae7', 'border-color': '#31736c', 'width': 330, 'height': 112, 'font-size': 16, 'font-weight': 700 } },
++    { selector: 'node[tipo = "macro_referida"]', style: { 'background-color': '#e7ecee', 'border-color': '#7d9a9b', 'width': 285, 'height': 100, 'font-size': 12 } },
++    { selector: 'node[tipo = "unidad_referida"]', style: { 'background-color': '#ebeffa', 'border-color': '#8295ba', 'width': 285, 'height': 100, 'font-size': 12 } },
++    { selector: 'node[tipo = "subunidad_referida"]', style: { 'background-color': '#f4f1e9', 'border-color': '#a69066', 'width': 300, 'height': 94, 'font-size': 12 } },
+     { selector: 'node[tipo = "paso_faq"]', style: { 'background-color': '#edf0fa', 'border-color': '#627ca0', 'width': 330, 'height': 106, 'font-size': 13, 'font-weight': 550 } },
+     { selector: 'node[tipo = "modulo_argumentativo"]', style: { 'background-color': '#e4f1f0', 'border-color': '#52837e', 'width': 310, 'height': 102, 'font-weight': 650, 'font-size': 16 } },
+     { selector: 'node[tipo = "modulo_contenedor"]', style: { 'background-color': '#cde6e1', 'background-opacity': 0.19, 'border-color': '#69958e', 'border-style': 'dashed', 'border-width': 2, 'text-valign': 'top', 'text-margin-y': -14, 'font-size': 19, 'font-weight': 700, 'color': '#255e58', 'padding': 50, 'shape': 'round-rectangle', 'text-max-width': '340px', 'width': 'label', 'height': 'label' } },
+@@ -181,6 +186,9 @@ function graphStyle() {
+     { selector: 'edge[tipo = "orden_textual"]', style: { 'line-style': 'dashed', 'line-color': '#aaa', 'target-arrow-color': '#aaa' } },
+     { selector: 'edge[tipo = "articula"]', style: { 'line-style': 'dashed', 'line-color': '#b99d54', 'target-arrow-color': '#b99d54' } },
+     { selector: 'edge[tipo = "argumentativa_propuesta"]', style: { 'width': 3, 'line-style': 'dashed', 'line-color': '#bc7548', 'target-arrow-color': '#bc7548', 'font-size': 12, 'text-rotation': 'none' } },
++    { selector: 'edge[tipo = "contexto_ficha"]', style: { 'width': 2.5, 'line-style': 'dashed', 'line-color': '#6c9692', 'target-arrow-color': '#6c9692', 'font-size': 10, 'text-rotation': 'none' } },
++    { selector: 'edge[tipo = "respaldo_textual"]', style: { 'width': 2.5, 'line-style': 'solid', 'line-color': '#94774b', 'target-arrow-color': '#94774b', 'font-size': 11, 'text-rotation': 'none' } },
++    { selector: 'edge[tipo = "contexto_ficha"][seleccionado = 1], edge[tipo = "respaldo_textual"][seleccionado = 1]', style: { 'width': 5, 'line-color': '#27655e', 'target-arrow-color': '#27655e' } },
+     { selector: 'edge[tipo = "orden_trayecto"]', style: { 'width': 3, 'line-style': 'dotted', 'line-color': '#707f9e', 'target-arrow-color': '#707f9e', 'font-size': 11 } },
+     { selector: 'edge[tipo = "orden_trayecto"][seleccionado = 1]', style: { 'width': 5, 'line-color': '#294e83', 'target-arrow-color': '#294e83' } },
+     { selector: 'edge[tipo = "argumentativa_resumida"]', style: { 'width': 4, 'line-style': 'dashed', 'line-color': '#417e78', 'target-arrow-color': '#417e78', 'font-size': 14, 'text-rotation': 'none' } },
+@@ -197,30 +205,35 @@ export async function createLabArchitectureView(App) {
+   css.rel = 'stylesheet'; css.href = '/css/lab-arquitectura-n1u2.css'; css.dataset.agoraLabArquitectura = '1';
+   document.head.append(css);
+   el.innerHTML = `<div class="arch-page">
+-    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.5 · Fichas explicativas · Solo consulta</span></nav>
+-    <h1>Arquitectura argumentativa del Libro I</h1>
+-    <p class="arch-intro">Macrounidades propuestas y unidades reales de MariaDB. La virtud completa en una vida entera.</p>
++    <nav class="arch-top"><a href="#/lab">← Volver al Lab</a><span>N1-U.6 · Lectura guiada · Solo consulta</span></nav>
++    <h1>Fichas explicativas del Libro I</h1>
++    <p class="arch-intro">Comenzá por un problema filosófico. Después explorá su contexto, sus argumentos y los pasajes que lo respaldan. La virtud completa en una vida entera.</p>
+     <p class="arch-status" role="status" aria-live="polite">Cargando la revisión editorial…</p>
+     <div class="arch-main" hidden>
+       <div class="arch-fichas-nav" role="group" aria-label="Fichas explicativas">
+-        <span>Fichas piloto:</span>
++        <span>Elegí una explicación:</span>
+         <button type="button" data-arch-card="proemio" aria-pressed="false">Proemio</button>
+         <button type="button" data-arch-card="faq.etica.intro" aria-pressed="false">¿Qué es la ética?</button>
+         <button type="button" data-arch-card="faq.agathon.pros_hen" aria-pressed="false">¿Cómo se dice el bien?</button>
+       </div>
+       <section class="arch-ficha-panel" aria-label="Marco explicativo del diagrama" hidden></section>
++      <div class="arch-perspectivas" role="group" aria-label="Enfoque de la ficha" hidden>
++        <button type="button" data-arch-perspectiva="orientacion" aria-pressed="true">1 · Contexto en el Libro I</button>
++        <button type="button" data-arch-perspectiva="diagrama" aria-pressed="false">2 · Diagrama explicativo</button>
++        <button type="button" data-arch-perspectiva="apoyos" aria-pressed="false">3 · Pasajes de apoyo</button>
++      </div>
+       <div class="arch-toolbar">
+-        <button type="button" data-arch-back="libro">Libro I</button>
++        <button type="button" data-arch-legacy>Archivo estructural del Libro I</button>
++        <button type="button" data-arch-back="libro" hidden>Libro I</button>
+         <button type="button" data-arch-back="macro" hidden>Volver a macrounidad</button>
+         <button type="button" data-arch-back="unidad" hidden>Volver a unidad</button>
+         <button type="button" data-arch-back="momento" hidden>Volver a momento</button>
+         <div class="arch-modes" role="group" aria-label="Vista del argumento" hidden>
+-          <button type="button" data-arch-mode="momentos" aria-pressed="false">Estructura textual</button>
+-          <button type="button" data-arch-mode="modulos" aria-pressed="true">Capa 1 · módulos</button>
+-          <button type="button" data-arch-mode="relaciones" aria-pressed="false">Capa 2 · subunidades</button>
++          <button type="button" data-arch-mode="modulos" aria-pressed="true">Vista sintética · módulos</button>
++          <button type="button" data-arch-mode="relaciones" aria-pressed="false">Vista analítica · relaciones</button>
+         </div>
+         <button type="button" data-arch-fit>Ajustar grafo</button>
+-        <span class="arch-legend">Estructura y lectura · Las flechas anaranjadas son hipótesis argumentativas, no registros</span>
++        <span class="arch-legend" data-arch-legend>Los vínculos desde la ficha son decisiones editoriales revisables, no aristas extraídas automáticamente del tagueo.</span>
+       </div>
+       <div class="arch-columns">
+         <section class="arch-graph-shell" aria-label="Grafo del libro">
+@@ -229,7 +242,7 @@ export async function createLabArchitectureView(App) {
+         </section>
+         <aside class="arch-inspector" aria-label="Ficha editorial"><div class="arch-inspector-content"></div></aside>
+       </div>
+-      <p class="arch-footer">N1-U.5 agrega marcos explicativos para el Proemio y dos trayectos FAQ publicados, sin modificarlos. N1-U.4 conserva dos resoluciones del mismo grafo propuesto. Los módulos y las relaciones N1-U.3 no son registros canónicos; las subunidades provienen de MariaDB y permiten lectura bilingüe.</p>
++      <p class="arch-footer">N1-U.6 comienza por las fichas y separa contexto, diagrama y apoyo textual. El archivo estructural sigue disponible como herramienta documental; los puentes explicativos y las aristas argumentativas hipotéticas no sustituyen ni modifican MariaDB.</p>
+     </div>
+     <section class="arch-reader" hidden>
+       <div class="arch-reader-head"><button type="button" data-arch-reader-back>← Volver al grafo</button><div><h2 data-arch-reader-title>Lectura</h2><p class="arch-muted" data-arch-reader-ref></p></div></div>
+@@ -242,7 +255,8 @@ export async function createLabArchitectureView(App) {
+   const main = $('.arch-main'), inspector = $('.arch-inspector-content'), reader = $('.arch-reader');
+   const graph = $('.arch-graph');
+   const state = { macroId: null, unidadId: null, momentoId: null, subId: null };
+-  let model = null, rels = null, capas = null, fichas = null, fichaActiva = null, fichaPasoId = null, fichaEnlaceId = null;
++  let model = null, rels = null, capas = null, fichas = null, puentes = null, fichaActiva = 'proemio', fichaPasoId = null, fichaEnlaceId = null;
++  let perspectiva = 'orientacion', puenteSeleccionado = null;
+   let modo = 'momentos', relacionId = null, relacionSubId = null;
+   let moduloId = null, enlaceId = null;
+   let cy = null, destroyed = false, readerModel = null, chapterNumber = null, readerTicket = 0;
+@@ -251,7 +265,7 @@ export async function createLabArchitectureView(App) {
+   const selected = () => obtenerContexto(model, state);
+   function navegar(kind, id = null) {
+     if (!model) return;
+-    fichaActiva = null; fichaPasoId = null; fichaEnlaceId = null;
++    fichaActiva = null; fichaPasoId = null; fichaEnlaceId = null; puenteSeleccionado = null;
+     if (kind === 'libro') Object.assign(state, { macroId: null, unidadId: null, momentoId: null, subId: null });
+     if (kind === 'macro') {
+       if (!model.macros.some(x => x.id === id)) return;
+@@ -279,30 +293,38 @@ export async function createLabArchitectureView(App) {
+     const ctx = selected();
+     const ficha = fichas?.porId.get(fichaActiva) || null;
+     const faq = ficha?.tipo === 'faq' ? ficha : null;
+-    const disponible = !faq && ctx.unidad?.id === 'proemio' && !!rels && !!capas;
++    const puenteVisible = !!ficha && !!puentes && perspectiva !== 'diagrama';
++    const disponible = !puenteVisible && !faq && ctx.unidad?.id === 'proemio' && !!rels && !!capas;
+     const sintetico = disponible && modo === 'modulos';
+     const argumentativo = disponible && modo === 'relaciones';
+-    $('.arch-modes').hidden = !disponible;
++    $('.arch-perspectivas').hidden = !ficha;
++    for (const b of el.querySelectorAll('[data-arch-perspectiva]')) b.setAttribute('aria-pressed', String(b.dataset.archPerspectiva === perspectiva));
++    $('.arch-modes').hidden = !(disponible && !!ficha);
++    $('[data-arch-back="libro"]').hidden = !!ficha;
++    $('[data-arch-legacy]').hidden = !ficha;
++    $('[data-arch-legend]').textContent = puenteVisible ? (perspectiva === 'orientacion' ? 'Vínculos editoriales con macrounidades y unidades; no son inferencias a partir de tags.' : 'Pasajes vinculados directamente con la explicación; consulta bilingüe disponible.') : faq ? 'Las flechas punteadas indican el orden del trayecto publicado, no demostraciones.' : 'Las relaciones argumentativas del Proemio son hipótesis todavía no validadas.';
+     const descripcion = $('.arch-ficha-panel');
+     descripcion.hidden = !ficha;
+     descripcion.innerHTML = ficha ? fichaIntroHtml(ficha) : '';
+     for (const b of el.querySelectorAll('[data-arch-card]')) b.setAttribute('aria-pressed', String(b.dataset.archCard === fichaActiva));
+     const vistaActiva = sintetico ? 'modulos' : argumentativo ? 'relaciones' : 'momentos';
+     for (const b of el.querySelectorAll('[data-arch-mode]')) b.setAttribute('aria-pressed', String(b.dataset.archMode === vistaActiva));
+-    inspector.innerHTML = faq ? inspectorFichaFAQHtml(faq, model, fichaPasoId, fichaEnlaceId)
++    inspector.innerHTML = puenteVisible ? inspectorPuentesHtml(model, fichas, puentes, ficha.id, perspectiva, puenteSeleccionado)
++      : faq ? inspectorFichaFAQHtml(faq, model, fichaPasoId, fichaEnlaceId)
+       : sintetico ? inspectorModulosHtml(model, capas, moduloId, enlaceId)
+       : argumentativo ? inspectorRelacionesHtml(model, rels, relacionId, relacionSubId) : inspectorHtml(model, state);
+-    $('[data-arch-back="macro"]').hidden = !!faq || !ctx.macro;
+-    $('[data-arch-back="unidad"]').hidden = !!faq || !ctx.unidad;
+-    $('[data-arch-back="momento"]').hidden = !!faq || !ctx.momento;
+-    graph.setAttribute('aria-label', faq ? `Trayecto editorial de la FAQ: ${faq.titulo}` : 'Grafo de arquitectura del Libro I');
++    $('[data-arch-back="macro"]').hidden = !!ficha || !ctx.macro;
++    $('[data-arch-back="unidad"]').hidden = !!ficha || !ctx.unidad;
++    $('[data-arch-back="momento"]').hidden = !!ficha || !ctx.momento;
++    graph.setAttribute('aria-label', puenteVisible ? `Ficha ${ficha.titulo}: ${perspectiva === 'orientacion' ? 'contexto editorial' : 'pasajes de apoyo'}` : faq ? `Trayecto editorial de la FAQ: ${faq.titulo}` : 'Grafo de arquitectura del Libro I');
+     if (cy) {
+-      const elements = faq ? elementosFichaFAQ(faq, model, { pasoId: fichaPasoId, enlaceId: fichaEnlaceId })
++      const elements = puenteVisible ? elementosPuentes(model, fichas, puentes, ficha.id, perspectiva, { id: puenteSeleccionado })
++        : faq ? elementosFichaFAQ(faq, model, { pasoId: fichaPasoId, enlaceId: fichaEnlaceId })
+         : sintetico ? elementosCapaBasica(capas, { moduloId, enlaceId })
+         : argumentativo ? elementosCapaDetallada(model, capas, { relacionId, subId: relacionSubId, moduloId })
+         : elementosArquitectura(model, state);
+       // Posiciones independientes para cada ficha y resolución.
+-      const posGroup = faq ? `ficha:${faq.id}:` : sintetico ? 'modulos:' : argumentativo ? 'relaciones:' : 'estructura:';
++      const posGroup = puenteVisible ? `puente:${ficha.id}:${perspectiva}:` : faq ? `ficha:${faq.id}:` : sintetico ? 'modulos:' : argumentativo ? 'relaciones:' : 'estructura:';
+       for (const e of elements) if (e.group === 'nodes' && e.data.tipo !== 'modulo_contenedor' && positions.has(posGroup + e.data.id)) e.position = positions.get(posGroup + e.data.id);
+       cy.batch(() => { cy.elements().remove(); cy.add(elements); });
+       cy.resize(); cy.fit(cy.elements(), 38);
+@@ -364,7 +386,7 @@ export async function createLabArchitectureView(App) {
+     const cardButton = event.target.closest('[data-arch-card]');
+     if (cardButton && fichas?.porId.has(cardButton.dataset.archCard)) {
+       const id = cardButton.dataset.archCard;
+-      fichaActiva = id; fichaPasoId = null; fichaEnlaceId = null;
++      fichaActiva = id; fichaPasoId = null; fichaEnlaceId = null; puenteSeleccionado = null; perspectiva = 'orientacion';
+       if (id === 'proemio') {
+         const macro = model.macros.find(m => m.unidades.some(u => u.id === 'proemio'));
+         if (!macro) return;
+@@ -373,6 +395,34 @@ export async function createLabArchitectureView(App) {
+       }
+       dibujar(); return;
+     }
++    const perspectiveButton = event.target.closest('[data-arch-perspectiva]');
++    if (perspectiveButton && fichaActiva) {
++      const next = perspectiveButton.dataset.archPerspectiva;
++      if (!['orientacion', 'diagrama', 'apoyos'].includes(next)) return;
++      perspectiva = next; puenteSeleccionado = null;
++      if (next === 'diagrama' && fichaActiva === 'proemio') modo = 'modulos';
++      dibujar(); return;
++    }
++    const bridgeButton = event.target.closest('[data-arch-bridge]');
++    if (bridgeButton && fichaActiva && puentes?.porFicha.has(fichaActiva)) {
++      const id = bridgeButton.dataset.archBridge;
++      const grupo = puentes.porFicha.get(fichaActiva);
++      const validos = perspectiva === 'orientacion' ? [
++        ...grupo.contextos.macros.map(m => `macro:${m.id}`), ...grupo.contextos.unidades.map(u => `unidad:${u.id}`)
++      ] : grupo.apoyos.map(s => `sub:${s.sub_id}`);
++      if (validos.includes(id)) { puenteSeleccionado = id; dibujar(); }
++      return;
++    }
++    const goUnit = event.target.closest('[data-arch-go-unit]');
++    if (goUnit && puentes?.porFicha.get(fichaActiva)?.contextos.unidades.some(u => u.id === goUnit.dataset.archGoUnit)) {
++      const macro = model.macros.find(m => m.unidades.some(u => u.id === goUnit.dataset.archGoUnit));
++      if (!macro) return;
++      Object.assign(state, { macroId: macro.id, unidadId: goUnit.dataset.archGoUnit, momentoId: null, subId: null });
++      fichaActiva = null; puenteSeleccionado = null; modo = 'momentos'; dibujar(); return;
++    }
++    if (event.target.closest('[data-arch-legacy]')) {
++      fichaActiva = null; puenteSeleccionado = null; navegar('libro'); return;
++    }
+     const cardStep = event.target.closest('[data-arch-card-step]');
+     if (cardStep && fichas?.porId.get(fichaActiva)?.pasos.some(p => p.id === cardStep.dataset.archCardStep)) {
+       fichaPasoId = cardStep.dataset.archCardStep; fichaEnlaceId = null; dibujar(); return;
+@@ -386,7 +436,7 @@ export async function createLabArchitectureView(App) {
+     if (modeButton) {
+       if (selected().unidad?.id !== 'proemio' || !rels) return;
+       const next = modeButton.dataset.archMode;
+-      if (!['momentos', 'modulos', 'relaciones'].includes(next)) return;
++      if (!['modulos', 'relaciones'].includes(next)) return;
+       modo = next;
+       relacionId = null; relacionSubId = null; moduloId = null; enlaceId = null;
+       dibujar(); return;
+@@ -449,21 +499,27 @@ export async function createLabArchitectureView(App) {
+     if (next) { chapterNumber = next.number; pintarLectura(); }
+   });
+   try {
+-    const [r, p, a, m, f] = await Promise.all([
++    const [r, p, a, m, f, v] = await Promise.all([
+       fetch('/api/labo/lectura', { cache: 'no-store', signal: abort.signal }),
+       fetch('/lab/n1u1-propuestas-libro-i.json', { cache: 'no-store', signal: abort.signal }),
+       fetch('/lab/n1u3-relaciones-proemio.json', { cache: 'no-store', signal: abort.signal }),
+       fetch('/lab/n1u4-modulos-proemio.json', { cache: 'no-store', signal: abort.signal }),
+       fetch('/lab/n1u5-fichas-explicativas.json', { cache: 'no-store', signal: abort.signal }),
++      fetch('/lab/n1u6-puentes-explicativos.json', { cache: 'no-store', signal: abort.signal }),
+     ]);
+-    if (!r.ok || !p.ok || !a.ok || !m.ok || !f.ok) throw new Error(`No se pudieron cargar las fuentes (MariaDB: ${r.status}; momentos: ${p.status}; relaciones: ${a.status}; módulos: ${m.status}; fichas: ${f.status}).`);
++    if (!r.ok || !p.ok || !a.ok || !m.ok || !f.ok || !v.ok) throw new Error(`No se pudieron cargar las fuentes (MariaDB: ${r.status}; momentos: ${p.status}; relaciones: ${a.status}; módulos: ${m.status}; fichas: ${f.status}; puentes: ${v.status}).`);
+     model = construirModeloArquitectura(await r.json(), await p.json());
+     rels = construirRelacionesProemio(model, await a.json());
+     capas = construirCapasProemio(model, rels, await m.json());
+     fichas = construirFichasArquitectura(model, capas, await f.json());
++    puentes = construirPuentesExplicativos(model, fichas, await v.json());
++    const macroProemio = model.macros.find(m => m.unidades.some(u => u.id === 'proemio'));
++    if (!macroProemio) throw new Error('No se encuentra el Proemio en el mapa de macrounidades.');
++    Object.assign(state, { macroId: macroProemio.id, unidadId: 'proemio', momentoId: null, subId: null });
++    modo = 'modulos';
+     if (destroyed) return { el, destroy() {} };
+     main.hidden = false;
+-    status.textContent = `Revisión ${model.revision.slice(0, 12)}… · ${model.stats.unidades} unidades · ${model.stats.subunidades} subunidades · ${fichas.fichas.length} fichas piloto (textos en borrador) · solo lectura`;
++    status.textContent = `Revisión ${model.revision.slice(0, 12)}… · ${fichas.fichas.length} fichas introductorias · ${model.stats.unidades} unidades y ${model.stats.subunidades} subunidades como respaldo documental · solo lectura`;
+     dibujar();
+     try {
+       const cytoscape = await cargarCytoscape();
+@@ -472,6 +528,13 @@ export async function createLabArchitectureView(App) {
+         minZoom: 0.22, maxZoom: 2.5, wheelSensitivity: 0.16, boxSelectionEnabled: false });
+       cy.on('tap', 'node', event => {
+         const n = event.target;
++        if (fichaActiva && perspectiva !== 'diagrama' && puentes?.porFicha.has(fichaActiva)) {
++          const key = n.data('key');
++          if (['macro_referida', 'unidad_referida', 'subunidad_referida'].includes(n.data('tipo'))) {
++            puenteSeleccionado = key; dibujar();
++          } else if (n.data('tipo') === 'ficha_central') { puenteSeleccionado = null; dibujar(); }
++          return;
++        }
+         if (fichas?.porId.get(fichaActiva)?.tipo === 'faq') {
+           if (n.data('tipo') === 'paso_faq') {
+             fichaPasoId = n.data('key'); fichaEnlaceId = null; dibujar();
+@@ -495,6 +558,10 @@ export async function createLabArchitectureView(App) {
+         const kind = ({ macro: 'macro', unidad: 'unidad', momento: 'momento', subunidad: 'subunidad' })[n.data('tipo')];
+         if (kind) navegar(kind, n.data('key'));
+       });
++      cy.on('tap', 'edge[tipo = "contexto_ficha"], edge[tipo = "respaldo_textual"]', event => {
++        if (!fichaActiva || perspectiva === 'diagrama') return;
++        puenteSeleccionado = event.target.data('key'); dibujar();
++      });
+       cy.on('tap', 'edge[tipo = "orden_trayecto"]', event => {
+         if (fichas?.porId.get(fichaActiva)?.tipo !== 'faq') return;
+         fichaEnlaceId = event.target.data('key'); fichaPasoId = null; dibujar();
+@@ -511,7 +578,7 @@ export async function createLabArchitectureView(App) {
+         if (event.target.data('tipo') === 'modulo_contenedor') return;
+         const proemio = selected().unidad?.id === 'proemio';
+         const faq = fichas?.porId.get(fichaActiva);
+-        const group = faq?.tipo === 'faq' ? `ficha:${faq.id}:` : proemio && modo === 'modulos' ? 'modulos:' : proemio && modo === 'relaciones' ? 'relaciones:' : 'estructura:';
++        const group = fichaActiva && perspectiva !== 'diagrama' ? `puente:${fichaActiva}:${perspectiva}:` : faq?.tipo === 'faq' ? `ficha:${faq.id}:` : proemio && modo === 'modulos' ? 'modulos:' : proemio && modo === 'relaciones' ? 'relaciones:' : 'estructura:';
+         positions.set(group + event.target.id(), { ...event.target.position() });
+       });
+       dibujar();
+diff --git a/public/lab/n1u6-puentes-explicativos.json b/public/lab/n1u6-puentes-explicativos.json
+new file mode 100644
+index 0000000..718a698
+--- /dev/null
++++ b/public/lab/n1u6-puentes-explicativos.json
+@@ -0,0 +1,70 @@
++{
++  "schema": "agora.lab.n1u6.puentes.v1",
++  "estado": "borrador_editorial_para_curaduria",
++  "fuente": {
++    "revision": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
++    "fichas_schema": "agora.lab.n1u5.fichas.v1",
++    "criterio": "Puentes seleccionados manualmente: ni pertenencia automática de subunidad a unidad, ni inferencias por coincidencia de tags. En las FAQ, los pasajes de apoyo coinciden deliberadamente con los anclajes de los trayectos publicados de la exportación."
++  },
++  "puentes": [
++    {
++      "ficha_id": "proemio",
++      "contextos": {
++        "macros": [
++          { "id": "macro:I-V", "rol": "Apertura de la investigación", "explicacion": "Sitúa el inicio de la Ética dentro del planteamiento del bien humano y del método apropiado para estudiarlo." }
++        ],
++        "unidades": [
++          { "id": "proemio", "rol": "Núcleo textual de la ficha", "explicacion": "Aquí se desarrolla el movimiento desde los fines diversos hasta la dimensión política del bien humano." }
++        ]
++      },
++      "apoyos": [
++        { "sub_id": "1094a1-3", "rol": "Punto de partida", "explicacion": "Introduce la orientación de artes, investigaciones, acciones y elecciones hacia un bien." },
++        { "sub_id": "1094a18-22", "rol": "Problema abierto", "explicacion": "Plantea condicionalmente la cuestión de un fin querido por sí mismo." },
++        { "sub_id": "1094a26-b3", "rol": "Articulación central", "explicacion": "Sitúa la búsqueda del bien en relación con el saber rector de la vida política." },
++        { "sub_id": "1094b7-10", "rol": "Ampliación política", "explicacion": "Desplaza la perspectiva hacia el bien de la comunidad política." }
++      ]
++    },
++    {
++      "ficha_id": "faq.etica.intro",
++      "contextos": {
++        "macros": [
++          { "id": "macro:I-V", "rol": "Planteamiento inicial", "explicacion": "Incluye la orientación hacia fines, la preparación del oyente y la formación de la pregunta ética." },
++          { "id": "macro:VIII-XII", "rol": "Proyección hacia la felicidad", "explicacion": "El itinerario retorna posteriormente a la actividad y a la consideración de la felicidad." }
++        ],
++        "unidades": [
++          { "id": "proemio", "rol": "Acciones y fines", "explicacion": "Distingue actividades y obras en el inicio de la investigación." },
++          { "id": "metodo", "rol": "Condiciones del aprendizaje", "explicacion": "Examina la experiencia y disposición de quien escucha una investigación práctica." },
++          { "id": "felicidad_opiniones", "rol": "Punto de partida del conocimiento práctico", "explicacion": "Reflexiona sobre el comienzo desde lo conocido por nosotros y los principios adquiridos." },
++          { "id": "confirmacion", "rol": "La felicidad como actividad", "explicacion": "Vuelve sobre la relación entre disposición, actividad y felicidad." }
++        ]
++      },
++      "apoyos": [
++        { "sub_id": "1094a3-6", "paso_id": "p1", "rol": "Distinción inicial", "explicacion": "El contraste entre actividad y obra permite introducir el campo de la investigación práctica." },
++        { "sub_id": "1095a2-6", "paso_id": "p2", "rol": "Condición pedagógica", "explicacion": "La experiencia de las acciones es relevante para aprender ética." },
++        { "sub_id": "1098b31-1099a3", "paso_id": "p3", "rol": "Ejercicio y actividad", "explicacion": "El trayecto destaca la diferencia entre poseer una disposición y ponerla en actividad." },
++        { "sub_id": "1095b4-8", "paso_id": "p4", "rol": "Principios y aprendizaje", "explicacion": "Señala la importancia de partir de lo conocido para nosotros." },
++        { "sub_id": "1094b7-10", "paso_id": "p5", "rol": "Dimensión política", "explicacion": "Vincula el bien del individuo con el de la ciudad." },
++        { "sub_id": "1099a29-31", "paso_id": "p6", "rol": "Apertura final", "explicacion": "Se conserva el último anclaje del trayecto publicado, sin identificarlo con una conclusión deducida." }
++      ]
++    },
++    {
++      "ficha_id": "faq.agathon.pros_hen",
++      "contextos": {
++        "macros": [
++          { "id": "macro:VI-VII", "rol": "Crítica del bien universal", "explicacion": "Ubica el problema de la multiplicidad de sentidos del bien en la crítica a una Idea común." },
++          { "id": "macro:VIII-XII", "rol": "Vinculación posterior", "explicacion": "Contiene el anclaje final elegido en el recorrido editorial de esta FAQ; no es una inferencia desde las alternativas semánticas." }
++        ],
++        "unidades": [
++          { "id": "idea_bien", "rol": "Problema filosófico principal", "explicacion": "Expone la dificultad de una única definición del bien y abre la pregunta por sus diferentes modos de unidad." },
++          { "id": "confirmacion", "rol": "Retorno al bien humano", "explicacion": "El recorrido publicado salta hacia la consideración de la felicidad, sin cerrar la discusión semántica." }
++        ]
++      },
++      "apoyos": [
++        { "sub_id": "1096a11-13", "paso_id": "p1", "rol": "Planteamiento crítico", "explicacion": "Se abre el examen de la Idea universal del bien." },
++        { "sub_id": "1096a23-29", "paso_id": "p2", "rol": "Pluralidad de sentidos", "explicacion": "El bien se dice de maneras diferentes según las categorías." },
++        { "sub_id": "1096b26-31", "paso_id": "p3", "rol": "Alternativas abiertas", "explicacion": "Aristóteles pregunta por la derivación desde uno, la referencia hacia uno y la analogía, sin decidir aquí entre ellas." },
++        { "sub_id": "1099a29-31", "paso_id": "p4", "rol": "Proyección editorial", "explicacion": "Se mantiene el paso final del trayecto; su conexión es pedagógica y requiere examen interpretativo." }
++      ]
++    }
++  ]
++}
+diff --git a/public/scripts/check-lab-arquitectura-n1u6.mjs b/public/scripts/check-lab-arquitectura-n1u6.mjs
+new file mode 100644
+index 0000000..49ba6ed
+--- /dev/null
++++ b/public/scripts/check-lab-arquitectura-n1u6.mjs
+@@ -0,0 +1,48 @@
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import { construirModeloArquitectura } from '../js/lab/architectureModel.js';
++import { construirRelacionesProemio } from '../js/lab/architectureRelations.js';
++import { construirCapasProemio } from '../js/lab/architectureLayers.js';
++import { construirFichasArquitectura } from '../js/lab/architectureCards.js';
++import { construirPuentesExplicativos, elementosPuentes, inspectorPuentesHtml } from '../js/lab/architectureBridges.js';
++const read = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
++const fuente = read('./fixtures/n1u2-unidades.json');
++const snapshot = JSON.stringify(fuente);
++const model = construirModeloArquitectura(fuente, read('../lab/n1u1-propuestas-libro-i.json'));
++const rel = construirRelacionesProemio(model, read('../lab/n1u3-relaciones-proemio.json'));
++const capas = construirCapasProemio(model, rel, read('../lab/n1u4-modulos-proemio.json'));
++const fichas = construirFichasArquitectura(model, capas, read('../lab/n1u5-fichas-explicativas.json'));
++const json = read('../lab/n1u6-puentes-explicativos.json');
++const puentes = construirPuentesExplicativos(model, fichas, json);
++assert.equal(puentes.porFicha.size, 3);
++for (const ficha of fichas.fichas) {
++  const p = puentes.porFicha.get(ficha.id);
++  assert(p?.contextos?.macros?.length && p?.contextos?.unidades?.length && p?.apoyos?.length);
++  for (const [vista, expected] of [['orientacion', 1 + p.contextos.macros.length + p.contextos.unidades.length], ['apoyos', 1 + p.apoyos.length]]) {
++    const elements = elementosPuentes(model, fichas, puentes, ficha.id, vista, { id: 'sub:1096b26-31' });
++    assert.equal(elements.filter(e => e.group === 'nodes').length, expected);
++    assert.equal(elements.filter(e => e.group === 'edges').length, expected - 1);
++    const ids = new Set(elements.filter(e => e.group === 'nodes').map(e => e.data.id));
++    for (const edge of elements.filter(e => e.group === 'edges')) {
++      assert.equal(edge.data.source, `puente:ficha:${ficha.id}`, 'las aristas siempre parten de la ficha');
++      assert(ids.has(edge.data.source) && ids.has(edge.data.target));
++      assert.equal(edge.data.tipo, vista === 'orientacion' ? 'contexto_ficha' : 'respaldo_textual');
++      assert.notEqual(edge.data.tipo, 'contiene', 'no hay conexión mecánica de subunidad a unidad');
++    }
++  }
++  assert(inspectorPuentesHtml(model, fichas, puentes, ficha.id, 'orientacion').includes('Ubicaciones relevantes'));
++  assert(inspectorPuentesHtml(model, fichas, puentes, ficha.id, 'apoyos', `sub:${p.apoyos[0].sub_id}`).includes('data-arch-read'));
++  assert.equal(p.apoyos.length, ficha.tipo === 'proemio' ? 4 : ficha.pasos.length);
++  if (ficha.tipo === 'faq') assert.deepEqual(p.apoyos.map(a => a.sub_id), ficha.pasos.map(x => x.sub_id));
++}
++const variant = update => { const obj = structuredClone(json); update(obj); return obj; };
++assert.throws(() => construirPuentesExplicativos(model, fichas, variant(j => j.fuente.revision = 'otra')), /revisión/);
++assert.throws(() => construirPuentesExplicativos(model, fichas, variant(j => j.puentes[0].apoyos[0].sub_id = 'inexistente')), /apoyo textual/);
++assert.throws(() => construirPuentesExplicativos(model, fichas, variant(j => j.puentes[1].apoyos[0].paso_id = 'p3')), /no coinciden/);
++assert.throws(() => construirPuentesExplicativos(model, fichas, variant(j => j.puentes[0].contextos.unidades[0].id = 'idea_bien')), /unidad sin macrounidad/);
++assert.throws(() => construirPuentesExplicativos(model, fichas, variant(j => j.puentes[0].apoyos[0].explicacion = '')), /apoyo textual/);
++const copy = variant(j => j.puentes[0].apoyos[0].rol = '<img src=x onerror=alert(1)>');
++const puentesXss = construirPuentesExplicativos(model, fichas, copy);
++assert(!inspectorPuentesHtml(model, fichas, puentesXss, 'proemio', 'apoyos', 'sub:1094a1-3').includes('<img'));
++assert.equal(JSON.stringify(fuente), snapshot, 'no se modifica el paquete de MariaDB');
++console.log('N1-U.6 OK: tres fichas → macrounidades/unidades elegidas y respaldos directos; sin enlaces mecánicos; integridad y HTML seguro.');

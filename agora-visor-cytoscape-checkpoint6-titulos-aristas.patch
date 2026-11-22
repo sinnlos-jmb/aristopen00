@@ -1,0 +1,354 @@
+diff --git a/docs/LAB_VISOR_CHECKPOINT6_TITULOS_ARISTAS.md b/docs/LAB_VISOR_CHECKPOINT6_TITULOS_ARISTAS.md
+new file mode 100644
+index 0000000..d11603c
+--- /dev/null
++++ b/docs/LAB_VISOR_CHECKPOINT6_TITULOS_ARISTAS.md
+@@ -0,0 +1,41 @@
++# Checkpoint 6 — Títulos selectivos para aristas del visor
++
++Incremento **sobre el Checkpoint 5** (persistencia de disposiciones), sin cambiar MariaDB ni los datos editoriales.
++
++## Comportamiento
++
++- **Vista focal por defecto:** las aristas foco-foco siguen resaltadas por grosor y color, pero **sus textos no aparecen automáticamente**. Tampoco aparecen `foco_faq`, ni los de las demás relaciones. Esto evita la saturación.
++- **Clic sobre arista → inspector lateral:** se muestran los datos originales (ID, tipo, relación, procedencia, referencias y extremos) y un nuevo campo «Título visible de esta arista».
++- **Aplicar título:** guarda un alias de presentación en memoria y habilita su etiqueta inmediatamente, con un máximo de 100 caracteres. Se utiliza siempre el **ID de la arista**, no el par origen/destino: dos relaciones entre los mismos conceptos pueden tener alias distintos.
++- **Ocultar / mostrar etiqueta:** no borra el título; permite recuperar la misma etiqueta posteriormente.
++- **Restablecer original:** elimina el título personalizado, conserva la propiedad editorial original y **no altera** la preferencia de mostrar/ocultar para esa arista.
++- **Mostrar nombres de todas las aristas:** interruptor optativo para inspección. Mientras está activo, no es posible ocultar individualmente una etiqueta. Desmarcarlo restaura la vista selectiva.
++- **Persistir ordenamiento:** guarda las posiciones, los IDs individuales de aristas visibles, los títulos personalizados y el interruptor global en la **misma entrada del Checkpoint 5** de `localStorage`, determinada por conjunto de focos y huella estructural.
++- **Recuperar ordenamiento guardado:** restaura títulos y selección de etiquetas, además de las posiciones. No se guarda nada hasta presionar «Persistir ordenamiento».
++- **Compatibilidad:** disposiciones anteriores sin `titulos` siguen funcionando. Las etiquetas que se activaron individualmente en el Checkpoint 5 siguen visibles. La nueva regla «solo algunas etiquetas» afecta las aristas focales que antes mostraban su nombre automáticamente.
++
++## Comprobación
++
++```bash
++git apply --check agora-visor-cytoscape-checkpoint6-titulos-aristas.patch
++git apply agora-visor-cytoscape-checkpoint6-titulos-aristas.patch
++node public/scripts/check-visor-titulos-aristas.mjs
++node public/scripts/check-visor-disposiciones.mjs
++node public/scripts/check-visor-expansion.mjs
++node public/scripts/check-visor-filtros.mjs
++node public/scripts/check-identidad-visor.mjs
++```
++
++En `/#/lab/visor-grafos`:
++1. Seleccionar `arete`, `eudaimonia` y `phusis`; confirmar que las aristas foco-foco estén destacadas **sin texto** por defecto.
++2. Hacer clic en una conexión de una FAQ (antes todas rotuladas `foco_faq`), escribir «Pregunta sobre la virtud» y pulsar **Aplicar título**.
++3. Rotular otra arista, ocultar una etiqueta y mostrarla de nuevo; la personalización debe sobrevivir.
++4. Mover nodos y pulsar **Persistir ordenamiento**; recargar el navegador o cambiar de focos y volver. Las etiquetas seleccionadas y títulos deben restaurarse.
++5. Pulsar **Restablecer original**, luego guardar: el alias desaparece, pero `tipo`, `relacion`, `referencia` y `fuente` siguen íntegros.
++6. Probar «Mostrar nombres de todas las aristas»: la saturación es una opción *explícita*, no el estado inicial.
++
++## Límites
++
++Los títulos son **personales a la disposición focal**, no forman parte del corpus compartido; cambiar de conjunto de focos puede recuperar una selección diferente. No se sincronizan entre equipos. En Cytoscape las aristas no tienen «posiciones» propias independientes: se guardan los títulos y su visibilidad, mientras que su geometría depende de las posiciones de los nodos.
++
++La UI requiere comprobación real en el navegador; las pruebas de Node verifican lógica, persistencia y compatibilidad, pero no un clic físico sobre Cytoscape.
+diff --git a/public/css/app.css b/public/css/app.css
+index 9279e9e..7ef9e57 100644
+--- a/public/css/app.css
++++ b/public/css/app.css
+@@ -1312,6 +1312,12 @@ dialog#faq-modal, dialog.confirm-modal { box-shadow: var(--shadow-xl); }
+ .lab-graph-inspector .lab-graph-properties dd { overflow-wrap: anywhere; }
+ .lab-graph-inspector-actions { display: grid; gap: 8px; margin-top: 20px; }
+ .lab-graph-inspector-actions button { white-space: normal; }
++/* Edición de etiquetas locales en el inspector lateral del visor. */
++.lab-graph-edge-editor { display: grid; gap: 8px; min-width: 0; }
++.lab-graph-edge-editor .lab-input { display: block; box-sizing: border-box; width: 100%; min-width: 0; }
++.lab-graph-edge-editor .lab-toolbar { margin: 4px 0; }
++.lab-graph-edge-editor .lab-toolbar button { flex: 1 1 115px; }
++
+ .lab-graph-id { overflow-wrap: anywhere; font-size: .88rem; }
+ .lab-graph-focal-controls { margin: 12px 0 18px; }
+ .lab-graph-focal-controls[hidden] { display: none; }
+diff --git a/public/js/lab/cytoscapeRenderer.js b/public/js/lab/cytoscapeRenderer.js
+index 11f205d..62ee52a 100644
+--- a/public/js/lab/cytoscapeRenderer.js
++++ b/public/js/lab/cytoscapeRenderer.js
+@@ -46,7 +46,8 @@ export async function crearVisorGrafo(contenedor, elementos, {
+       { selector: 'edge[nombreAristaVisible != ""]', style: {
+         'label': 'data(nombreAristaVisible)', 'font-size': 11, 'color': '#253b4c',
+         'text-background-color': '#ffffff', 'text-background-opacity': 0.88,
+-        'text-background-padding': 3, 'text-rotation': 'autorotate',
++        'text-background-padding': 3, 'text-rotation': 'none',
++        'text-wrap': 'wrap', 'text-max-width': 145,
+       } },
+       { selector: ':selected', style: {
+         'border-color': '#b36d20', 'border-width': 3, 'line-color': '#b36d20',
+diff --git a/public/js/lab/graphLayoutPersistence.js b/public/js/lab/graphLayoutPersistence.js
+index fa6ee91..aa45ca1 100644
+--- a/public/js/lab/graphLayoutPersistence.js
++++ b/public/js/lab/graphLayoutPersistence.js
+@@ -1,6 +1,15 @@
+ // Preferencias de visualización por conjunto de focos; jamás modifica el corpus.
+ export const GRAPH_LAYOUT_STORAGE_KEY = 'agora.lab.visorgrafos.layouts.v1';
+ const MAX_ENTRIES = 30;
++export const MAX_TITULO_ARISTA = 100;
++const MAX_TITULOS_POR_DISPOSICION = 250;
++
++// Los títulos son alias de presentación: NO reemplazan `relacion`, `tipo` ni la evidencia.
++export function normalizarTituloArista(titulo) {
++  if (typeof titulo !== 'string') return '';
++  return titulo.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim()
++    .slice(0, MAX_TITULO_ARISTA).trim();
++}
+ 
+ export function huellaGrafo(elementos = []) {
+   // El ID, los extremos y las relaciones participan en la huella: una arista modificada la invalida.
+@@ -23,8 +32,16 @@ export function normalizarDisposicion(value) {
+     if (id.length > 300 || !p || !Number.isFinite(p.x) || !Number.isFinite(p.y) || Math.abs(p.x) > 1e7 || Math.abs(p.y) > 1e7) continue;
+     posiciones[id] = { x: p.x, y: p.y };
+   }
++  // Compatible con disposiciones del Checkpoint 5, que solo guardaban `etiquetas`.
+   const etiquetas = Array.isArray(value.etiquetas) ? [...new Set(value.etiquetas.filter(x => typeof x === 'string' && x.length < 300))] : [];
+-  return { posiciones, todasEtiquetas: value.todasEtiquetas === true, etiquetas };
++  const entradas = value.titulos && typeof value.titulos === 'object' && !Array.isArray(value.titulos)
++    ? Object.entries(value.titulos) : [];
++  const titulos = Object.fromEntries(entradas
++    .filter(([id, titulo]) => id.length > 0 && id.length < 300 && typeof titulo === 'string')
++    .map(([id, titulo]) => [id, normalizarTituloArista(titulo)])
++    .filter(([, titulo]) => titulo)
++    .slice(0, MAX_TITULOS_POR_DISPOSICION));
++  return { posiciones, todasEtiquetas: value.todasEtiquetas === true, etiquetas, titulos };
+ }
+ 
+ export function leerDisposicion(storage, key) {
+@@ -48,15 +65,18 @@ export function guardarDisposicion(storage, key, value) {
+   } catch { return false; }
+ }
+ 
+-export function decorarAristasFocales(elementos, focos, { todasEtiquetas = false, etiquetas = [] } = {}) {
++export function decorarAristasFocales(elementos, focos, { todasEtiquetas = false, etiquetas = [], titulos = {} } = {}) {
+   const focus = new Set(focos);
+   const nombradas = new Set(etiquetas);
+   return elementos.map(e => {
+     if (e.group !== 'edges') return e;
+     const d = e.data;
+     const entreFocos = focus.has(d.source) && focus.has(d.target);
+-    const nombre = d.relacion || d.label || d.tipo || '';
+-    const mostrar = Boolean(nombre) && (entreFocos || todasEtiquetas || nombradas.has(d.id));
++    const personalizado = normalizarTituloArista(titulos?.[d.id]);
++    const nombre = personalizado || d.relacion || d.label || d.tipo || '';
++    // Ni siquiera los enlaces entre focos imponen una etiqueta: solo las seleccionadas
++    // (o el modo voluntario «mostrar todas»). El color/grosor sí destaca esos enlaces.
++    const mostrar = Boolean(nombre) && (todasEtiquetas || nombradas.has(d.id));
+     return { ...e, data: { ...d, conexionFocos: entreFocos ? 1 : 0,
+       nombreAristaVisible: mostrar ? String(nombre) : '' } };
+   });
+diff --git a/public/js/views/labGraphPilotView.js b/public/js/views/labGraphPilotView.js
+index 41c9cb0..bdf3ab2 100644
+--- a/public/js/views/labGraphPilotView.js
++++ b/public/js/views/labGraphPilotView.js
+@@ -5,7 +5,7 @@ import { indexarGrafo, crearEstadoFocal, cambiarFocos, alternarExpansion, obtene
+ import { crearVisorGrafo } from '../lab/cytoscapeRenderer.js';
+ import { filtrarGrafoDidactico, ordenarBusquedaFocal } from '../lab/graphDisplayPolicy.js';
+ import { integrarIdentidadesVisuales } from '../lab/graphConceptIdentity.js';
+-import { huellaGrafo, claveDisposicion, leerDisposicion, guardarDisposicion, decorarAristasFocales } from '../lab/graphLayoutPersistence.js';
++import { huellaGrafo, claveDisposicion, leerDisposicion, guardarDisposicion, decorarAristasFocales, normalizarTituloArista, MAX_TITULO_ARISTA } from '../lab/graphLayoutPersistence.js';
+ 
+ // Checkpoint 2: Cytoscape permanece como visor experimental; el corpus es de sólo lectura.
+ // Focos estables + expansión local reversible + inspector lateral. Sin Relate/MariaDB.
+@@ -35,10 +35,10 @@ export function createLabGraphPilotView(App) {
+     estado.expandidos = new Set([...previo].filter(id => indice.nodos.has(id)));
+   }
+   reconstruirIndice(predeterminados);
+-  let preferencias = { posiciones: {}, todasEtiquetas: false, etiquetas: [] };
++  let preferencias = { posiciones: {}, todasEtiquetas: false, etiquetas: [], titulos: {} };
+   const claveActual = () => claveDisposicion(estado.focos, huella);
+   const leerPreferencias = () => { preferencias = leerDisposicion(almacenamiento, claveActual()) ||
+-    { posiciones: {}, todasEtiquetas: false, etiquetas: [] }; };
++    { posiciones: {}, todasEtiquetas: false, etiquetas: [], titulos: {} }; };
+   leerPreferencias();
+   let modo = 'focal';
+   let tipo = 'todos';
+@@ -66,8 +66,8 @@ export function createLabGraphPilotView(App) {
+         <p class="hint">Focos permanentes (máximo 5). Se muestran sus aristas entrantes y salientes, pero NO las conexiones secundarias entre vecinos hasta que las expandas.</p>
+         <div id="gv-foci" class="lab-graph-foci"></div>
+         <label class="lab-graph-option"><input id="gv-parrafos" type="checkbox" /> Mostrar párrafos (ocultos inicialmente; incorporación voluntaria)</label>
+-        <label class="lab-graph-option"><input id="gv-edge-labels" type="checkbox" /> Mostrar nombres de todas las aristas</label>
+-        <p class="hint">Las relaciones directas entre focos se destacan y muestran su nombre siempre que esté registrado.</p>
++        <label class="lab-graph-option"><input id="gv-edge-labels" type="checkbox" /> Mostrar nombres de todas las aristas (vista detallada)</label>
++        <p class="hint">Las aristas directas entre focos están destacadas. Los títulos se ocultan inicialmente: seleccioná una arista para ponerle un título propio y mostrar solo las etiquetas que te interesen.</p>
+         <div class="lab-toolbar">
+           <button type="button" id="gv-save-layout" class="lab-btn">Persistir ordenamiento</button>
+           <button type="button" id="gv-reset-layout" class="lab-btn lab-btn--ghost">Recuperar ordenamiento guardado</button>
+@@ -110,15 +110,32 @@ export function createLabGraphPilotView(App) {
+     if (closed) return;
+     const out = $('#gv-inspector');
+     if (!item) { out.innerHTML = '<h3>Propiedades</h3><p>Seleccioná un nodo o una arista para examinar su procedencia.</p>'; return; }
+-    const attrs = Object.entries(item).filter(([k,v]) => !['id','label','clase','foco','expandido','compartido'].includes(k) && v != null && v !== '');
+-    out.innerHTML = `<h3>${esc(item.label || item.tipo || item.clase)}</h3>
++    const esArista = item.clase === 'arista';
++    const tituloPropio = esArista ? preferencias.titulos[item.id] || '' : '';
++    const encabezado = esArista
++      ? (tituloPropio || `${etiqueta(item.source)} → ${etiqueta(item.target)}`)
++      : (item.label || item.tipo || item.clase);
++    const attrs = Object.entries(item).filter(([k,v]) =>
++      !['id','label','clase','foco','expandido','compartido','conexionFocos','nombreAristaVisible'].includes(k) && v != null && v !== '');
++    out.innerHTML = `<h3>${esc(encabezado)}</h3>
+       <p class="lab-graph-id"><strong>ID:</strong> ${esc(item.id || '—')}<br>${esc(item.clase)}</p>
+       <dl class="lab-graph-properties">${attrs.map(([k,v]) => `<dt>${esc(k)}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>`;
+-    if (item.clase === 'arista' && modo === 'focal' && !item.conexionFocos) {
++    if (esArista && modo === 'focal') {
+       const acciones = document.createElement('div');
+       acciones.className = 'lab-graph-inspector-actions';
+       const habilitada = preferencias.etiquetas.includes(item.id);
+-      acciones.innerHTML = `<button type="button" class="lab-btn lab-btn--ghost" data-gv-edge-label="${esc(item.id)}">${habilitada ? 'Ocultar' : 'Mostrar'} nombre de esta arista</button>`;
++      const global = preferencias.todasEtiquetas;
++      acciones.innerHTML = `<form data-gv-edge-editor="${esc(item.id)}" class="lab-graph-edge-editor">
++        <label for="gv-edge-custom-title">Título visible de esta arista (máximo ${MAX_TITULO_ARISTA} caracteres)</label>
++        <input id="gv-edge-custom-title" class="lab-input" type="text" maxlength="${MAX_TITULO_ARISTA}" placeholder="Escribir un título breve…" />
++        <div class="lab-toolbar">
++          <button type="submit" class="lab-btn">Aplicar título</button>
++          <button type="button" class="lab-btn lab-btn--ghost" data-gv-edge-reset="${esc(item.id)}" ${tituloPropio ? '' : 'disabled'}>Restablecer original</button>
++          <button type="button" class="lab-btn lab-btn--ghost" data-gv-edge-label="${esc(item.id)}" ${global ? 'disabled' : ''}>${habilitada ? 'Ocultar etiqueta' : 'Mostrar etiqueta'}</button>
++        </div>
++        <p class="hint">${global ? 'Con «mostrar todas» activo, las etiquetas individuales no se pueden ocultar.' : 'El título original y su referencia siguen en las propiedades.'} Pulsá «Persistir ordenamiento» para guardar también estos cambios.</p>
++      </form>`;
++      acciones.querySelector('input').value = tituloPropio;
+       out.append(acciones);
+     }
+     if (item.clase === 'nodo' && !item.resumen && indice.nodos.has(item.id)) {
+@@ -230,7 +247,7 @@ export function createLabGraphPilotView(App) {
+     if (modo !== 'focal' || !viewer) { status('Abrí la vista de focos para guardar su disposición.'); return; }
+     preferencias.posiciones = { ...preferencias.posiciones, ...viewer.posiciones() };
+     const ok = guardarDisposicion(almacenamiento, claveActual(), preferencias);
+-    status(ok ? 'Ordenamiento y etiquetas guardados en este navegador para este conjunto de focos.'
++    status(ok ? 'Ordenamiento, títulos y visibilidad de aristas guardados en este navegador para estos focos.'
+       : 'No se pudo acceder al almacenamiento local. El ordenamiento no fue guardado.');
+   });
+   $('#gv-reset-layout').addEventListener('click', () => {
+@@ -239,9 +256,36 @@ export function createLabGraphPilotView(App) {
+     void dibujar();
+     status('Se recuperó el último ordenamiento guardado, si existe.');
+   });
++  $('#gv-inspector').addEventListener('submit', e => {
++    const form = e.target.closest('[data-gv-edge-editor]');
++    if (!form || modo !== 'focal') return;
++    e.preventDefault();
++    const id = form.dataset.gvEdgeEditor;
++    if (!indice.aristas?.has(id)) { status('La arista ya no está disponible.'); return; }
++    const titulo = normalizarTituloArista(form.querySelector('input').value);
++    if (!titulo) { status('Escribí un título no vacío, o usá «Restablecer original».'); return; }
++    preferencias.titulos = { ...preferencias.titulos, [id]: titulo };
++    preferencias.etiquetas = [...new Set([...preferencias.etiquetas, id])];
++    actualizarFocal();
++    const arista = viewer?.cy.getElementById(id);
++    if (arista?.nonempty()) inspeccionar({ clase: 'arista', ...arista.data() });
++    status('Título aplicado y visible. Usá «Persistir ordenamiento» para conservarlo.');
++  });
+   $('#gv-inspector').addEventListener('click', e => {
++    const reset = e.target.closest('[data-gv-edge-reset]');
++    if (reset) {
++      const id = reset.dataset.gvEdgeReset;
++      if (!indice.aristas?.has(id)) return;
++      const { [id]: descartado, ...resto } = preferencias.titulos;
++      preferencias.titulos = resto;
++      actualizarFocal();
++      const arista = viewer?.cy.getElementById(id);
++      if (arista?.nonempty()) inspeccionar({ clase: 'arista', ...arista.data() });
++      status('Título personalizado restablecido. Persistí el ordenamiento para guardar el cambio.');
++      return;
++    }
+     const boton = e.target.closest('[data-gv-edge-label]');
+-    if (!boton) return;
++    if (!boton || preferencias.todasEtiquetas) return;
+     const id = boton.dataset.gvEdgeLabel;
+     const etiquetas = new Set(preferencias.etiquetas);
+     if (etiquetas.has(id)) etiquetas.delete(id); else etiquetas.add(id);
+diff --git a/public/scripts/check-visor-disposiciones.mjs b/public/scripts/check-visor-disposiciones.mjs
+index 153bd6a..69f46bc 100644
+--- a/public/scripts/check-visor-disposiciones.mjs
++++ b/public/scripts/check-visor-disposiciones.mjs
+@@ -15,7 +15,7 @@ assert.notEqual(huellaGrafo(all),huellaGrafo([...all.slice(0,-1),edge('rel3','du
+ const state = crearEstadoFocal(indexarGrafo(all),['phusis','arete','eudaimonia']);
+ const base = decorarAristasFocales(obtenerSubgrafoFocal(state).elementos, state.focos);
+ assert.equal(base.find(x=>x.data.id==='rel1').data.conexionFocos,1);
+-assert.equal(base.find(x=>x.data.id==='rel1').data.nombreAristaVisible,'condicion');
++assert.equal(base.find(x=>x.data.id==='rel1').data.nombreAristaVisible,'', 'arista focal destacada sin etiqueta por defecto');
+ assert.equal(base.find(x=>x.data.id==='rel2').data.conexionFocos,0);
+ assert.equal(base.find(x=>x.data.id==='rel2').data.nombreAristaVisible,'');
+ assert.ok(!base.some(x=>x.data.id==='rel3'));
+@@ -37,4 +37,4 @@ assert.equal(leerDisposicion({getItem:()=>'{mal'},key),null);
+ assert.equal(guardarDisposicion({getItem:()=>null,setItem:()=>{throw Error('quota')}},key,{}),false);
+ for(let i=0;i<35;i++) guardarDisposicion(mock,`foco${i}`,{posiciones:{}});
+ assert.ok(Object.keys(JSON.parse(storage.get(GRAPH_LAYOUT_STORAGE_KEY))).length<=30);
+-console.log('OK: aristas foco-foco, nombres opcionales, huellas, persistencia, corrupción y cuota.');
++console.log('OK: aristas foco-foco destacadas, etiquetas opcionales, huellas, persistencia, corrupción y cuota.');
+diff --git a/public/scripts/check-visor-titulos-aristas.mjs b/public/scripts/check-visor-titulos-aristas.mjs
+new file mode 100644
+index 0000000..82653c9
+--- /dev/null
++++ b/public/scripts/check-visor-titulos-aristas.mjs
+@@ -0,0 +1,70 @@
++import assert from 'node:assert/strict';
++import {
++  huellaGrafo, claveDisposicion, decorarAristasFocales, normalizarDisposicion,
++  normalizarTituloArista, guardarDisposicion, leerDisposicion, MAX_TITULO_ARISTA,
++} from '../js/lab/graphLayoutPersistence.js';
++import { indexarGrafo, crearEstadoFocal, alternarExpansion, obtenerSubgrafoFocal } from '../js/lab/graphFocusExpansion.js';
++
++const node = (id, tipo = 'concepto_estatico') => ({ group: 'nodes', data: { id, tipo, label: id } });
++const edge = (id, source, target, tipo, relacion = '') => ({
++  group: 'edges', data: { id, source, target, tipo, relacion, fuente: 'fuente-editorial', referencia: 'EN I.7' },
++});
++const corpus = [node('arete'), node('eudaimonia'), node('faq:virtud', 'faq'), node('hexis'), node('dunamis'),
++  edge('condicion', 'arete', 'eudaimonia', 'arista_funcional', 'condicion'),
++  edge('pregunta', 'faq:virtud', 'arete', 'foco_faq'),
++  edge('disposicion', 'arete', 'hexis', 'arista_funcional', 'disposicion'),
++  edge('potencia', 'hexis', 'dunamis', 'arista_funcional', 'potencia')];
++const original = JSON.stringify(corpus);
++const focos = ['arete', 'eudaimonia'];
++const estado = crearEstadoFocal(indexarGrafo(corpus), focos);
++const base = obtenerSubgrafoFocal(estado).elementos;
++const byId = (items, id) => items.find(e => e.data.id === id);
++
++const inicial = decorarAristasFocales(base, focos);
++assert.equal(byId(inicial, 'condicion').data.conexionFocos, 1, 'directa entre focos');
++assert.equal(byId(inicial, 'condicion').data.nombreAristaVisible, '', 'sin etiqueta automática ni siquiera entre focos');
++assert.equal(byId(inicial, 'pregunta').data.nombreAristaVisible, '', 'no repetir foco_faq en el lienzo');
++assert.equal(byId(inicial, 'pregunta').data.tipo, 'foco_faq', 'el tipo original se conserva');
++
++const pref = { todasEtiquetas: false, etiquetas: ['pregunta', 'condicion'], titulos: {
++  pregunta: '¿Qué es la virtud?', condicion: 'La virtud es condición de felicidad',
++} };
++const visible = decorarAristasFocales(base, focos, pref);
++assert.equal(byId(visible, 'pregunta').data.nombreAristaVisible, '¿Qué es la virtud?');
++assert.equal(byId(visible, 'condicion').data.nombreAristaVisible, 'La virtud es condición de felicidad');
++assert.equal(byId(visible, 'disposicion').data.nombreAristaVisible, '', 'otras aristas siguen ocultas');
++assert.equal(JSON.stringify(corpus), original, 'no se modifica la fuente editorial');
++
++const ocultas = decorarAristasFocales(base, focos, { ...pref, etiquetas: [] });
++assert.equal(byId(ocultas, 'pregunta').data.nombreAristaVisible, '', 'ocultar no borra título personalizado');
++const reabiertas = decorarAristasFocales(base, focos, pref);
++assert.equal(byId(reabiertas, 'pregunta').data.nombreAristaVisible, '¿Qué es la virtud?');
++const todas = decorarAristasFocales(base, focos, { ...pref, todasEtiquetas: true });
++assert.equal(byId(todas, 'disposicion').data.nombreAristaVisible, 'disposicion', 'modo voluntario todas');
++const sinTitulo = decorarAristasFocales(base, focos, { etiquetas: ['pregunta'], titulos: {} });
++assert.equal(byId(sinTitulo, 'pregunta').data.nombreAristaVisible, 'foco_faq', 'restablecer usa nombre editorial sin cambiarlo');
++const expandido = obtenerSubgrafoFocal(alternarExpansion(estado, 'hexis')).elementos;
++assert.ok(expandido.some(e => e.data.id === 'potencia'), 'la expansión mantiene sus relaciones');
++assert.equal(decorarAristasFocales(expandido, focos, { etiquetas: ['potencia'], titulos: { potencia: 'Potencia' } })
++  .find(e => e.data.id === 'potencia').data.nombreAristaVisible, 'Potencia');
++
++assert.equal(normalizarTituloArista('  Virtud  \n como   condición '), 'Virtud como condición');
++assert.equal(normalizarTituloArista('  \n  '), '');
++assert.equal(normalizarTituloArista(12), '');
++assert.equal(normalizarTituloArista('a'.repeat(500)).length, MAX_TITULO_ARISTA);
++const old = normalizarDisposicion({ etiquetas: ['pregunta'], posiciones: {arete:{x:1,y:2}} });
++assert.deepEqual(old.titulos, {}, 'compatibilidad con el Checkpoint 5');
++assert.deepEqual(old.etiquetas, ['pregunta']);
++assert.deepEqual(normalizarDisposicion({titulos:{pregunta:'  Título breve  ', vacia:'\n', mal:4}}).titulos,
++  {pregunta:'Título breve'}, 'solo títulos válidos');
++const db = new Map();
++const storage = {getItem:k=>db.get(k)||null,setItem:(k,v)=>db.set(k,v)};
++const key = claveDisposicion(focos, huellaGrafo(corpus));
++assert.equal(guardarDisposicion(storage, key, {...pref, posiciones:{arete:{x:123,y:456}}}), true);
++assert.deepEqual(leerDisposicion(storage, key).titulos, pref.titulos);
++assert.deepEqual(leerDisposicion(storage, key).etiquetas, pref.etiquetas);
++assert.deepEqual(leerDisposicion(storage, key).posiciones.arete, {x:123,y:456});
++assert.equal(claveDisposicion([...focos].reverse(),huellaGrafo(corpus)),key);
++assert.equal(leerDisposicion(storage,claveDisposicion(focos,huellaGrafo([...corpus.slice(0,-1)]))), null,
++  'al cambiar la estructura documental no se reaplica un título sobre otra arista');
++console.log('OK: títulos personalizados por ID, visibilidad selectiva, FAQ, expansiones, guardado y compatibilidad C5.');

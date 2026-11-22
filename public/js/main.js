@@ -11,9 +11,12 @@ import { readSession } from './lab/session.js';
 import { validateManual } from './lab/audit.js';
 import { loadLibrary } from './reader/text.js';
 import { createReadingView } from './views/reading.js';
+import { FICHAS_PUBLICAS } from './lab/architecturePublicRoutes.js';
 import { createGraphCatalogView, createGraphView, GRAPHS } from './views/graphs.js';
 import { createLabView, createLabCatalogView, EXPERIMENTS } from './views/lab.js';
 import { createLabOrientadorView } from './views/labOrientadorView.js';
+import { createLabSemanticExplorerView } from './views/labSemanticExplorerView.js';
+import { createLabGraphPilotView } from './views/labGraphPilotView.js';
 
 const App = {
   S: null,
@@ -58,10 +61,17 @@ const router = createRouter({
     '/chat':      () => createChatView(App),
     '/lab':       () => createLabCatalogView(),
     '/reading':   () => createReadingView(App),
+    // N1-U.13 · Acceso público a las fichas: comparte el motor editorial del Lab.
+    '/fichas':    async () => (await import('./views/fichas.js')).createFichasView(App),
+    ...Object.fromEntries(Object.entries(FICHAS_PUBLICAS).map(([slug, fichaId]) => [`/fichas/${slug}`,
+      async () => (await import('./views/fichas.js')).createFichasView(App, { fichaId })])),
     '/grafos':    () => createGraphCatalogView(),
     ...Object.fromEntries(Object.keys(GRAPHS).map(id => [`/grafos/${id}`, () => createGraphView(id)])),
     ...Object.fromEntries(Object.keys(EXPERIMENTS).map(id => [`/lab/${id}`, () => createLabView(App, { exp: id })])),
+    '/lab/arquitectura': async () => { const { createLabArchitectureView } = await import('./views/labArchitectureView.js'); return createLabArchitectureView(App); },
     '/lab/orientador': () => createLabOrientadorView(App),
+    '/lab/semantica': () => createLabSemanticExplorerView(App),
+    '/lab/visor-grafos': () => createLabGraphPilotView(App),
   },
   notFound: () => createLandingView(App),
   onChange: (path) => {

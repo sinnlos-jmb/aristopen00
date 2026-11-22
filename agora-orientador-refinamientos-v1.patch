@@ -1,0 +1,233 @@
+--- a/public/js/lab/orientador.js
++++ b/public/js/lab/orientador.js
+@@ -42,6 +42,41 @@
+     consulta: clone(sesion.consulta),
+     estado: sesion.estado,
+   }];
++}
++
++// Sugerencias documentales de un salto: respetan la dirección de cada arista.
++// No son trayectos validados ni infieren reciprocidad entre los conceptos.
++export function sugerirRelaciones(S, tema, omitidos = []) {
++  if (!tema || !S?.FE?.length) return [];
++  const omitir = new Set([tema, ...omitidos]);
++  const anclas = new Set([tema, ...(S.REM?.[tema] || [])]);
++  // Los remite_a funcionales pueden portar sufijos de sentido (concepto#sentido).
++  for (const [id, nodo] of Object.entries(S.FN || {})) {
++    if ((nodo.remite_a || []).some(r => r.split('#')[0] === tema)) anclas.add(id);
++  }
++  const encontrados = new Map();
++  for (const edge of S.FE) {
++    let otro, direccion, nodo;
++    if (anclas.has(edge.de)) { otro = edge.a; direccion = 'saliente'; nodo = edge.de; }
++    else if (anclas.has(edge.a)) { otro = edge.de; direccion = 'entrante'; nodo = edge.a; }
++    else continue;
++    const conceptos = [otro, ...(S.FN?.[otro]?.remite_a || []).map(r => r.split('#')[0])];
++    const id = conceptos.find(c => !omitir.has(c) && (S.N?.[c] || S.FN?.[c])) || (omitir.has(otro) ? null : otro);
++    if (!id || omitir.has(id) || encontrados.has(id)) continue;
++    encontrados.set(id, {
++      valor: id,
++      etiqueta: S.N?.[id]?.label || S.FN?.[id]?.label || id,
++      fuente: 'arista_funcional',
++      direccion,
++      relacion: edge.rel || null,
++      de: edge.de,
++      a: edge.a,
++      ref: edge.ref || null,
++      voz: edge.voz || null,
++      ancla: nodo,
++    });
++  }
++  return [...encontrados.values()];
+ }
+ 
+ export function iniciarOrientacion(texto) {
+@@ -57,6 +92,7 @@
+     analisis: {
+       normalizado: analisis.normalized,
+       conceptosDetectados: conceptos,
++      activadores: analisis.conceptos.map(c => ({ id: c.id, palabra: c.word })),
+       intencionDetectada: analisis.primaryMode?.id || null,
+     },
+     consulta: {
+@@ -76,7 +112,7 @@
+   return sesion;
+ }
+ 
+-export function siguientePregunta(sesion) {
++export function siguientePregunta(sesion, S = null) {
+   if (!sesion || sesion.estado !== 'en_refinamiento') return null;
+   const c = sesion.consulta;
+   let clave = null;
+@@ -88,17 +124,41 @@
+   else if (!hasValue(c.origen)) clave = 'origen';
+   if (!clave) return null;
+   const spec = PREGUNTAS[clave];
+-  return {
+-    clave, texto: spec.texto,
+-    opciones: spec.opciones
+-      .filter(([v]) => clave !== 'destino' || v !== c.tema)
+-      .map(([valor, etiqueta]) => ({ valor, etiqueta })),
+-  };
+-}
+-
+-export function responderOrientacion(sesion, valor) {
++  const originales = spec.opciones
++    .filter(([v]) => clave !== 'destino' || v !== c.tema)
++    .map(([valor, etiqueta]) => ({ valor, etiqueta, fuente: 'opcion_general' }));
++  if (clave === 'tema') {
++    const reconocidos = sesion.analisis.conceptosDetectados.map(id => ({
++      valor: id, etiqueta: S?.N?.[id]?.label || S?.FN?.[id]?.label || originales.find(o => o.valor === id)?.etiqueta || id,
++      fuente: 'pregunta_inicial',
++    }));
++    const unicos = new Map();
++    for (const opcion of [...reconocidos, ...originales]) {
++      if (!unicos.has(opcion.valor)) unicos.set(opcion.valor, opcion);
++    }
++    return { clave, texto: spec.texto, opciones: [...unicos.values()] };
++  }
++  if (clave === 'destino') {
++    const reconocidos = sesion.analisis.conceptosDetectados
++      .filter(id => id !== c.tema)
++      .map(id => ({ valor: id, etiqueta: S?.N?.[id]?.label || S?.FN?.[id]?.label || originales.find(o => o.valor === id)?.etiqueta || id, fuente: 'pregunta_inicial' }));
++    const aristas = sugerirRelaciones(S, c.tema).slice(0, 8);
++    for (const reconocido of reconocidos) {
++      const arista = aristas.find(a => a.valor === reconocido.valor);
++      if (arista) reconocido.vinculo = { direccion: arista.direccion, de: arista.de, a: arista.a, relacion: arista.relacion, ref: arista.ref };
++    }
++    const unicos = new Map();
++    for (const opcion of [...reconocidos, ...aristas, ...originales]) {
++      if (opcion.valor !== c.tema && !unicos.has(opcion.valor)) unicos.set(opcion.valor, opcion);
++    }
++    return { clave, texto: spec.texto, opciones: [...unicos.values()].slice(0, 12) };
++  }
++  return { clave, texto: spec.texto, opciones: originales };
++}
++
++export function responderOrientacion(sesion, valor, S = null) {
+   if (sesion?.estado !== 'en_refinamiento') throw new Error('Esta orientación ya terminó.');
+-  const pregunta = siguientePregunta(sesion);
++  const pregunta = siguientePregunta(sesion, S);
+   if (!pregunta) throw new Error('La consulta está completa. Podés confirmar o abandonar.');
+   const opcion = pregunta.opciones.find(o => o.valor === valor);
+   if (!opcion) throw new Error('Opción no válida para la pregunta actual.');
+--- a/public/js/views/labOrientadorView.js
++++ b/public/js/views/labOrientadorView.js
+@@ -9,13 +9,14 @@
+ };
+ 
+ // Experimento aislado: no usa el bot del Chat ni guarda cambios editoriales.
+-export function createLabOrientadorView() {
++export function createLabOrientadorView(App = null) {
+   const el = document.createElement('div');
+   el.className = 'view-lab scrollable has-scroll';
+   let sesion = null;
++  const S = App?.S || null;
+ 
+   function render() {
+-    const actual = sesion ? siguientePregunta(sesion) : null;
++    const actual = sesion ? siguientePregunta(sesion, S) : null;
+     const resumen = sesion ? resumenOrientacion(sesion) : null;
+     el.innerHTML = `<div class="lab__inner">
+       <nav class="lab-nav"><a class="btn btn--ghost btn--sm" href="#/lab">← Laboratorio</a></nav>
+@@ -29,11 +30,19 @@
+           <button class="lab-btn" type="submit">Comenzar orientación</button>
+         </form>` : `
+         <p><strong>Inquietud inicial:</strong> ${esc(sesion.textoInicial)}</p>
++        <section class="lab-panel" id="orientador-reconocimiento">
++          <h3>Reconocimiento inicial · hipótesis del motor</h3>
++          <p>${sesion.analisis.activadores?.length
++            ? sesion.analisis.activadores.map(c => `<span class="lab-chip">${esc(c.palabra)} <small>→ ${esc(c.id)}</small></span>`).join(' ')
++            : '<span class="hint">No se reconocieron conceptos con el léxico actual.</span>'}</p>
++          <p class="hint">${sesion.analisis.conceptosDetectados.length > 1 ? 'Se reconocieron varios conceptos: elegí cuál será el tema principal. Los restantes conservarán prioridad al preguntar por relaciones.' : 'El reconocimiento es léxico, no una interpretación filosófica confirmada.'}</p>
++          <p class="hint">Intención detectada: ${esc(sesion.analisis.intencionDetectada || 'No determinada; el orientador pedirá precisarla.')}</p>
++        </section>
+         <p><strong>Estado:</strong> ${esc(sesion.estado)} · ${sesion.bitacora.length} decisiones registradas.</p>
+         ${actual ? `<div class="lab-panel" aria-live="polite">
+           <h3>${esc(actual.texto)}</h3>
+           <p class="hint">Aclaración ${esc(actual.clave)}. Ninguna respuesta altera el grafo ni el Chat.</p>
+-          <div class="lab-help" id="orientador-opciones">${actual.opciones.map(o => `<button class="lab-help__item" type="button" data-opcion="${esc(o.valor)}">${esc(o.etiqueta)}</button>`).join('')}</div>
++          <div class="lab-help" id="orientador-opciones">${actual.opciones.map(o => `<button class="lab-help__item" type="button" data-opcion="${esc(o.valor)}">${esc(o.etiqueta)}${o.fuente === 'pregunta_inicial' ? `<small> · Mencionado en tu pregunta${o.vinculo ? ` · Arista ${esc(o.vinculo.direccion)}: ${esc(o.vinculo.de)} → ${esc(o.vinculo.a)} (${esc(o.vinculo.relacion || 'sin tipo')})` : ''}</small>` : o.fuente === 'arista_funcional' ? `<small> · Arista ${esc(o.direccion)}: ${esc(o.de)} → ${esc(o.a)} (${esc(o.relacion || 'sin tipo')})${o.ref ? ` · ref. ${esc(o.ref)}` : ''}</small>` : ''}</button>`).join('')}</div>
+         </div>` : sesion.estado === 'en_refinamiento' ? '<p class="lab-panel">La consulta está especificada. Podés confirmarla o abandonar el proceso.</p>' : '<p class="lab-panel">La orientación terminó. La bitácora sigue disponible para su examen.</p>'}
+         <div class="lab-toolbar">
+           ${sesion.estado === 'en_refinamiento' ? `<button type="button" class="lab-btn" id="orientador-conforme">Conforme con la consulta</button>
+@@ -64,7 +73,7 @@
+       render();
+     });
+     el.querySelectorAll('[data-opcion]').forEach(button => button.addEventListener('click', () => {
+-      sesion = responderOrientacion(sesion, button.dataset.opcion);
++      sesion = responderOrientacion(sesion, button.dataset.opcion, S);
+       render();
+     }));
+     el.querySelector('#orientador-conforme')?.addEventListener('click', () => { sesion = cerrarOrientacion(sesion, 'conforme'); render(); });
+--- a/public/js/main.js
++++ b/public/js/main.js
+@@ -61,7 +61,7 @@
+     '/grafos':    () => createGraphCatalogView(),
+     ...Object.fromEntries(Object.keys(GRAPHS).map(id => [`/grafos/${id}`, () => createGraphView(id)])),
+     ...Object.fromEntries(Object.keys(EXPERIMENTS).map(id => [`/lab/${id}`, () => createLabView(App, { exp: id })])),
+-    '/lab/orientador': () => createLabOrientadorView(),
++    '/lab/orientador': () => createLabOrientadorView(App),
+   },
+   notFound: () => createLandingView(App),
+   onChange: (path) => {
+--- a/public/package.json
++++ b/public/package.json
+@@ -1,9 +1,9 @@
+ {
+   "type": "module",
+   "scripts": {
+-    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs && node scripts/check-evidence-audit.mjs && node scripts/check-orientador.mjs",
++    "test:views": "node scripts/check-views.mjs && node scripts/check-lab-refactor.mjs && node scripts/check-question-diagnostic.mjs && node scripts/check-evidence-audit.mjs && node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs",
+     "test:questions": "node scripts/check-question-diagnostic.mjs",
+     "test:evidence": "node scripts/check-evidence-audit.mjs",
+-    "test:orientador": "node scripts/check-orientador.mjs"
++    "test:orientador": "node scripts/check-orientador.mjs && node scripts/check-orientador-relaciones.mjs"
+   }
+ }
+--- /dev/null
++++ b/public/scripts/check-orientador-relaciones.mjs
+@@ -0,0 +1,43 @@
++import assert from 'node:assert/strict';
++import { iniciarOrientacion, siguientePregunta, responderOrientacion, sugerirRelaciones } from '../js/lab/orientador.js';
++
++const S = {
++  N: { phusis: { label: 'Naturaleza' }, eudaimonia: { label: 'Felicidad' }, arete: { label: 'Excelencia' }, hexis: { label: 'Disposición' } },
++  FN: { naturaleza_func: { label: 'Naturaleza funcional', remite_a: ['phusis#sentido'] }, arete: { label: 'Excelencia' }, eudaimonia: { label: 'Felicidad' }, hexis: { label: 'Disposición' } },
++  FE: [
++    { de: 'naturaleza_func', a: 'arete', rel: 'condicion', ref: '1097a' },
++    { de: 'eudaimonia', a: 'naturaleza_func', rel: 'contraste', ref: '1098b' },
++    { de: 'hexis', a: 'arete', rel: 'perfecciona' },
++  ],
++};
++const inicio = iniciarOrientacion('Quiero comprender la naturaleza y su relación con la felicidad');
++assert.deepEqual(inicio.analisis.conceptosDetectados, ['phusis', 'eudaimonia']);
++assert.equal(inicio.consulta.tema, null);
++const tema = siguientePregunta(inicio, S);
++assert.equal(tema.clave, 'tema');
++assert.deepEqual(tema.opciones.slice(0, 2).map(o => o.valor), ['phusis','eudaimonia']);
++assert.ok(tema.opciones.slice(0,2).every(o => o.fuente === 'pregunta_inicial'));
++const a = responderOrientacion(inicio,'phusis',S);
++const b = responderOrientacion(a,'relacionar',S);
++const destino = siguientePregunta(b,S);
++assert.equal(destino.clave,'destino');
++assert.equal(destino.opciones[0].valor,'eudaimonia');
++assert.equal(destino.opciones[0].fuente,'pregunta_inicial');
++const virtud = destino.opciones.find(o => o.valor === 'arete');
++assert.equal(virtud.fuente,'arista_funcional');
++assert.equal(virtud.direccion,'saliente');
++assert.equal(virtud.de,'naturaleza_func');
++assert.equal(virtud.a,'arete');
++assert.equal(virtud.ref,'1097a');
++assert.equal(destino.opciones.filter(o => o.valor === 'eudaimonia').length,1);
++assert.equal(destino.opciones.some(o => o.valor === 'hexis'), false, 'No se proponen dos saltos como vecinos');
++const rel = sugerirRelaciones(S,'phusis');
++assert.equal(rel.find(o=>o.valor==='eudaimonia').direccion,'entrante');
++assert.equal(rel.find(o=>o.valor==='eudaimonia').de,'eudaimonia');
++assert.equal(rel.find(o=>o.valor==='eudaimonia').a,'naturaleza_func');
++assert.equal(sugerirRelaciones({ FE: [] },'phusis').length,0);
++const elegido = responderOrientacion(b,'arete',S);
++assert.equal(elegido.bitacora.at(-1).datos.opcion.fuente, 'arista_funcional');
++assert.equal(elegido.consulta.destino,'arete');
++assert.equal(b.consulta.destino,null);
++console.log('OK: conceptos reconocidos, sugerencias de un salto, dirección, procedencia e historial.');

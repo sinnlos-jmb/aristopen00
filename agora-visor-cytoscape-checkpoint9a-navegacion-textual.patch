@@ -1,0 +1,600 @@
+diff --git a/docs/LAB_VISOR_CHECKPOINT9A_TEXTO.md b/docs/LAB_VISOR_CHECKPOINT9A_TEXTO.md
+new file mode 100644
+index 0000000..5eddc8b
+--- /dev/null
++++ b/docs/LAB_VISOR_CHECKPOINT9A_TEXTO.md
+@@ -0,0 +1,52 @@
++# Ágora · Checkpoint 9A — Navegación contextual hacia unidades y subunidades
++
++## Propósito
++
++Vincular el grafo conceptual de solo lectura con la estructura textual **ya existente** en `App.S`, sin incorporar de golpe párrafos al grafo ni convertir asociaciones editoriales en pruebas de una tesis filosófica.
++
++Se mantiene la distinción entre **identidad del concepto**, **relación filosófica**, **indexación textual** y **decisión de visualización**. El corpus sigue siendo responsabilidad de MariaDB y `/api/contenido`; este módulo no escribe en la base.
++
++## Uso
++
++1. Abrir `/#/lab/visor-grafos` y mantener **Vista de focos**.
++2. Seleccionar un concepto o una arista funcional, abrir el inspector derecho y elegir **Explorar texto de Aristóteles**. También se admiten FAQ cuando su nodo individual está visible.
++3. Aparece el agrupador `Texto de Aristóteles (N)`, unido visualmente a la selección. Doble clic sobre el agrupador para desplegar unidades. Inicialmente se presentan hasta **seis** unidades; desde el inspector del agrupador puede habilitarse la lista completa.
++4. Doble clic sobre una unidad para desplegar **solo las subunidades con vínculo explícito**. El inspector de la unidad explica la procedencia y permite **Mostrar todas como contexto**, con advertencia explícita de que no tienen todas el mismo tipo de evidencia.
++5. Seleccionar una subunidad para consultar su ID y tramo Bekker. El lector con griego/traducción y resaltado corresponde al futuro **Checkpoint 9B**.
++6. **Persistir ordenamiento** guarda también el ancla textual, unidades desplegadas y coordenadas de los nodos de navegación. Recuperar devuelve el último estado de la variante focal. Ningún alias editorial se modifica (eso corresponde a 9C).
++
++## Contrato de procedencia
++
++- `concepto_clave`: una subunidad identifica expresamente el concepto en `conceptos_clave`.
++- `extremo_relacion_editorial`: una relación de subunidad usa el ID exacto del concepto como extremo `de` o `a` (no se interpreta texto libre como identificador).
++- `destino_arista_funcional`: un destino de una relación de subunidad identifica explícitamente la misma arista funcional por su ID editorial **estable**. El ID de Cytoscape `vinculo:N` no se confunde con ese ID.
++- `tag_parrafo_contexto_unidad`: un párrafo etiquetado pertenece a una unidad. **NO** se distribuye esa etiqueta entre todas las subunidades de la unidad.
++- `pasaje_faq_subunidad` y `pasaje_faq_unidad`: se resuelven solamente los IDs existentes; `u:xxx` representa una unidad si `xxx` existe en el bundle. No se deducen rangos Bekker o coincidencias parciales.
++- `contexto_unidad_no_evidencia_directa`: todas las subunidades de una unidad pueden abrirse voluntariamente, pero no se presentan como evidencia propia de la selección.
++
++Los nodos `texto:*` y aristas `navegacion_textual_visual` pertenecen exclusivamente a la visualización. No alimentan los algoritmos de vecindad conceptual, no se exportan a la proyección Cypher ni modifican el grafo editorial. Para una arista seleccionada, se usa un anclaje visual auxiliar sin convertir la arista original en un nodo filosófico.
++
++## Límites deliberados
++
++- No se presenta texto completo ni se resalta una subunidad: **9B** incorporará el lector contextual y verificará la granularidad de las anclas textuales.
++- No se permiten aún títulos personalizados para unidad/subunidad: **9C** los guardará como alias de presentación, sin renombrar registros.
++- No se construyen relaciones nuevas desde mera similitud léxica, coaparición de tags o pertenencia a una unidad.
++- Si una arista funcional no tiene destinos textuales explícitos, se indica que no existe ese enlace en el conjunto consultado; no se inventa un pasaje a partir de su referencia general.
++- Los agrupadores se muestran bajo demanda. El máximo inicial de seis unidades protege la vista en notebooks. Las subunidades no aparecen salvo doble clic.
++
++## Pruebas
++
++```sh
++node public/scripts/check-visor-texto-9a.mjs
++node public/scripts/check-visor-visibilidad-8a.mjs
++node public/scripts/check-visor-disposiciones.mjs
++node public/scripts/check-visor-faq-grupos.mjs
++node public/scripts/check-semantic-explorer.mjs
++```
++
++Prueba manual: inspeccionar `arete` y, por separado, una arista como `arete → eudaimonia`; comprobar que la lista de unidades **puede ser diferente** porque la primera se apoya también en índices conceptuales, mientras que la segunda requiere destinos textuales explícitos. Abrir y cerrar unidades, guardar, recuperar y verificar que las ramas y FAQ del Checkpoint 8A siguen intactas.
++
++## Orientaciones para el Libro II y el aula (no implementadas)
++
++1. **Libro II**: migrar o ajustar el contrato común de tags, sentidos y relaciones para ambos libros, en vez de sostener dos esquemas. Antes de generar índices textuales nuevos, definir una identidad estable de pasaje por obra/libro/localización; el `parrafo_nro` del Libro I no debería convertirse en identificador universal.
++2. **Variantes de clase**: una secuencia de disposiciones guardadas puede servir como guion de exposición, heredando el centro focal y cambiando nodos, posiciones y anotaciones. Debe conservarse la separación entre evidencia compartida y composición particular del docente. La interfaz de presentación y las familias/variantes serán checkpoints independientes.
+diff --git a/public/js/lab/cytoscapeRenderer.js b/public/js/lab/cytoscapeRenderer.js
+index fe0183a..4ea941b 100644
+--- a/public/js/lab/cytoscapeRenderer.js
++++ b/public/js/lab/cytoscapeRenderer.js
+@@ -34,6 +34,10 @@ export async function crearVisorGrafo(contenedor, elementos, {
+       } },
+       { selector: 'node[tipo = "faq"]', style: { 'background-color': '#f4e6bf' } },
+       { selector: 'node[tipo = "subunidad"]', style: { 'background-color': '#e4dcf0' } },
++      { selector: 'node[grupoTexto = 1]', style: { 'background-color': '#c8e2e0', 'border-color': '#39837b', 'border-width': 2.6, 'width': 136 } },
++      { selector: 'node[unidadTexto = 1]', style: { 'background-color': '#dce9da', 'border-color': '#68885a', 'width': 122 } },
++      { selector: 'node[subunidadTexto = 1]', style: { 'background-color': '#eee6d1', 'border-color': '#9a8756', 'width': 128 } },
++      { selector: 'node[anclaRelacion = 1]', style: { 'background-color': '#dce4f1', 'border-color': '#657f9b', 'width': 112 } },
+       { selector: 'node[compartido = 1]', style: { 'border-color': '#6e67b1', 'border-width': 2.5 } },
+       { selector: 'node[expandido = 1]', style: { 'border-color': '#287550', 'border-width': 3.5 } },
+       { selector: 'node[conservado = 1]', style: { 'border-style': 'double', 'border-width': 4, 'border-color': '#856c39' } },
+@@ -47,6 +51,9 @@ export async function crearVisorGrafo(contenedor, elementos, {
+       { selector: 'edge[agrupacionVisual = 1]', style: {
+         'line-style': 'dashed', 'line-color': '#c6a266', 'target-arrow-shape': 'none', 'opacity': 0.6,
+       } },
++      { selector: 'edge[navegacionTextual = 1]', style: {
++        'line-style': 'dotted', 'line-color': '#6b9187', 'target-arrow-shape': 'none', 'opacity': 0.8, 'width': 1.5,
++      } },
+       { selector: 'edge[conexionFocos = 1]', style: {
+         'width': 3.2, 'line-color': '#376f93', 'target-arrow-color': '#376f93', 'opacity': 1,
+         'z-index': 20,
+diff --git a/public/js/lab/graphLayoutPersistence.js b/public/js/lab/graphLayoutPersistence.js
+index 93e6057..f72aeae 100644
+--- a/public/js/lab/graphLayoutPersistence.js
++++ b/public/js/lab/graphLayoutPersistence.js
+@@ -3,6 +3,7 @@ export const GRAPH_LAYOUT_STORAGE_KEY = 'agora.lab.visorgrafos.layouts.v1';
+ const MAX_ENTRIES = 30;
+ import { estadoTiposInicial, normalizarTiposVisibles } from './graphFaqGrouping.js';
+ import { normalizarIds } from './graphNodeVisibility.js';
++import { normalizarEstadoTextual } from './graphTextNavigation.js';
+ export const MAX_TITULO_ARISTA = 100;
+ const MAX_TITULOS_POR_DISPOSICION = 250;
+ 
+@@ -47,7 +48,8 @@ export function normalizarDisposicion(value) {
+     ? [...new Set(value.faqExpandidas.filter(x => typeof x === 'string' && x.startsWith('grupo_faq:') && x.length < 300))].slice(0, 150) : [];
+   return { posiciones, todasEtiquetas: value.todasEtiquetas === true, etiquetas, titulos,
+     tiposVisibles: normalizarTiposVisibles(value.tiposVisibles || estadoTiposInicial()), faqExpandidas,
+-    nodosOcultos: normalizarIds(value.nodosOcultos), nodosConservados: normalizarIds(value.nodosConservados) };
++    nodosOcultos: normalizarIds(value.nodosOcultos), nodosConservados: normalizarIds(value.nodosConservados),
++    texto: normalizarEstadoTextual(value.texto) };
+ }
+ 
+ export function leerDisposicion(storage, key) {
+diff --git a/public/js/lab/graphTextNavigation.js b/public/js/lab/graphTextNavigation.js
+new file mode 100644
+index 0000000..749a407
+--- /dev/null
++++ b/public/js/lab/graphTextNavigation.js
+@@ -0,0 +1,163 @@
++// Checkpoint 9A: navegación textual de SOLO LECTURA.
++// Un concepto clave, una relación editorial y un tag de párrafo NO acreditan lo mismo.
++// Los nodos/aristas `texto_*` son presentación, no entidades ni aristas filosóficas.
++const saneId = value => typeof value === 'string' && value.length > 0 && value.length <= 300;
++const uniques = values => [...new Set(values)];
++const asArray = value => Array.isArray(value) ? value : [];
++const refBekker = sub => asArray(sub?.bekker).filter(Boolean).join('–');
++const idsExtremo = text => typeof text === 'string' ? text.split(', ').filter(Boolean) : [];
++const ID_LIMIT = 40;
++
++export const estadoTextualInicial = () => ({ ancla: null, abierto: false, todasUnidades: false, unidadesAbiertas: [], unidadesCompletas: [] });
++export function normalizarEstadoTextual(raw) {
++  const base = estadoTextualInicial();
++  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return base;
++  const a = raw.ancla;
++  if (a && typeof a === 'object' && ['concepto', 'arista_funcional', 'faq'].includes(a.tipo)
++    && saneId(a.id) && (a.tipo !== 'arista_funcional' ? saneId(a.nodo) : saneId(a.source) && saneId(a.target) && saneId(a.arista))) {
++    base.ancla = a.tipo === 'arista_funcional'
++      ? { tipo: a.tipo, id: a.id, arista: a.arista, source: a.source, target: a.target }
++      : { tipo: a.tipo, id: a.id, nodo: a.nodo };
++  }
++  base.abierto = raw.abierto === true;
++  base.todasUnidades = raw.todasUnidades === true;
++  base.unidadesAbiertas = uniques(asArray(raw.unidadesAbiertas).filter(saneId)).slice(0, ID_LIMIT);
++  base.unidadesCompletas = uniques(asArray(raw.unidadesCompletas).filter(saneId)).slice(0, ID_LIMIT);
++  return base;
++}
++
++// Cada unidad puede provenir de una subunidad individual, o sólo de tags
++// de párrafo. NO atribuimos a una subunidad los tags del párrafo de su unidad.
++export function buscarVinculosTextuales(S = {}, ancla = null) {
++  if (!ancla || !['concepto', 'arista_funcional', 'faq'].includes(ancla.tipo)) return [];
++  const unidades = new Map();
++  const ensuring = unitId => {
++    const unit = S.U?.[unitId];
++    if (!unit) return null;
++    if (!unidades.has(unitId)) unidades.set(unitId, {
++      id: unitId, titulo: unit.titulo || unitId, motivos: [], subunidades: new Map(),
++    });
++    return unidades.get(unitId);
++  };
++  const motivo = (unitId, subId, via, referencia = '') => {
++    const u = ensuring(unitId);
++    if (!u) return;
++    const item = { via, referencia: String(referencia || '') };
++    if (subId) {
++      const sub = S.SUB?.[subId];
++      if (!sub || sub.unidad !== unitId) return;
++      if (!u.subunidades.has(subId)) u.subunidades.set(subId, {
++        id: subId, titulo: sub.titulo || subId, bekker: refBekker(sub), motivos: [],
++      });
++      const s = u.subunidades.get(subId);
++      if (!s.motivos.some(m => m.via === via && m.referencia === item.referencia)) s.motivos.push(item);
++    }
++    if (!u.motivos.some(m => m.via === via && m.referencia === item.referencia)) u.motivos.push(item);
++  };
++
++  for (const [subId, sub] of Object.entries(S.SUB || {})) {
++    if (!sub?.unidad) continue;
++    if (ancla.tipo === 'concepto') {
++      if (asArray(sub.conceptos_clave).includes(ancla.id))
++        motivo(sub.unidad, subId, 'concepto_clave', refBekker(sub));
++      // Sólo extremos que se corresponden exactamente con IDs; no texto libre.
++      for (const r of asArray(sub.relaciones)) if ([...idsExtremo(r.de), ...idsExtremo(r.a)].includes(ancla.id))
++        motivo(sub.unidad, subId, 'extremo_relacion_editorial', r.ref || refBekker(sub));
++    }
++    if (ancla.tipo === 'arista_funcional') {
++      for (const r of asArray(sub.relaciones)) for (const d of asArray(r.destinos))
++        if (d.arista === ancla.id)
++          motivo(sub.unidad, subId, 'destino_arista_funcional', d.ref || r.ref || refBekker(sub));
++    }
++  }
++  if (ancla.tipo === 'concepto') {
++    for (const [unitId, unit] of Object.entries(S.U || {})) {
++      for (const p of asArray(unit.parrafos)) {
++        if (asArray(S.TP?.[p]?.conceptos).some(t => t.c === ancla.id)) {
++          motivo(unitId, null, 'tag_parrafo_contexto_unidad', `Párrafo ${p}`);
++        }
++      }
++    }
++  }
++  if (ancla.tipo === 'faq') {
++    const faq = S.FAQ?.[ancla.id];
++    for (const pasaje of asArray(faq?.pasajes)) {
++      const ref = pasaje?.ref;
++      if (typeof ref !== 'string') continue;
++      // Se prueban explícitamente IDs de unidad (u:) y subunidad (sub: o exactos).
++      const unitId = ref.startsWith('u:') ? ref.slice(2) : null;
++      if (unitId && S.U?.[unitId]) motivo(unitId, null, 'pasaje_faq_unidad', ref);
++      const subId = ref.startsWith('sub:') ? ref.slice(4) : ref;
++      const sub = S.SUB?.[subId];
++      if (sub) motivo(sub.unidad, subId, 'pasaje_faq_subunidad', ref);
++    }
++  }
++  const pesos = { destino_arista_funcional: 1, extremo_relacion_editorial: 2, concepto_clave: 3,
++    pasaje_faq_subunidad: 3, pasaje_faq_unidad: 4, tag_parrafo_contexto_unidad: 8 };
++  return [...unidades.values()].map(u => ({ ...u,
++    subunidades: [...u.subunidades.values()].sort((a,b) => a.id.localeCompare(b.id, 'es')),
++    todasSubunidades: asArray(S.U?.[u.id]?.subunidades).map(sub => ({ id: sub.id, titulo: sub.titulo || sub.id, bekker: refBekker(sub), motivos: [{ via: 'contexto_unidad_no_evidencia_directa', referencia: '' }] })),
++    prioridad: Math.min(...u.motivos.map(m => pesos[m.via] || 9)),
++  })).sort((a,b) => a.prioridad - b.prioridad || a.titulo.localeCompare(b.titulo, 'es'));
++}
++
++export const idHubTexto = ancla => `texto:hub:${ancla.tipo}:${ancla.id}`;
++export const idUnidadTexto = id => `texto:unidad:${id}`;
++export const idSubunidadTexto = id => `texto:subunidad:${id}`;
++
++// Consume un subgrafo ya filtrado. La capa no añade nada al índice conceptual.
++export function construirCapaTextual(elementos, unidades, rawState) {
++  const state = normalizarEstadoTextual(rawState);
++  const a = state.ancla;
++  const base = elementos.filter(e => e.group === 'nodes');
++  const ids = new Set(base.map(e => e.data.id));
++  if (!a || !unidades.length) return { elementos, visible: false, unidadesVisibles: 0, subunidadesVisibles: 0 };
++  if (a.tipo === 'arista_funcional') {
++    const edge = elementos.find(e => e.group === 'edges' && e.data.id === a.arista);
++    if (!edge || edge.data.source !== a.source || edge.data.target !== a.target) return { elementos, visible: false, unidadesVisibles: 0, subunidadesVisibles: 0 };
++  } else if (!ids.has(a.nodo)) return { elementos, visible: false, unidadesVisibles: 0, subunidadesVisibles: 0 };
++  const nodes = [], edges = [];
++  const node = (id, label, data = {}) => { if (ids.has(id)) return; ids.add(id); nodes.push({ group: 'nodes', data: { id, label, tipo: 'texto_navegacion', navegacionTextual: 1, ...data } }); };
++  const edge = (id, from, to) => edges.push({ group: 'edges', data: { id, source: from, target: to,
++    tipo: 'navegacion_textual_visual', fuente: 'presentacion', agrupacionVisual: 1, navegacionTextual: 1,
++    nombreAristaVisible: '' } });
++  let origen = a.nodo;
++  if (a.tipo === 'arista_funcional') {
++    origen = `texto:relacion:${a.id}`;
++    node(origen, 'Evidencia de relación', { anclaRelacion: 1, idRelacion: a.id });
++    edge(`texto:desde:${a.arista}`, a.source, origen);
++    edge(`texto:hacia:${a.arista}`, a.target, origen);
++  }
++  const hub = idHubTexto(a);
++  node(hub, `Texto de Aristóteles (${unidades.length})`, { grupoTexto: 1 });
++  edge(`texto:enlace:${hub}`, origen, hub);
++  let countUnits = 0, countSubs = 0;
++  if (state.abierto) {
++    const mostradas = state.todasUnidades ? unidades : unidades.slice(0, 6);
++    for (const u of mostradas) {
++      const id = idUnidadTexto(u.id);
++      node(id, u.titulo, { unidadTexto: 1, unidadId: u.id, nivelEvidencia: u.prioridad });
++      edge(`texto:enlace:unidad:${hub}:${u.id}`, hub, id);
++      countUnits++;
++      if (!state.unidadesAbiertas.includes(u.id)) continue;
++      const subs = state.unidadesCompletas.includes(u.id)
++        ? u.todasSubunidades : u.subunidades;
++      for (const sub of subs) {
++        const sid = idSubunidadTexto(sub.id);
++        node(sid, sub.titulo, { subunidadTexto: 1, subunidadId: sub.id, unidadId: u.id, referencia: sub.bekker });
++        edge(`texto:enlace:sub:${u.id}:${sub.id}`, id, sid);
++        countSubs++;
++      }
++    }
++  }
++  return { elementos: [...elementos, ...nodes, ...edges], visible: true, unidadesVisibles: countUnits, subunidadesVisibles: countSubs };
++}
++
++// El modo «todas las subunidades» se aplica exclusivamente a una unidad abierta,
++// nunca se confunde con pertinencia documental.
++export function subunidadesParaUnidad(S, unitId, vinculadas = [], completas = false) {
++  if (!completas) return vinculadas;
++  const unit = S.U?.[unitId];
++  return asArray(unit?.subunidades).map(s => ({ id: s.id, titulo: s.titulo || s.id,
++    bekker: refBekker(s), motivos: [{ via: 'contexto_unidad_no_evidencia_directa', referencia: '' }] }));
++}
+diff --git a/public/js/lab/semanticGraphAdapter.js b/public/js/lab/semanticGraphAdapter.js
+index c7d049c..26d97d0 100644
+--- a/public/js/lab/semanticGraphAdapter.js
++++ b/public/js/lab/semanticGraphAdapter.js
+@@ -12,7 +12,7 @@ export function proyeccionAElementos(proyeccion, { tipos = null } = {}) {
+     ...edges.map(e => ({ group: 'edges', data: {
+       id: e.uid, source: e.desde, target: e.hacia, tipo: e.tipo,
+       relacion: e.relacion, fuente: e.fuente, referencia: e.referencia,
+-      voz: e.voz, sentidoReferido: e.sentidoReferido, rol: e.rol,
++      voz: e.voz, sentidoReferido: e.sentidoReferido, rol: e.rol, aristaFuente: e.idFuente || '',
+     } })),
+   ];
+ }
+diff --git a/public/js/lab/semanticProjection.js b/public/js/lab/semanticProjection.js
+index caa1f12..529e57e 100644
+--- a/public/js/lab/semanticProjection.js
++++ b/public/js/lab/semanticProjection.js
+@@ -35,7 +35,7 @@ export function buildSemanticProjection(S = {}) {
+       uid: `vinculo:${edges.length + 1}`, tipo, desde: from, hacia: to, fuente,
+       relacion: txt(extra.relacion), referencia: txt(extra.referencia),
+       voz: txt(extra.voz), sentidoReferido: txt(extra.sentidoReferido),
+-      rol: txt(extra.rol),
++      rol: txt(extra.rol), idFuente: txt(extra.idFuente),
+     });
+   }
+   function conceptoId(id) {
+@@ -80,7 +80,7 @@ export function buildSemanticProjection(S = {}) {
+ 
+   for (const e of S.FE || []) {
+     edge('arista_funcional', uid('nodo_funcional', e.de), uid('nodo_funcional', e.a),
+-      'funcional.aristas', { relacion: e.rel, referencia: e.ref, voz: e.voz });
++      'funcional.aristas', { relacion: e.rel, referencia: e.ref, voz: e.voz, idFuente: e.id });
+   }
+   for (const [id, n] of Object.entries(S.FN || {})) {
+     for (const remision of n.remite_a || []) {
+diff --git a/public/js/views/labGraphPilotView.js b/public/js/views/labGraphPilotView.js
+index 19a4918..1bafa95 100644
+--- a/public/js/views/labGraphPilotView.js
++++ b/public/js/views/labGraphPilotView.js
+@@ -9,6 +9,8 @@ import { agruparFaqs, TIPOS_VISIBLES, estadoTiposInicial, normalizarTiposVisible
+ import { incorporarConservados, ocultarNodos } from '../lab/graphNodeVisibility.js';
+ import { huellaGrafo, claveDisposicion, leerDisposicion, guardarDisposicion, decorarAristasFocales, normalizarTituloArista, MAX_TITULO_ARISTA } from '../lab/graphLayoutPersistence.js';
+ import { crearNotificadorGrafo } from '../lab/graphUiFeedback.js';
++import { buscarVinculosTextuales, construirCapaTextual, normalizarEstadoTextual,
++  estadoTextualInicial, idHubTexto, idUnidadTexto } from '../lab/graphTextNavigation.js';
+ 
+ // Checkpoint 2: Cytoscape permanece como visor experimental; el corpus es de sólo lectura.
+ // Focos estables + expansión local reversible + inspector lateral. Sin Relate/MariaDB.
+@@ -38,7 +40,7 @@ export function createLabGraphPilotView(App) {
+     estado.expandidos = new Set([...previo].filter(id => indice.nodos.has(id)));
+   }
+   reconstruirIndice(predeterminados);
+-  const preferenciasIniciales = () => ({ posiciones: {}, todasEtiquetas: false, etiquetas: [], titulos: {}, tiposVisibles: estadoTiposInicial(), faqExpandidas: [], nodosOcultos: [], nodosConservados: [] });
++  const preferenciasIniciales = () => ({ posiciones: {}, todasEtiquetas: false, etiquetas: [], titulos: {}, tiposVisibles: estadoTiposInicial(), faqExpandidas: [], nodosOcultos: [], nodosConservados: [], texto: estadoTextualInicial() });
+   let preferencias = preferenciasIniciales();
+   const claveActual = () => claveDisposicion(estado.focos, huella);
+   const leerPreferencias = () => { preferencias = leerDisposicion(almacenamiento, claveActual()) ||
+@@ -85,6 +87,7 @@ export function createLabGraphPilotView(App) {
+         <button id="gv-hide" type="button" class="lab-btn lab-btn--ghost" disabled>Ocultar selección</button>
+         <button id="gv-restore" type="button" class="lab-btn lab-btn--ghost" disabled>Restaurar ocultos</button>
+       </div>
++      <p class="hint">Texto: seleccioná un concepto, una FAQ o una arista funcional documentada y elegí «Explorar texto». El agrupador y sus unidades se despliegan mediante doble clic. No se abren pasajes completos hasta 9B.</p>
+       <p id="gv-usage" class="hint">Doble clic sobre un vecino: expandir sus conexiones. Otro doble clic: contraer su rama. Los focos permanecen visibles. Clic simple: propiedades a la derecha; rueda: zoom; arrastrar: mover.</p>
+       <div class="lab-graph-main">
+         <div class="lab-graph-canvas-wrap">
+@@ -178,9 +181,59 @@ export function createLabGraphPilotView(App) {
+     const caja = $('#gv-foci');
+     caja.innerHTML = estado.focos.map(id => `<span class="lab-graph-focus-chip"><strong>${esc(etiqueta(id))}</strong><small>${esc(id)}</small><button type="button" data-gv-remove="${esc(id)}" title="Quitar este foco" aria-label="Quitar foco ${esc(etiqueta(id))}" ${estado.focos.length === 1 ? 'disabled' : ''}>×</button></span>`).join('');
+   }
++  function anclaDeItem(item) {
++    if (!item || modo !== 'focal' || item.navegacionTextual) return null;
++    if (item.clase === 'arista' && item.tipo === 'arista_funcional' && item.aristaFuente)
++      return { tipo: 'arista_funcional', id: item.aristaFuente, arista: item.id, source: item.source, target: item.target };
++    if (item.clase !== 'nodo') return null;
++    if (item.tipo === 'faq') return { tipo: 'faq', id: item.id.slice(4), nodo: item.id };
++    if (item.tipo === 'concepto_estatico' || item.tipo === 'nodo_funcional')
++      return { tipo: 'concepto', id: item.id.split(':').slice(1).join(':'), nodo: item.id };
++    return null;
++  }
++  const textoActivo = () => normalizarEstadoTextual(preferencias.texto);
++  const resumenTexto = () => buscarVinculosTextuales(App.S, textoActivo().ancla);
++  function cambiarTexto(patch) {
++    preferencias.texto = normalizarEstadoTextual({ ...textoActivo(), ...patch });
++    actualizarFocal();
++  }
++  function inspeccionarTexto(item, out) {
++    const state = textoActivo();
++    const units = resumenTexto();
++    if (item.grupoTexto) {
++      const button = document.createElement('div'); button.className = 'lab-graph-inspector-actions';
++      button.innerHTML = `<p class="hint">Vínculos documentados o índices, distinguidos por procedencia. No son aristas filosóficas.</p>
++        <button type="button" class="lab-btn" data-gv-text-hub>${state.abierto ? 'Contraer unidades' : 'Mostrar unidades relacionadas'}</button>
++        ${state.abierto && units.length > 6 ? `<button type="button" class="lab-btn lab-btn--ghost" data-gv-text-all>${state.todasUnidades ? 'Mostrar seis unidades' : `Mostrar las ${units.length} unidades`}</button>` : ''}
++        <button type="button" class="lab-btn lab-btn--ghost" data-gv-text-close>Retirar navegación textual</button>`;
++      out.append(button); return;
++    }
++    if (item.unidadTexto) {
++      const unit = units.find(u => u.id === item.unidadId);
++      if (!unit) return;
++      const opened = state.unidadesAbiertas.includes(unit.id);
++      const full = state.unidadesCompletas.includes(unit.id);
++      const section = document.createElement('div'); section.className = 'lab-graph-inspector-actions';
++      section.innerHTML = `<p class="hint"><strong>Origen de los vínculos:</strong></p>
++        <ul>${unit.motivos.slice(0,8).map(m => `<li>${esc(m.via.replaceAll('_',' '))}${m.referencia ? ` · ${esc(m.referencia)}` : ''}</li>`).join('')}</ul>
++        <p class="hint">${unit.subunidades.length} subunidades con vínculo propio; ${unit.todasSubunidades.length} en la unidad. Los tags de párrafo no se atribuyen a subunidades.</p>
++        <button type="button" class="lab-btn" data-gv-text-unit="${esc(unit.id)}">${opened ? 'Contraer subunidades' : 'Mostrar subunidades vinculadas'}</button>
++        <button type="button" class="lab-btn lab-btn--ghost" data-gv-text-complete="${esc(unit.id)}">${full ? 'Solo las vinculadas' : 'Mostrar todas como contexto'}</button>`;
++      out.append(section); return;
++    }
++    if (item.subunidadTexto) {
++      const unit = units.find(u => u.id === item.unidadId);
++      const sub = unit?.subunidades.find(s => s.id === item.subunidadId);
++      const div = document.createElement('div'); div.className = 'lab-graph-inspector-actions';
++      div.innerHTML = `<p class="hint">${sub ? `Vínculo: ${sub.motivos.map(m => esc(m.via.replaceAll('_', ' '))).join(', ')}.` : 'Contexto de unidad, sin vínculo directo acreditado con la selección.'}</p>
++        <p class="hint">Referencia Bekker: ${esc(item.referencia || 'No consignada')}. El lector contextual con resaltado se incorporará en 9B.</p>`;
++      out.append(div);
++    }
++  }
+   function inspeccionar(item) {
+     if (closed) return;
+     const out = $('#gv-inspector');
++    delete out.dataset.gvTextAnchor;
+     if (!item) { out.innerHTML = '<h3>Propiedades</h3><p>Seleccioná un nodo o una arista para examinar su procedencia.</p>'; return; }
+     const esArista = item.clase === 'arista';
+     const idAristaEditable = esArista ? (item.aristaOriginalId || item.id) : null;
+@@ -193,6 +246,20 @@ export function createLabGraphPilotView(App) {
+     out.innerHTML = `<h3>${esc(encabezado)}</h3>
+       <p class="lab-graph-id"><strong>ID:</strong> ${esc(item.id || '—')}<br>${esc(item.clase)}</p>
+       <dl class="lab-graph-properties">${attrs.map(([k,v]) => `<dt>${esc(k)}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>`;
++    if (item.navegacionTextual && item.clase === 'nodo') { inspeccionarTexto(item, out); return; }
++    const ancla = anclaDeItem(item);
++    if (ancla) {
++      const units = buscarVinculosTextuales(App.S, ancla);
++      const section = document.createElement('div'); section.className = 'lab-graph-inspector-actions';
++      if (units.length) {
++        section.innerHTML = `<p class="hint">${units.length} unidades vinculadas en el corpus. Se distingue evidencia de subunidad y contexto de tags.</p>
++          <button type="button" class="lab-btn" data-gv-text-open>Explorar texto de Aristóteles</button>`;
++      } else {
++        section.innerHTML = '<p class="hint">No se encontraron vínculos textuales explícitos para este elemento. No se infieren pasajes.</p>';
++      }
++      out.append(section);
++      out.dataset.gvTextAnchor = JSON.stringify(ancla);
++    } else delete out.dataset.gvTextAnchor;
+     if (esArista && modo === 'focal' && (!item.agrupacionVisual || item.aristaOriginalId)) {
+       const acciones = document.createElement('div');
+       acciones.className = 'lab-graph-inspector-actions';
+@@ -249,12 +316,14 @@ export function createLabGraphPilotView(App) {
+       tiposVisibles: preferencias.tiposVisibles, nodosOcultos: preferencias.nodosOcultos,
+       conservados: preferencias.nodosConservados });
+     const visibles = ocultarNodos(vista.elementos, preferencias.nodosOcultos, estado.focos);
+-    return { sub, vista, rutas, elementos: decorarAristasFocales(visibles, estado.focos, preferencias) };
++    const texto = construirCapaTextual(visibles, resumenTexto(), preferencias.texto);
++    const resultado = ocultarNodos(texto.elementos, preferencias.nodosOcultos, estado.focos);
++    return { sub, vista, rutas, texto, elementos: decorarAristasFocales(resultado, estado.focos, preferencias) };
+   }
+   function actualizarFocal() {
+     // Conservar también la última posición de los nodos que un filtro va a ocultar.
+     if (viewer) preferencias.posiciones = { ...preferencias.posiciones, ...viewer.posiciones() };
+-    const { sub, vista, rutas, elementos } = elementosFocales();
++    const { sub, vista, rutas, texto, elementos } = elementosFocales();
+     viewer?.actualizarElementos(elementos, { posiciones: preferencias.posiciones });
+     renderFocos();
+     const funcionales = sub.elementos.filter(e => e.group === 'nodes' && e.data.facetaFuncional).length;
+@@ -265,7 +334,7 @@ export function createLabGraphPilotView(App) {
+       `<div class="lab-graph-hidden-row"><span>${esc(indice.nodos.get(id)?.data.label || id)}</span><button type="button" class="lab-btn lab-btn--ghost" data-gv-node-restore="${esc(id)}">Mostrar</button></div>`).join('') || '<p class="hint">No hay nodos ocultos.</p>';
+     if (preferencias.nodosOcultos.length > 30) $('#gv-hidden-items').insertAdjacentHTML('beforeend', '<p class="hint">Se muestran los primeros 30. Podés restaurar todos para recuperar el resto.</p>');
+     $('#gv-clear-pins').disabled = !preferencias.nodosConservados.length;
+-    status(`${elementos.filter(e => e.group === 'nodes').length} nodos visibles · ${elementos.filter(e => e.group === 'edges').length} conexiones · ${vista.agrupadas} FAQ plegadas · ${sub.estadisticas.expandidos} expansiones de conceptos.`);
++    status(`${elementos.filter(e => e.group === 'nodes').length} nodos visibles · ${elementos.filter(e => e.group === 'edges').length} conexiones · ${vista.agrupadas} FAQ plegadas · ${sub.estadisticas.expandidos} expansiones de conceptos${texto.visible ? ` · ${texto.unidadesVisibles} unidades / ${texto.subunidadesVisibles} subunidades textuales` : ''}.`);
+   }
+   function alternarGrupoFaq(id) {
+     const groups = new Set(preferencias.faqExpandidas);
+@@ -276,6 +345,16 @@ export function createLabGraphPilotView(App) {
+     if (grupo?.nonempty()) inspeccionar({ clase: 'nodo', ...grupo.data() });
+   }
+   function dobleClick(item) {
++    if (modo === 'focal' && item.navegacionTextual) {
++      const textState = textoActivo();
++      if (item.grupoTexto) cambiarTexto({ abierto: !textState.abierto });
++      else if (item.unidadTexto) {
++        const opened = new Set(textState.unidadesAbiertas);
++        if (opened.has(item.unidadId)) opened.delete(item.unidadId); else opened.add(item.unidadId);
++        cambiarTexto({ unidadesAbiertas: [...opened] });
++      }
++      return;
++    }
+     if (modo === 'focal' && item.agrupadorFaq) { alternarGrupoFaq(item.id); return; }
+     if (modo !== 'focal') {
+       const nodo = viewer?.cy.getElementById(item.id);
+@@ -409,6 +488,35 @@ export function createLabGraphPilotView(App) {
+     status('Título aplicado y visible. Usá «Persistir ordenamiento» para conservarlo.');
+   });
+   $('#gv-inspector').addEventListener('click', e => {
++    const open = e.target.closest('[data-gv-text-open]');
++    if (open) {
++      let ancla = null;
++      try { ancla = JSON.parse($('#gv-inspector').dataset.gvTextAnchor || 'null'); } catch {}
++      if (ancla && buscarVinculosTextuales(App.S, ancla).length) {
++        cambiarTexto({ ancla, abierto: false, todasUnidades: false, unidadesAbiertas: [], unidadesCompletas: [] });
++        viewer?.enfocar(idHubTexto(ancla));
++        status('Navegación textual incorporada. Doble clic en el nodo «Texto de Aristóteles» para abrir unidades.');
++      }
++      return;
++    }
++    if (e.target.closest('[data-gv-text-close]')) { cambiarTexto(estadoTextualInicial()); inspeccionar(null); return; }
++    if (e.target.closest('[data-gv-text-hub]')) { cambiarTexto({ abierto: !textoActivo().abierto }); return; }
++    if (e.target.closest('[data-gv-text-all]')) { cambiarTexto({ todasUnidades: !textoActivo().todasUnidades }); return; }
++    const unidad = e.target.closest('[data-gv-text-unit]');
++    if (unidad) {
++      const changed = new Set(textoActivo().unidadesAbiertas);
++      if (changed.has(unidad.dataset.gvTextUnit)) changed.delete(unidad.dataset.gvTextUnit);
++      else changed.add(unidad.dataset.gvTextUnit);
++      cambiarTexto({ unidadesAbiertas: [...changed] }); return;
++    }
++    const completa = e.target.closest('[data-gv-text-complete]');
++    if (completa) {
++      const changed = new Set(textoActivo().unidadesCompletas);
++      const id = completa.dataset.gvTextComplete;
++      if (changed.has(id)) changed.delete(id); else changed.add(id);
++      const opened = new Set(textoActivo().unidadesAbiertas); opened.add(id);
++      cambiarTexto({ unidadesCompletas: [...changed], unidadesAbiertas: [...opened] }); return;
++    }
+     const ocultar = e.target.closest('[data-gv-node-hide]');
+     if (ocultar && modo === 'focal') { ocultarNodo(ocultar.dataset.gvNodeHide); return; }
+     const pin = e.target.closest('[data-gv-node-pin]');
+diff --git a/public/scripts/check-visor-texto-9a.mjs b/public/scripts/check-visor-texto-9a.mjs
+new file mode 100644
+index 0000000..6b5c7f3
+--- /dev/null
++++ b/public/scripts/check-visor-texto-9a.mjs
+@@ -0,0 +1,95 @@
++// Checkpoint 9A: evidencia textual y navegación sin inventar vínculos ni editar corpus.
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import path from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { buscarVinculosTextuales, construirCapaTextual, normalizarEstadoTextual, estadoTextualInicial,
++  idHubTexto, idUnidadTexto, idSubunidadTexto } from '../js/lab/graphTextNavigation.js';
++import { guardarDisposicion, leerDisposicion } from '../js/lab/graphLayoutPersistence.js';
++import { buildSemanticProjection } from '../js/lab/semanticProjection.js';
++import { proyeccionAElementos } from '../js/lab/semanticGraphAdapter.js';
++import { integrarIdentidadesVisuales } from '../js/lab/graphConceptIdentity.js';
++
++const S = {
++  N: { arete: { id:'arete', label:'Virtud', path:[] }, eudaimonia: { id:'eudaimonia', label:'Felicidad', path:[] } },
++  FN: { arete: { id:'arete', label:'Virtud', depth:2 }, eudaimonia: { id:'eudaimonia', label:'Felicidad', depth:2 } },
++  FE: [{id:'a-cond', de:'arete', a:'eudaimonia', rel:'condicion', ref:'EN I.7', voz:'textual'}],
++  U: {
++    u1: { id:'u1', titulo:'Unidad 1', parrafos:[1], subunidades:[{id:'s1',titulo:'Sub 1',bekker:['1098a1','1098a4']},{id:'s2',titulo:'Sub 2',bekker:['1098a5','1098a8']}] },
++    u2: { id:'u2', titulo:'Unidad 2', parrafos:[2], subunidades:[{id:'s3',titulo:'Sub 3',bekker:['1099a1','1099a3']}] },
++    u3: { id:'u3', titulo:'Unidad 3', parrafos:[], subunidades:[{id:'s4',titulo:'Sub 4',bekker:['1100a1','1100a3']}] },
++  },
++  SUB: {
++    s1: {id:'s1',unidad:'u1',titulo:'Sub 1',bekker:['1098a1','1098a4'],conceptos_clave:['arete'],relaciones:[{de:'arete',a:'eudaimonia',ref:'EN I.7',destinos:[{arista:'a-cond',ref:'EN I.7'}]}]},
++    s2: {id:'s2',unidad:'u1',titulo:'Sub 2',bekker:['1098a5','1098a8'],conceptos_clave:[],relaciones:[]},
++    s3: {id:'s3',unidad:'u2',titulo:'Sub 3',bekker:['1099a1','1099a3'],conceptos_clave:[],relaciones:[]},
++    s4: {id:'s4',unidad:'u3',titulo:'Sub 4',bekker:['1100a1','1100a3'],conceptos_clave:[],relaciones:[{de:'moralidad abstracta',a:'arete en general',ref:'EN I.7'}]},
++  },
++  TP: { 1:{ parrafo:1, conceptos:[{c:'arete',n:'central'}] }, 2:{parrafo:2, conceptos:[{c:'arete',n:'presente'}]} },
++  FAQ: { x:{id:'x',pregunta:'¿Qué es virtud?',pasajes:[{ref:'u:u2'},{ref:'s1'}]} },
++  DEF:{}, ftree:{categorias:[]}, tags:{ version:'v-test' },
++};
++const concepto = {tipo:'concepto',id:'arete',nodo:'concepto_estatico:arete'};
++const fc = buscarVinculosTextuales(S, concepto);
++assert.equal(fc.length,2, 'el tag del párrafo vincula u2, pero no u3');
++assert.equal(fc[0].id,'u1', 'prioridad para vínculo directo');
++assert.deepEqual(fc[0].subunidades.map(x=>x.id),['s1']);
++assert.deepEqual(fc[1].subunidades,[], 'un tag de párrafo NO acredita una subunidad');
++assert(fc[1].motivos.some(x=>x.via==='tag_parrafo_contexto_unidad'));
++assert(!fc.some(x=>x.id==='u3'), 'no atribuir relación con extremo en texto libre');
++assert.equal(fc[0].todasSubunidades.length,2);
++
++const rel = {tipo:'arista_funcional',id:'a-cond',arista:'vinculo:123',source:'concepto_estatico:arete',target:'concepto_estatico:eudaimonia'};
++const fr = buscarVinculosTextuales(S, rel);
++assert.equal(fr.length,1);
++assert.deepEqual(fr[0].subunidades.map(x=>x.id),['s1']);
++assert.equal(fr[0].subunidades[0].motivos[0].via,'destino_arista_funcional');
++assert.deepEqual(buscarVinculosTextuales(S,{...rel,id:'otra'}),[], 'sin un destino documentado no se inventa');
++const fq = buscarVinculosTextuales(S,{tipo:'faq',id:'x',nodo:'faq:x'});
++assert.equal(fq.length,2);
++assert(fq.some(u=>u.id==='u2'&&u.subunidades.length===0), 'u: es una unidad');
++assert(fq.some(u=>u.id==='u1'&&u.subunidades[0].id==='s1'), 'ID de subunidad exacto');
++
++const ne = (id,tipo) => ({group:'nodes',data:{id,label:id,tipo}});
++const ae = (id,source,target) => ({group:'edges',data:{id,source,target,tipo:'arista_funcional'}});
++const base = [ne('concepto_estatico:arete','concepto_estatico'),ne('concepto_estatico:eudaimonia','concepto_estatico'),ae(rel.arista,rel.source,rel.target)];
++const none = construirCapaTextual(base,fc,estadoTextualInicial());
++assert.equal(none.visible,false);
++const collapsed = construirCapaTextual(base,fc,{ancla:concepto});
++assert.equal(collapsed.visible,true);
++assert(collapsed.elementos.some(x=>x.data.id===idHubTexto(concepto)));
++assert(!collapsed.elementos.some(x=>x.data.id===idUnidadTexto('u1')));
++const expanded = construirCapaTextual(base,fc,{ancla:concepto,abierto:true,unidadesAbiertas:['u1']});
++assert(expanded.elementos.some(x=>x.data.id===idUnidadTexto('u1')));
++assert(expanded.elementos.some(x=>x.data.id===idSubunidadTexto('s1')));
++assert(!expanded.elementos.some(x=>x.data.id===idSubunidadTexto('s2')));
++assert(!expanded.elementos.some(x=>x.data.id===idSubunidadTexto('s3')));
++assert.equal(expanded.elementos.filter(e=>e.data.navegacionTextual && e.group==='edges').every(e=>e.data.fuente==='presentacion'),true);
++assert.deepEqual(base[0].data,{id:rel.source,label:rel.source,tipo:'concepto_estatico'},'nunca mutar corpus');
++const full = construirCapaTextual(base,fc,{ancla:concepto,abierto:true,unidadesAbiertas:['u1'],unidadesCompletas:['u1']});
++assert(full.elementos.some(x=>x.data.id===idSubunidadTexto('s2')));
++assert(!full.elementos.some(x=>x.data.id===idSubunidadTexto('s3')));
++const fromEdge = construirCapaTextual(base,fr,{ancla:rel,abierto:true});
++assert(fromEdge.elementos.some(x=>x.data.anclaRelacion));
++assert(fromEdge.elementos.some(x=>x.data.id===idUnidadTexto('u1')));
++assert.equal(construirCapaTextual(base.slice(0,2),fr,{ancla:rel}).visible,false, 'si la arista original desaparece, no queda evidencia fantasma');
++assert.equal(normalizarEstadoTextual({ancla:{tipo:'concepto',id:'',nodo:'x'}}).ancla,null);
++assert.deepEqual(normalizarEstadoTextual({abierto:true,unidadesAbiertas:['u1','u1','']} ).unidadesAbiertas,['u1']);
++
++const storage=new Map();
++const mock={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
++assert(guardarDisposicion(mock,'test9a',{posiciones:{},texto:{ancla:concepto,abierto:true,unidadesAbiertas:['u1'],unidadesCompletas:['u1']}}));
++assert.equal(leerDisposicion(mock,'test9a').texto.ancla.id,'arete');
++assert.deepEqual(leerDisposicion(mock,'test9a').texto.unidadesCompletas,['u1']);
++assert.equal(leerDisposicion(mock,'test9a').titulos.a,undefined,'compatible con persistencia anterior');
++
++const projection=buildSemanticProjection(S);
++const elems=integrarIdentidadesVisuales(proyeccionAElementos(projection)).elementos;
++const functional=elems.find(e=>e.group==='edges'&&e.data.tipo==='arista_funcional');
++assert.equal(functional.data.aristaFuente,'a-cond','identidad editorial estable de la arista');
++assert.equal(functional.data.source,'concepto_estatico:arete','identidad conceptual compartida');
++
++const view=readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../js/views/labGraphPilotView.js'),'utf8');
++for(const text of ['data-gv-text-open','data-gv-text-hub','data-gv-text-unit','data-gv-text-complete','data-gv-text-close','construirCapaTextual','navegacionTextual'])
++  assert(view.includes(text),`falta integración de ${text}`);
++console.log('OK: 9A unidades y subunidades verificables, tag ≠ evidencia, arista original, FAQ u:, expansión reversible y persistencia.');

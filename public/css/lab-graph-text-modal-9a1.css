@@ -1,0 +1,56 @@
+/* Checkpoint 9A.1: exploración documental fuera del lienzo conceptual. */
+.lab-graph-text-dialog {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: min(94vw, 1480px);
+  max-width: none;
+  height: min(90vh, 1000px);
+  max-height: none;
+  margin: auto;
+  border: 1px solid #8c9fab;
+  border-radius: 14px;
+  padding: 0;
+  color: var(--text, #24394a);
+  background: var(--bg-elevated, #fff);
+  box-shadow: 0 25px 85px #132b4266;
+  overflow: hidden;
+}
+.lab-graph-text-dialog::backdrop { background: rgba(17, 37, 54, 0.48); }
+.lab-graph-text-dialog-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  height: 100%;
+  box-sizing: border-box;
+  min-height: 0;
+}
+.lab-graph-text-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.lab-graph-text-heading h2 { margin: 3px 0; font-size: clamp(1.05rem, 1.7vw, 1.5rem); }
+.lab-graph-text-heading small { color: var(--muted, #667783); }
+.lab-graph-text-heading .hint { margin: 0; }
+.lab-graph-text-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lab-graph-text-content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(245px, 310px); gap: 12px; flex: 1; min-height: 0; }
+.lab-graph-text-canvas { min-width: 0; min-height: 300px; height: 100%; border: 1px solid #bdc9d0; border-radius: 10px; background: var(--bg-elevated, #f7f9fb); touch-action: none; }
+.lab-graph-text-inspector { min-height: 0; overflow-y: auto; overflow-wrap: anywhere; }
+.lab-graph-text-inspector ul { padding-left: 20px; }
+.lab-graph-text-dialog .hint { font-size: .85rem; }
+@media (max-width: 700px) {
+  .lab-graph-text-dialog { width: 98vw; height: 95dvh; border-radius: 8px; }
+  .lab-graph-text-dialog-inner { padding: 10px; gap: 7px; }
+  .lab-graph-text-content { grid-template-columns: 1fr; grid-template-rows: minmax(250px, 1fr) minmax(110px, 30%); }
+  .lab-graph-text-inspector { overflow-y: auto; }
+}
+/* 9A.2: barra compacta de agrupaciones en el modal (sin tapar el grafo). */
+.lab-graph-text-group-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lab-graph-text-group-bar label { font-size: .85rem; font-weight: 600; }
+.lab-graph-text-group-bar input { flex: 1 1 190px; max-width: 320px; min-width: 130px; }
+.lab-graph-text-group-bar small { color: var(--muted, #667783); }
+.lab-graph-text-inspector form[data-tm-rename] { display: grid; gap: 8px; margin: 10px 0; }
+.lab-graph-text-inspector form[data-tm-rename] input { width: 100%; box-sizing: border-box; }
+@media (max-width: 700px) {
+  .lab-graph-text-group-bar { gap: 5px; }
+  .lab-graph-text-group-bar input { flex-basis: 140px; }
+  .lab-graph-text-toolbar .hint { display: none; }
+}
