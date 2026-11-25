@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {CONCEPTS,occurrences,buildTree} from '../js/lab/conceptTrees.js';
+import {buildSheetLinks} from '../labo/js/vectorial-engine.js';
+const read=n=>readFile(new URL(`../lab/${n}.json`,import.meta.url),'utf8').then(JSON.parse);
+const [f5,f6,f7]=await Promise.all(['n1u5-fichas-explicativas','n1u6-puentes-explicativos','n1u7-fichas-red-piloto'].map(read));
+const links=buildSheetLinks([f5,f7],f6);
+const happiness=CONCEPTS.find(c=>c.id==='eudaimonia');
+const logos=CONCEPTS.find(c=>c.id==='logos');
+const docs=[{id:'paragraph:1',kind:'parrafo',chapter:7,es:'Felicidad feliz infelicidad.',gr:'εὐδαιμονία εὐδαιμονίας.'},{id:'sub:1098a16-18',sourceId:'1098a16-18',kind:'subunidad',es:'felicidad',gr:'εὐδαιμονία'},{id:'paragraph:2',kind:'parrafo',chapter:13,es:'Razón y argumento.',gr:'λόγος λόγον'}];
+test('formas enteras, acentos y sigma final, offsets originales',()=>{const t='ΛΌΓΟΣ λόγον ἀλόγος';const m=occurrences(t,logos.gr);assert.deepEqual(m.map(x=>t.slice(x.start,x.end)),['ΛΌΓΟΣ','λόγον']);assert.equal(occurrences('infelicidad felicidad',happiness.es).length,1);});
+test('recuento por párrafo y lengua, no duplica subunidad',()=>{const t=buildTree(happiness,docs,links,true);assert.deepEqual(t.counts,{gr:2,es:2});assert.equal(t.chapters.length,1);});
+test('definición central y continuación explícita; vínculo editorial real y ausencia de texto distinguibles',()=>{const t=buildTree(happiness,docs,links,true);assert.equal(t.definition[0].id,'1098a16-18');assert(t.definition[0].registered);assert(t.definition[0].doc);assert.equal(t.definition[1].id,'1098a18-20');assert.equal(t.definition[1].doc,null);assert(t.definition.some(x=>x.id==='1100a3-5'));});
+test('lógos no tiene definición única ni se clasifican sentidos por palabra',()=>{const t=buildTree(logos,docs,links,true);assert.equal(t.definition.length,0);assert.equal(t.counts.gr,2);assert(t.allusions.some(x=>x.role.startsWith('Argumento:')));assert(t.allusions.some(x=>x.role.startsWith('Razón:')));});
+test('revisión incompatible: preserva recuento, no devuelve ramas editoriales',()=>{const t=buildTree(happiness,docs,links,false);assert.equal(t.counts.gr,2);assert.deepEqual(t.definition,[]);assert.deepEqual(t.allusions,[]);});
+test('vista: usa escapado, preferencias, enlaces sin perder árbol, aborta carga',async()=>{const s=await readFile(new URL('../js/views/labTreesView.js',import.meta.url),'utf8');assert(s.includes('esc(hit.form)'));assert(s.includes('controlesTamanoLector()'));assert(s.includes('target="_blank" rel="noopener"'));assert(s.includes('abort.abort()'));});
