@@ -1,0 +1,540 @@
+diff --git a/docs/AGORA_N1U15_EXPLORADOR_VECTORIAL.md b/docs/AGORA_N1U15_EXPLORADOR_VECTORIAL.md
+new file mode 100644
+index 0000000..566e1b4
+--- /dev/null
++++ b/docs/AGORA_N1U15_EXPLORADOR_VECTORIAL.md
+@@ -0,0 +1,60 @@
++# Ágora · N1-U.15 · Explorador vectorial de citas
++
++## Alcance
++
++Nuevo experimento **en el Laboratorio especializado**, en `http://localhost:<puerto>/labo/#/vectorial` (sustituir puerto por el de la aplicación). No modifica MariaDB, las fichas, las FAQ ni el motor de diálogo. El Lab anterior de búsqueda/constructor permanece en `#/buscar`.
++
++### Objetivo filosófico
++
++Permitir localizar citas en párrafos y subunidades que ayuden a examinar críticamente una lectura editorial o de un especialista. Dos consultas pueden formularse en paralelo para buscar **candidatos de evidencia** y **candidatos para una lectura alternativa**. Ni una posición alta ni la coincidencia de etiquetas demuestran que un pasaje apoye o refute una tesis. La clasificación de pertinencia, apoyo, objeción y contexto es una operación interpretativa que queda a cargo del editor o lector.
++
++### Índice y fuentes
++
++- `GET /api/labo/lectura` (unidades, subunidades y revisión documental desde MariaDB).
++- `GET /api/texto/EN_libro1_v8.txt` (párrafos bilingües y anclas del Libro I). La relación subunidad↔párrafo se deriva de anclas localizadas por el lector ya existente; no se asignan etiquetas de párrafo sin procedencia.
++- `/lab/n1u5-fichas-explicativas.json`, `/lab/n1u6-puentes-explicativos.json`, `/lab/n1u7-fichas-red-piloto.json` (fichas y apoyos seleccionados editorialmente). Si su revisión difiere de la documental, se desactivan enlaces y filtro por ficha.
++- Las categorías estáticas provienen de `conceptos_clave` de cada subunidad y las funcionales de `movimientos`. No se crean categorías desde palabras sueltas del texto. El corpus del Labo suministra las etiquetas legibles si están disponibles.
++
++### Algoritmo experimental
++
++Índice local disperso de TF-IDF con frecuencia sublineal e IDF suavizado; similitud coseno sobre títulos, introducciones y pasajes castellanos/griegos. Se ponderan títulos por repetición, coincidencias de frase y categorías seleccionadas. La opción **priorizar** suma señales editoriales y la opción **filtrar** exige al menos una etiqueta por cada familia activa. Se muestran por separado coseno, frase y aporte de etiquetas. **No es un modelo de embeddings**, ni un verificador de tesis, ni una medida probabilística de verdad.
++
++Una ficha o FAQ puede limitar la búsqueda a subunidades explícitamente elegidas como apoyos; los párrafos aparecen solo cuando hay anclas que los conectan con esas subunidades. Los documentos fuera de este alcance no se califican como irrelevantes: sencillamente no se incluyen en ese filtro.
++
++### Prueba manual
++
++1. Abrir `/labo/#/vectorial`; comprobar que el laboratorio anterior conserva su pestaña de búsqueda y el constructor.
++2. Buscar `felicidad actividad` en *Subunidades y párrafos*. Desplegar una cita bilingüe, inspeccionar componentes del puntaje y el origen de sus categorías.
++3. Seleccionar la ficha «¿Qué es la felicidad?» y repetir; ahora se muestran solo sus apoyos editoriales y párrafos asociados por anclas.
++4. Agregar una categoría estática y una funcional; comparar el modo «Aumentan prioridad» con «Filtran resultados».
++5. En «Consulta alternativa» escribir `placer honor riqueza`. Comprobar que el bloque de contraste no afirma que los resultados sean objeciones.
++6. Exportar el JSON de resultados; verificar revisión, consulta, filtros, puntajes y referencias. Repetir después de recargar la página.
++7. Cambiar la revisión documental (si corresponde): los vínculos de fichas de otra revisión deben desactivarse hasta publicar una revisión coherente.
++
++### Instalación (CMD o Git Bash)
++
++Con N1-U.14 instalado, descargar `agora-n1u15-explorador-vectorial.patch` y ejecutar desde la raíz del repositorio:
++
++```cmd
++ git apply --check agora-n1u15-explorador-vectorial.patch
++ git apply agora-n1u15-explorador-vectorial.patch
++ node public/scripts/check-n1u15-vectorial.mjs
++```
++
++No aplicar si falla `--check`. Este parche solo toca `public/labo/index.html` y `public/labo/js/main.js` y añade archivos nuevos. No toca `labArchitectureView.js` ni el CSS de fichas; evita los conflictos de versiones experimentados anteriormente.
++
++### Validación y límites
++
++Pruebas de motor, filtros, anclaje de párrafos, ranking explicable, vinculación de fichas y sintaxis JavaScript. El índice corre en el navegador sobre la respuesta de la API actual. **Quedan pendientes** la validación visual en el navegador del usuario, la verificación con MariaDB activa y la evaluación de precisión por especialistas.
++
++## Contrato futuro del chat LLM (N1-U.17)
++
++- **Seis interacciones con la LLM por sesión de uso** durante el piloto; definir explícitamente en interfaz qué consume un crédito y cuántos quedan.
++- Un intercambio con generación efectiva consume un crédito. Consultar fichas, texto, grafos, buscar citas y utilizar el Query Builder no consume créditos LLM. Las llamadas rechazadas o fallidas no se contabilizan como interacciones consumidas (con transacciones seguras y prevención de duplicados).
++- La autorización y el contador deben mantenerse **del lado del servidor**, con sesión firmada y un decremento atómico y auditable **antes de la llamada cobrable**, con restitución si falla. Sin cuentas autenticadas, el límite por sesión es solo experimental y no impide reiniciar identidad; para créditos por usuario requerimos autenticación y almacenamiento duradero.
++- Denegar nuevas generaciones cuando se agota el cupo, antes de gastar tokens. Mantener claves API en backend. Limitar presupuesto por solicitud y duración, aplicar rate limiting independiente, no registrar conversaciones privadas innecesariamente y limitar el corpus enviado a evidencia recuperada.
++- Para principiantes, priorizar pasajes y preguntas de reflexión antes de ofrecer generación automática; para avanzados, modos de exploración adicionales. Patrocinios o suscripciones futuros no cambiarán la distinción entre textos editoriales y respuestas generadas.
++
++## Próximos hitos
++
++N1-U.16: comparación de consultas naturales, constructor visual, patrones de grafos estilo Cypher y un DSL híbrido Ágora, todos compilados a una representación común y un intérprete seguro. N1-U.17: LLM controlada mediante API y cupo inicial de seis. N1-U.18: evaluación de recuperación y respuestas con juicio editorial. Después: contrato de tagueo del Libro II y primeras fichas entre libros.
+diff --git a/public/labo/css/vectorial.css b/public/labo/css/vectorial.css
+new file mode 100644
+index 0000000..54a3cdc
+--- /dev/null
++++ b/public/labo/css/vectorial.css
+@@ -0,0 +1,39 @@
++/* N1-U.15 · Buscador vectorial experimental; aislado del estilo de fichas. */
++.vexp-page{max-width:none;overflow:auto}
++.vexp-wrapper{max-width:1520px;margin:0 auto;padding:clamp(14px,2.4vw,30px);font-size:15px}
++.vexp-heading{display:flex;justify-content:space-between;align-items:start;gap:18px}
++.vexp-heading h1{font-size:clamp(24px,2.5vw,34px);line-height:1.2;margin:.25rem 0}
++.vexp-heading p{max-width:78ch;line-height:1.55}
++.vexp-heading>a{white-space:nowrap;text-decoration:underline}
++.vexp-muted{opacity:.75;font-size:.84rem;line-height:1.45}
++.vexp-form{padding:20px;border:1px solid var(--border,#8b8b8b40);border-radius:12px;display:grid;gap:16px;background:var(--surface,#88888809)}
++.vexp-form label{display:grid;gap:5px;font-size:.92rem}
++.vexp-form input[type=search],.vexp-form textarea,.vexp-form select{padding:10px;border:1px solid var(--border,#8888);border-radius:7px;background:var(--raised,var(--surface,#fff));color:var(--text,inherit);font:inherit;min-width:0;width:100%;box-sizing:border-box}
++.vexp-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;min-width:0}
++.vexp-options{display:flex;gap:16px;flex-wrap:wrap}.vexp-options>label{flex:1 1 180px}
++.vexp-facets{display:grid;grid-template-columns:1fr 1fr;gap:14px}
++.vexp-facets fieldset{min-width:0;border:1px solid var(--border,#8885);border-radius:8px;display:flex;flex-wrap:wrap;align-content:start;gap:7px;padding:12px}
++.vexp-facets legend{font-weight:600;padding:0 5px}
++.vexp-facets label.vexp-toggle{display:flex;gap:7px;align-items:center;border:1px solid var(--border,#7776);padding:4px 8px;border-radius:8px;font-size:.82rem;cursor:pointer}
++.vexp-facets label.vexp-toggle:has(input:checked){background:var(--chip-selected,#7088a523);border-color:#6790ad}
++.vexp-facets label.vexp-toggle input{width:auto;accent-color:#577e9e}
++.vexp-facets label.vexp-toggle small{opacity:.6}
++.vexp-small,.vexp-form-actions button{border:1px solid var(--border,#8888);border-radius:7px;cursor:pointer;padding:8px 12px;font:inherit;background:var(--raised,var(--surface,#fff));color:var(--text,inherit)}
++.vexp-form-actions{display:flex;flex-wrap:wrap;gap:10px}
++.vexp-form-actions button.primary{background:#376a8d;color:white;border-color:#376a8d}
++.vexp-comparisons{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,470px),1fr));gap:18px;margin:20px 0}
++.vexp-results{min-width:0}.vexp-results h3{margin:8px 0 14px}
++.vexp-hit{padding:14px;border:1px solid var(--border,#8886);border-radius:9px;margin-bottom:10px;background:var(--raised,var(--surface,#fff));overflow-wrap:anywhere}
++.vexp-hit header{display:flex;align-items:start;gap:10px}
++.vexp-hit header>div{flex:1;min-width:0}.vexp-hit header>b{font:600 .93rem ui-monospace,Consolas,monospace}
++.vexp-hit>p{font-size:.92rem;line-height:1.5;margin:9px 0;color:var(--text,inherit)}
++.vexp-rank{display:inline-flex;align-items:center;justify-content:center;background:#718fa922;border-radius:50%;height:28px;min-width:28px;font-size:.84rem;font-weight:700}
++.vexp-hit details{border-top:1px solid var(--border,#aaa6);padding-top:8px}
++.vexp-hit summary{cursor:pointer;font-size:.86rem}
++.vexp-bilingual{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:14px}
++.vexp-bilingual h4{font-size:.85rem;margin:10px 0}
++.vexp-bilingual p{font-family:"DejaVu Sans Mono","Noto Sans Mono","FreeMono",Consolas,monospace;font-size:var(--vexp-font,16px);line-height:1.7;text-align:justify;overflow-wrap:break-word;white-space:pre-line;hyphens:auto}
++.vexp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.vexp-actions a{font-size:.79rem;text-decoration:underline}
++.vexp-empty{padding:25px;border:1px dashed #8886;border-radius:10px;margin:20px 0}
++.vexp-wrapper>footer{margin-top:22px}
++@media(max-width:820px){.vexp-heading,.vexp-grid2,.vexp-facets{display:grid;grid-template-columns:1fr}.vexp-bilingual{grid-template-columns:1fr}.vexp-wrapper{padding:12px}.vexp-heading>a{white-space:normal}}
+diff --git a/public/labo/index.html b/public/labo/index.html
+index a040702..d3a15e9 100644
+--- a/public/labo/index.html
++++ b/public/labo/index.html
+@@ -7,6 +7,7 @@
+   <meta name="description" content="Laboratorio local de búsqueda, evaluación y recorrido guiado para la Ética nicomáquea.">
+   <title>EN I · Labo</title>
+   <link rel="stylesheet" href="./css/labo.css">
++  <link rel="stylesheet" href="./css/vectorial.css">
+   <script type="module" src="./js/main.js"></script>
+ </head>
+ <body>
+@@ -21,6 +22,7 @@
+     </div>
+     <nav class="nav" aria-label="Secciones del Laboratorio">
+       <a href="#/buscar" data-section="buscar">Búsqueda</a>
++      <a href="#/vectorial" data-section="vectorial">Vectorial <span>N1-U.15</span></a>
+       <a href="#/recorrido" data-section="recorrido">Recorrido</a>
+       <a href="#/recorrido-stream" data-section="recorrido-stream">Bot stream</a>
+       <a href="#/grafos" data-section="grafos">Grafos <span>F2</span></a>
+diff --git a/public/labo/js/main.js b/public/labo/js/main.js
+index 8b980fe..d76a9c0 100644
+--- a/public/labo/js/main.js
++++ b/public/labo/js/main.js
+@@ -1,6 +1,7 @@
+ import { parse } from './router.js';
+ import { loadConfig, loadInitial, saveConfig } from './store.js';
+ import * as searchView from './views/busqueda.js';
++import * as vectorialView from './views/vectorial.js';
+ import * as historyView from './views/historial.js';
+ import * as configView from './views/config.js';
+ import * as courseView from './views/recorrido.js';
+@@ -36,6 +37,7 @@ async function mount() {
+   });
+   try {
+     if (route.section === 'buscar') await searchView.render(root, app, route);
++    else if (route.section === 'vectorial') await vectorialView.render(root, app, route);
+     else if (route.section === 'recorrido') await zeroView.render(root, app);
+     else if (route.section === 'recorrido-stream') await streamView.render(root, app);
+     else if (route.section === 'recorrido-anterior') await courseView.render(root, app);
+diff --git a/public/labo/js/vectorial-engine.js b/public/labo/js/vectorial-engine.js
+new file mode 100644
+index 0000000..d3af6da
+--- /dev/null
++++ b/public/labo/js/vectorial-engine.js
+@@ -0,0 +1,149 @@
++// Ágora · N1-U.15 · Motor de recuperación experimental, puro y sin API externa.
++// TF-IDF/coseno es similitud LÉXICA vectorizada, no embeddings ni juicio filosófico.
++import { buildLibrary, passageText, parseBekker } from '../../js/reader/text.js';
++
++const STOP = new Set(('el la los las un una unos unas de del a al y e o u en con por para que qué como cómo donde dónde cual cuáles cual es son era fue ser se su sus lo les le este esta estos estas eso esos desde sobre entre sino ante acerca mas más hay puede pueden aristoteles aristóteles texto pasaje libro etica ética').split(' '));
++const arr = v => Array.isArray(v) ? v : [];
++export function normalizeText(v) {
++  return String(v ?? '').normalize('NFD').replace(/\p{M}/gu, '')
++    .toLocaleLowerCase('es').replace(/ς/g, 'σ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
++}
++export function terms(v) { return normalizeText(v).split(/\s+/).filter(t => t.length > 1 && !STOP.has(t)); }
++function idList(v) {
++  return [...new Set(arr(v).map(x => typeof x === 'string' ? x : x?.id).filter(x => typeof x === 'string' && x.trim()))];
++}
++function textOf(v) { return Array.isArray(v) ? v.join(' ') : String(v ?? ''); }
++
++export function buildEvidenceDocuments(lectura, book) {
++  if (!arr(lectura?.tags?.unidades).length || !arr(book?.chapters).length) throw Error('Faltan unidades o párrafos del Libro I.');
++  const subs = lectura.tags.unidades.flatMap(u => arr(u.subunidades).map(s => ({ ...s, unidadId: u.id, unidadTitulo: u.titulo })));
++  const lib = buildLibrary([book], {
++    SUB: Object.fromEntries(subs.map(s => [s.id, s])),
++    repo: { libroTagueado: () => book.id },
++  });
++  const docs = [];
++  const indexedByParagraph = new Map();
++  for (const s of subs) {
++    const passage = lib.passages[s.id];
++    const es = passage ? passageText(book, passage, 'es') : '';
++    const gr = passage ? passageText(book, passage, 'gr') : '';
++    const staticTags = idList(s.conceptos_clave);
++    const functionalTags = idList(s.movimientos);
++    const doc = {
++      id: `sub:${s.id}`, kind: 'subunidad', sourceId:s.id,
++      title:s.titulo || s.id, unit:s.unidadTitulo, reference:s.id,
++      intro:s.intro || '', es, gr, staticTags, functionalTags,
++      tagOrigin: 'Etiquetas de la subunidad (MariaDB)', relatedSubunits:[s.id],
++      chapter:passage?.chapter ?? null, paragraph:null,
++    };
++    docs.push(doc);
++    // Asociación por anclas textuales verificadas; nunca etiqueta directa del párrafo.
++    for (const p of passage?.es || []) {
++      if (!indexedByParagraph.has(p.paragraph)) indexedByParagraph.set(p.paragraph, []);
++      indexedByParagraph.get(p.paragraph).push(doc);
++    }
++  }
++  for (const ch of book.chapters) for (const p of ch.paragraphs) {
++    const associations = indexedByParagraph.get(p.number) || [];
++    docs.push({
++      id:`paragraph:${p.number}`, kind:'parrafo', sourceId:String(p.number),
++      title:`Párrafo ${p.number} · I.${ch.number}`, unit:`Libro I · capítulo ${ch.number}`,
++      reference:`I.${ch.number} · párr. ${p.number}`, intro:'', es:p.es, gr:p.gr,
++      staticTags:[...new Set(associations.flatMap(a=>a.staticTags))],
++      functionalTags:[...new Set(associations.flatMap(a=>a.functionalTags))],
++      tagOrigin: associations.length ? 'Etiquetas proyectadas desde subunidades por anclas; NO tagueo del párrafo' : 'Párrafo sin etiquetas de subunidad asociadas',
++      relatedSubunits:[...new Set(associations.map(s=>s.sourceId))],
++      chapter:ch.number, paragraph:p.number,
++    });
++  }
++  return { documents:docs, issues:lib.issues, revision:lectura.revision || '', bookId:book.id };
++}
++
++export function buildSheetLinks(fichaFiles, bridgeFile = null) {
++  const ids = new Map();
++  const slugs = {
++    proemio:'proemio', 'faq.etica.intro':'etica', 'faq.agathon.pros_hen':'bien',
++    'faq.lab.felicidad':'felicidad','faq.lab.ergon':'ergon','faq.lab.alma':'alma','faq.lab.virtudes':'virtudes',
++  };
++  for (const payload of arr(fichaFiles)) for (const f of arr(payload?.fichas)) {
++    if (!slugs[f.id]) continue;
++    const supports = [...new Set([...arr(f.apoyos).map(x=>x.sub_id), ...arr(f.pasos).map(x=>x.sub_id)].filter(Boolean))];
++    ids.set(f.id, { id:f.id, title:f.titulo, url:`/#/fichas/${slugs[f.id]}`, supports });
++  }
++  for (const bridge of arr(bridgeFile?.puentes)) {
++    const ficha = ids.get(bridge.ficha_id);
++    if (ficha) ficha.supports = [...new Set([...ficha.supports, ...arr(bridge.apoyos).map(x=>x.sub_id)].filter(Boolean))];
++  }
++  const bySub = new Map();
++  for (const f of ids.values()) for (const sub of f.supports) {
++    if (!bySub.has(sub)) bySub.set(sub, []);
++    bySub.get(sub).push({ id:f.id, title:f.title, url:f.url, reason:'Pasaje seleccionado editorialmente en la ficha' });
++  }
++  return bySub;
++}
++
++function vectorFrequency(tokens) {
++  const tf = new Map();
++  for (const token of tokens) tf.set(token, (tf.get(token) || 0) + 1);
++  // Frecuencia sublineal: evita que un párrafo largo monopolice el ranking.
++  for (const [token,count] of tf) tf.set(token,1+Math.log(count));
++  return tf;
++}
++export function makeIndex(documents) {
++  const uniqueIds = new Set();
++  const DF = new Map();
++  const source = documents.map(d=>{
++    if (!d.id || uniqueIds.has(d.id)) throw Error(`Documento duplicado: ${d.id}`);
++    uniqueIds.add(d.id);
++    const title = [d.title,d.title,d.title].join(' ');
++    const searchable = [title, d.intro, d.es, d.gr].join(' ');
++    const tf = vectorFrequency(terms(searchable));
++    for (const t of tf.keys()) DF.set(t,(DF.get(t)||0)+1);
++    return {...d, normalizedText:normalizeText(searchable), tf};
++  });
++  const N = source.length;
++  const idf = t=>1+Math.log((N+1)/((DF.get(t)||0)+1));
++  return {
++    size:N,
++    documents:source.map(d=>{
++      const vector = new Map([...d.tf].map(([t,w])=>[t,w*idf(t)]));
++      const norm = Math.hypot(...vector.values()) || 1;
++      return { ...d, vector, norm };
++    }),
++    idf,
++  };
++}
++
++export function searchIndex(index, { query='', staticTags=[], functionalTags=[], filterMode='boost', type='ambos', limit=12, supportSubIds=null }={}) {
++  const selectedStatic = new Set(staticTags), selectedFunctional = new Set(functionalTags);
++  const scope = Array.isArray(supportSubIds) ? new Set(supportSubIds) : null;
++  const q = [...new Set(terms(query))];
++  if (!q.length && !selectedStatic.size && !selectedFunctional.size) return [];
++  const qtf=vectorFrequency(q);
++  const qvec=new Map([...qtf].map(([t,w])=>[t,w*index.idf(t)]));
++  const qnorm=Math.hypot(...qvec.values()) || 1;
++  return index.documents.flatMap(d=>{
++    if (type!=='ambos' && d.kind !== type) return [];
++    if (scope && !d.relatedSubunits.some(id=>scope.has(id))) return [];
++    const hitsS=d.staticTags.filter(id=>selectedStatic.has(id));
++    const hitsF=d.functionalTags.filter(id=>selectedFunctional.has(id));
++    if (filterMode==='restrict' && ((selectedStatic.size && !hitsS.length)||(selectedFunctional.size && !hitsF.length))) return [];
++    const matched=q.filter(t=>d.vector.has(t));
++    const numerator=[...qvec].reduce((sum,[t,w])=>sum+w*(d.vector.get(t)||0),0);
++    const cosine=q.length ? numerator/(qnorm*d.norm) : 0;
++    const exact = q.length>1 && d.normalizedText.includes(normalizeText(query)) ? .08 : 0;
++    const tagBonus=Math.min(.24, hitsS.length*.07+hitsF.length*.07);
++    const score=cosine+exact+tagBonus;
++    if(score <= 0.00001) return [];
++    return [{ ...d, score:Number(score.toFixed(5)), cosine:Number(cosine.toFixed(5)), exact,
++      tagBonus, matchedTerms:matched, matchedStatic:hitsS, matchedFunctional:hitsF }];
++  }).sort((a,b)=>b.score-a.score || a.id.localeCompare(b.id)).slice(0,Math.max(1,Math.min(50,Number(limit)||12)));
++}
++
++export function categoryChoices(documents, type) {
++  const key=type==='static'?'staticTags':'functionalTags';
++  const counts=new Map();
++  // Sólo las subunidades aportan etiquetas directas; evita inflar la frecuencia con herencias de párrafos.
++  for (const d of documents) if (d.kind==='subunidad') for (const id of d[key]) counts.set(id,(counts.get(id)||0)+1);
++  return [...counts].map(([id,count])=>({id,count})).sort((a,b)=>b.count-a.count || a.id.localeCompare(b.id));
++}
+diff --git a/public/labo/js/views/vectorial.js b/public/labo/js/views/vectorial.js
+new file mode 100644
+index 0000000..8778e3e
+--- /dev/null
++++ b/public/labo/js/views/vectorial.js
+@@ -0,0 +1,159 @@
++import { esc } from '../ui.js';
++import { parseBook } from '../../../js/reader/text.js';
++import { buildEvidenceDocuments, buildSheetLinks, makeIndex, searchIndex, categoryChoices } from '../vectorial-engine.js';
++
++const array = v=>Array.isArray(v)?v:[];
++const initialState = () => ({
++  query:'', contrast:'', claim:'', type:'ambos', filterMode:'boost', sheetId:'',
++  staticTags:[], functionalTags:[], limit:12, searched:false, expandedTags:false, status:'',
++});
++const getJSON = async url => {
++  const r=await fetch(url,{cache:'no-store'});
++  if (!r.ok) throw Error(`${url}: HTTP ${r.status}`);
++  return r.json();
++};
++const label=(id,map)=>map.get(id)||id.replaceAll('_',' ');
++
++async function loadIndex(app) {
++  if (app.vectorialIndex) return app.vectorialIndex;
++  const [lectura, texto, f5, f6, f7] = await Promise.all([
++    getJSON('/api/labo/lectura'),
++    fetch('/api/texto/EN_libro1_v8.txt',{cache:'no-store'}).then(async r=>{
++      if(!r.ok) throw Error(`No se pudo cargar el texto bilingüe (${r.status}).`);
++      return r.text();
++    }),
++    getJSON('/lab/n1u5-fichas-explicativas.json').catch(()=>null),
++    getJSON('/lab/n1u6-puentes-explicativos.json').catch(()=>null),
++    getJSON('/lab/n1u7-fichas-red-piloto.json').catch(()=>null),
++  ]);
++  const book=parseBook(texto);
++  const data=buildEvidenceDocuments(lectura,book);
++  const index=makeIndex(data.documents);
++  const links=buildSheetLinks([f5,f7].filter(Boolean),f6);
++  const sheets=new Map();
++  for(const [sub,items] of links) for(const f of items) {
++    if(!sheets.has(f.id)) sheets.set(f.id,{id:f.id,title:f.title,supports:[]});
++    sheets.get(f.id).supports.push(sub);
++  }
++  const labels=new Map(array(app.corpus?.catalog?.criteria).map(x=>[x.id,x.label||x.id]));
++  const staticChoices=categoryChoices(index.documents,'static');
++  const functionalChoices=categoryChoices(index.documents,'functional');
++  const editorialRevisions=[f5?.fuente?.revision,f6?.fuente?.revision,f7?.fuente?.revision].filter(Boolean);
++  const matching=editorialRevisions.every(rev=>rev===lectura.revision);
++  const obj={...data,index,links:matching?links:new Map(),sheets:matching?sheets:new Map(),staticChoices,functionalChoices,labels,
++    editorialState:matching?'Correspondencia de revisión comprobada':'Revisión de las fichas distinta o no disponible: enlaces desactivados',
++    sheetsPresent:Boolean(f5&&f7)};
++  app.vectorialIndex=obj;
++  return obj;
++}
++
++function renderCategoryOptions(choices,selected,map,name,expanded) {
++  if(!choices.length) return '<span class="vexp-muted">Sin etiquetas registradas de esta clase.</span>';
++  const shown=expanded?choices:choices.slice(0,14);
++  const options=shown.map(x=>`<label class="vexp-toggle"><input type="checkbox" data-category="${esc(name)}" value="${esc(x.id)}" ${selected.includes(x.id)?'checked':''}><span>${esc(label(x.id,map))}</span><small>${x.count}</small></label>`).join('');
++  return options + (choices.length>14?`<button type="button" data-more-categories="1" class="vexp-small">${expanded?'Mostrar menos':`Ver las ${choices.length} categorías`}</button>`:'');
++}
++function renderHits(results,data,headline,warning='') {
++  if (!results.length) return `<section class="vexp-results"><h3>${esc(headline)}</h3><p class="vexp-muted">No se recuperaron coincidencias con los términos y filtros seleccionados. Esto no demuestra la ausencia del concepto en la obra.</p></section>`;
++  return `<section class="vexp-results"><h3>${esc(headline)} <small>(${results.length})</small></h3>
++    ${warning?`<p class="vexp-muted">${esc(warning)}</p>`:''}
++    ${results.map((r,i)=>{
++      const linked=new Map(r.relatedSubunits.flatMap(id=>data.links.get(id)||[]).map(f=>[f.id,f]));
++      const tags=[...r.matchedStatic.map(x=>`estática: ${label(x,data.labels)}`),...r.matchedFunctional.map(x=>`funcional: ${label(x,data.labels)}`)];
++      const snippet=r.es.trim().replace(/\s+/g,' ').slice(0,310);
++      return `<article class="vexp-hit">
++        <header><span class="vexp-rank">${i+1}</span><div><strong>${esc(r.title)}</strong><div class="vexp-muted">${r.kind==='parrafo'?'Párrafo bilingüe':'Subunidad'} · ${esc(r.reference)} · ${esc(r.unit)}</div></div><b title="Puntuación relativa, no probabilidad filosófica">${r.score.toFixed(3)}</b></header>
++        <p>${esc(snippet)}${r.es.length>310?'…':''}</p>
++        <details><summary>Ver cita bilingüe y explicación del puntaje</summary>
++          <div class="vexp-bilingual"><div><h4>Castellano</h4><p>${esc(r.es||r.intro||'Pasaje no localizado con las anclas disponibles.')}</p></div><div><h4>Griego</h4><p lang="grc">${esc(r.gr||'Pasaje griego no localizado.')}</p></div></div>
++          <p class="vexp-muted">Coseno TF-IDF: ${r.cosine.toFixed(3)} · coincidencia de frase: ${r.exact.toFixed(3)} · etiquetas: ${r.tagBonus.toFixed(3)}</p>
++          <p class="vexp-muted">Términos: ${esc(r.matchedTerms.join(', ')||'sin coincidencia léxica')} · Coincidencias de tags: ${esc(tags.join('; ')||'ninguna')}</p>
++          <p class="vexp-muted">Procedencia: ${esc(r.tagOrigin)}.</p>
++        </details>
++        <div class="vexp-actions">
++          ${[...linked.values()].map(f=>`<a href="${esc(f.url)}" title="${esc(f.reason)}">Ficha: ${esc(f.title)}</a>`).join('')}
++          <a href="/#/reading" title="Abrir la biblioteca bilingüe">Biblioteca</a>
++        </div>
++      </article>`;
++    }).join('')}
++  </section>`;
++}
++
++function renderContents(root,app,data) {
++  const s=app.vectorialUI;
++  const params={query:s.query,type:s.type,filterMode:s.filterMode,staticTags:s.staticTags,functionalTags:s.functionalTags,limit:s.limit,
++    supportSubIds:s.sheetId && data.sheets.has(s.sheetId)?data.sheets.get(s.sheetId).supports:null};
++  const results=s.searched?searchIndex(data.index,params):[];
++  const contrasts=s.searched && s.contrast.trim()?searchIndex(data.index,{...params,query:s.contrast}):[];
++  root.classList.add('vexp-page');
++  root.innerHTML=`<div class="vexp-wrapper">
++    <header class="vexp-heading"><div><span class="eyebrow">Ágora · N1-U.15 · Exploración experimental</span><h1>Citas y relaciones documentales</h1>
++    <p>Recuperación vectorial TF-IDF sobre el Libro I. Las coincidencias ayudan a localizar pasajes y revisar interpretaciones; <strong>no prueban por sí mismas que un texto apoye o refute una lectura</strong>.</p></div>
++    <a href="#/buscar">Buscador y Query Builder anterior</a></header>
++    <p class="vexp-muted">${data.index.size} documentos: ${data.documents.filter(x=>x.kind==='subunidad').length} subunidades y ${data.documents.filter(x=>x.kind==='parrafo').length} párrafos · revisión documental: ${esc(data.revision.slice(0,14))}… · ${esc(data.editorialState)}</p>
++    <form id="vexp-form" class="vexp-form">
++      <div class="vexp-grid2"><label>Buscar una cita, una idea o una pregunta<input name="query" type="search" value="${esc(s.query)}" placeholder="Ej.: la felicidad es actividad" autocomplete="off"></label>
++        <label>Consulta alternativa para contrastar (opcional)<input name="contrast" type="search" value="${esc(s.contrast)}" placeholder="Ej.: posesión de la virtud"></label></div>
++      <label>Lectura o hipótesis que estamos examinando (anotación, no entra al ranking)<textarea name="claim" rows="2" placeholder="Ej.: un especialista privilegia un pasaje para interpretar la felicidad">${esc(s.claim)}</textarea></label>
++      <div class="vexp-options">
++        <label>Ficha o FAQ de referencia<select name="sheetId"><option value="">Todo el Libro I</option>${[...data.sheets.values()].map(f=>`<option value="${esc(f.id)}" ${s.sheetId===f.id?'selected':''}>${esc(f.title)}</option>`).join('')}</select></label>
++        <label>Unidad de recuperación<select name="type"><option value="ambos" ${s.type==='ambos'?'selected':''}>Subunidades y párrafos</option><option value="subunidad" ${s.type==='subunidad'?'selected':''}>Solo subunidades</option><option value="parrafo" ${s.type==='parrafo'?'selected':''}>Solo párrafos</option></select></label>
++        <label>Etiquetas seleccionadas<select name="filterMode"><option value="boost" ${s.filterMode==='boost'?'selected':''}>Aumentan prioridad</option><option value="restrict" ${s.filterMode==='restrict'?'selected':''}>Filtran resultados</option></select></label>
++        <label>Máximo de resultados<select name="limit">${[6,12,20,30].map(n=>`<option value="${n}" ${s.limit===n?'selected':''}>${n}</option>`).join('')}</select></label>
++      </div>
++      <div class="vexp-facets"><fieldset><legend>Categorías estáticas · conceptos</legend>${renderCategoryOptions(data.staticChoices,s.staticTags,data.labels,'static',s.expandedTags)}</fieldset>
++        <fieldset><legend>Categorías funcionales · movimientos</legend>${renderCategoryOptions(data.functionalChoices,s.functionalTags,data.labels,'functional',s.expandedTags)}</fieldset></div>
++      <div class="vexp-form-actions"><button class="primary" type="submit">Recuperar citas</button><button type="button" data-reset>Limpiar filtros</button>${s.searched?'<button type="button" data-export>Exportar resultados JSON</button>':''}</div>
++    </form>
++    ${s.searched?`<div class="vexp-comparisons">${renderHits(results,data,'Candidatos para lectura y examen')}${s.contrast.trim()?renderHits(contrasts,data,'Consulta de contraste','Estos resultados no son automáticamente objeciones: hay que leerlos en su contexto.') : ''}</div>`:'<section class="vexp-empty"><h2>¿Qué querés investigar?</h2><p>Ejemplo: buscá «felicidad actividad» y contrastá con «placer honor riqueza». Seleccioná conceptos o movimientos argumentativos para ampliar o restringir el conjunto de pasajes.</p></section>'}
++    <footer class="vexp-muted">Las fichas se enlazan solo por apoyos editoriales registrados en los JSON piloto y únicamente cuando coincide su revisión. Los párrafos pueden heredar categorías de subunidades por anclas verificadas; el ranking no establece relaciones argumentativas nuevas ni altera MariaDB.</footer>
++  </div>`;
++  root.querySelector('#vexp-form').addEventListener('submit',e=>{
++    e.preventDefault();
++    const form=e.currentTarget;
++    s.query=form.elements.query.value.trim();
++    s.contrast=form.elements.contrast.value.trim();
++    s.claim=form.elements.claim.value.trim();
++    s.type=form.elements.type.value;
++    s.sheetId=form.elements.sheetId.value;
++    s.filterMode=form.elements.filterMode.value;
++    s.limit=Number(form.elements.limit.value);
++    s.searched=true;
++    renderContents(root,app,data);
++  });
++  root.querySelectorAll('[data-category]').forEach(input=>input.addEventListener('change',()=>{
++    const key=input.dataset.category==='static'?'staticTags':'functionalTags';
++    s[key]=input.checked?[...new Set([...s[key],input.value])]:s[key].filter(x=>x!==input.value);
++    // No perder texto escrito al alternar una categoría.
++    const f=root.querySelector('#vexp-form');
++    s.query=f.elements.query.value;s.contrast=f.elements.contrast.value;s.claim=f.elements.claim.value;
++  }));
++  root.querySelector('[data-more-categories]')?.addEventListener('click',()=>{
++    const f=root.querySelector('#vexp-form');
++    s.query=f.elements.query.value;s.contrast=f.elements.contrast.value;s.claim=f.elements.claim.value;
++    s.expandedTags=!s.expandedTags;renderContents(root,app,data);
++  });
++  root.querySelector('[data-reset]')?.addEventListener('click',()=>{
++    Object.assign(s,initialState());renderContents(root,app,data);
++  });
++  root.querySelector('[data-export]')?.addEventListener('click',()=>{
++    const payload={schema:'agora.lab.n1u15.revision.v1',revision:data.revision,claim:s.claim,query:s.query,contrast:s.contrast,
++      options:params,warning:'Similitud léxica y filtros no prueban apoyo ni refutación',
++      candidates:results.map(({id,kind,reference,score,cosine,exact,tagBonus,relatedSubunits})=>({id,kind,reference,score,cosine,exact,tagBonus,relatedSubunits})),
++      comparison:contrasts.map(({id,kind,reference,score,cosine,exact,tagBonus})=>({id,kind,reference,score,cosine,exact,tagBonus}))};
++    const href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
++    const a=document.createElement('a');a.href=href;a.download='agora-n1u15-resultados.json';a.click();setTimeout(()=>URL.revokeObjectURL(href),1000);
++  });
++}
++export async function render(root,app,route) {
++  if(!app.vectorialUI) app.vectorialUI=initialState();
++  const routeQuery=route.query.get('q');
++  if(routeQuery!=null && !app.vectorialUI.searched) app.vectorialUI.query=routeQuery;
++  root.innerHTML='<div class="loading">Preparando índice de subunidades y párrafos…</div>';
++  try {
++    const data=await loadIndex(app);
++    renderContents(root,app,data);
++  } catch(error) {
++    root.innerHTML=`<section class="placeholder"><h2>No se pudo preparar el índice vectorial</h2><p>${esc(error.message)}</p><a href="#/buscar">Volver al buscador editorial</a></section>`;
++  }
++}
+diff --git a/public/scripts/check-n1u15-vectorial.mjs b/public/scripts/check-n1u15-vectorial.mjs
+new file mode 100644
+index 0000000..5984587
+--- /dev/null
++++ b/public/scripts/check-n1u15-vectorial.mjs
+@@ -0,0 +1,63 @@
++// Ágora · N1-U.15 · Pruebas puras, sin navegador, red ni MariaDB.
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++import { dirname, join, resolve } from 'node:path';
++import { parseBook } from '../js/reader/text.js';
++import { buildEvidenceDocuments, buildSheetLinks, categoryChoices, makeIndex, searchIndex, normalizeText } from '../labo/js/vectorial-engine.js';
++const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
++const file = name=>readFileSync(join(root,name),'utf8');
++
++// Prueba del lector con un fragmento bilingüe real del Libro I, si existe.
++const raw=`1\n{ "parrafo_nro": 1 }\nToda arte y toda investigación parecen tender a algún bien. Las acciones tienen fines.\n1094a Πᾶσα τέχνη καὶ πᾶσα μέθοδος, ἀγαθοῦ τινὸς ἐφίεσθαι δοκεῖ·\n`;
++const book=parseBook(raw);
++const lectura={ revision:'test-revision',tags:{unidades:[{
++  id:'proemio',titulo:'Proemio',subunidades:[
++    {id:'1094a1-3',titulo:'Todo tiende al bien',intro:'Los fines de la acción',
++      es_ancla:{inicio:'Toda arte',fin:'Las acciones tienen fines.'},
++      gr_ancla:{inicio:'Πᾶσα τέχνη',fin:'ἐφίεσθαι δοκεῖ·'},
++      conceptos_clave:['bien','telos'],movimientos:['definicion']},
++  ],
++}]}};
++const corpus=buildEvidenceDocuments(lectura,book);
++assert.equal(corpus.documents.length,2);
++const sub=corpus.documents.find(d=>d.kind==='subunidad');
++const para=corpus.documents.find(d=>d.kind==='parrafo');
++assert.match(sub.es,/Toda arte/);
++assert.match(sub.gr,/Πᾶσα/);
++assert.deepEqual(sub.staticTags,['bien','telos']);
++assert.deepEqual(para.relatedSubunits,['1094a1-3']);
++assert.match(para.tagOrigin,/NO tagueo del párrafo/);
++assert.equal(normalizeText('Ἀρετή, felicidad'), 'αρετη felicidad');
++
++const index=makeIndex(corpus.documents);
++let hits=searchIndex(index,{query:'acciones tienen fines'});
++assert.equal(hits.length,2);
++assert(hits[0].score>0);
++assert(hits[0].matchedTerms.includes('acciones'));
++hits=searchIndex(index,{query:'inexistente',staticTags:['bien'],filterMode:'boost'});
++assert(hits.length>0,'Un tag aporta candidatos aun sin coincidencia textual');
++hits=searchIndex(index,{query:'acciones',staticTags:['sin_correspondencia'],filterMode:'restrict'});
++assert.equal(hits.length,0,'El filtro estricto descarta resultados sin el tag');
++hits=searchIndex(index,{query:'acciones',supportSubIds:['otra_subunidad']});
++assert.equal(hits.length,0,'El alcance de una ficha requiere respaldo editorial explícito');
++hits=searchIndex(index,{query:'acciones',supportSubIds:['1094a1-3'],type:'parrafo'});
++assert.equal(hits.length,1);
++assert.equal(categoryChoices(corpus.documents,'static').find(x=>x.id==='bien').count,1,'La proyección a párrafos no infla recuentos de tags');
++assert.throws(()=>makeIndex([sub,sub]),/duplicado/);
++
++const links=buildSheetLinks([
++  {fichas:[{id:'faq.etica.intro',titulo:'¿Qué es la ética?',apoyos:[],pasos:[]}]},
++],{puentes:[{ficha_id:'faq.etica.intro',apoyos:[{sub_id:'1094a1-3'}]}]});
++assert.equal(links.get('1094a1-3')[0].url,'/#/fichas/etica');
++
++// Verificación estática de la integración del Lab, sin cargar ni reemplazar la aplicación.
++const main=file('labo/js/main.js'), page=file('labo/index.html'), view=file('labo/js/views/vectorial.js');
++assert(main.includes("route.section === 'vectorial'"));
++assert(page.includes('data-section="vectorial"'));
++assert(view.includes('/api/labo/lectura') && view.includes('/api/texto/EN_libro1_v8.txt'));
++assert(view.includes('Consulta alternativa para contrastar'));
++assert(view.includes('s.sheetId'));
++assert(view.includes('revisión')||view.includes('revision'));
++assert(!view.includes('/api/openai') && !view.includes('apiKey'));
++console.log('N1-U.15 OK: índice vectorial, tags, párrafos, fichas, filtro por respaldo y navegación del Labo.');

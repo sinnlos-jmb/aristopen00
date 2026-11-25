@@ -1,0 +1,404 @@
+diff --git a/instalar-lab-n1u191.mjs b/instalar-lab-n1u191.mjs
+new file mode 100644
+index 0000000..0b34ee7
+--- /dev/null
++++ b/instalar-lab-n1u191.mjs
+@@ -0,0 +1,68 @@
++// Ágora N1-U.19.1: registra la vista de esfinge sin reescribir ni sustituir el resto del Lab.
++// Uso desde la raíz del repositorio: node instalar-lab-n1u191.mjs [--check]
++import fs from 'node:fs';
++import path from 'node:path';
++import { spawnSync } from 'node:child_process';
++
++const checkOnly = process.argv.includes('--check');
++const file = path.resolve('public/js/views/lab.js');
++if (!fs.existsSync(file)) {
++  console.error(`No existe ${file}. Ejecutá el script desde la raíz de Ágora.`);
++  process.exit(1);
++}
++const original = fs.readFileSync(file, 'utf8');
++const eol = original.includes('\r\n') ? '\r\n' : '\n';
++let result = original;
++const importStmt = "import { createLabEsfingeView } from './labEsfingeView.js';";
++const catalogMarker = /export\s+const\s+EXPERIMENTS\s*=\s*Object\.freeze\s*\(\s*\{/g;
++const viewMarker = /export\s+function\s+createLabView\s*\(\s*App\s*,\s*opts\s*=\s*\{\s*\}\s*\)\s*\{/g;
++const viewLine = "if (opts.exp === 'esfinge') return createLabEsfingeView(App);";
++const catalogKey = /\besfinge\s*:/g;
++
++function countMatches(text, re) { return Array.from(text.matchAll(re)).length; }
++function fail(msg) { console.error(`N1-U.19.1: ${msg} No se modificó lab.js.`); process.exit(1); }
++const sections = [
++  ['EXPERIMENTS',catalogMarker],
++  ['createLabView',viewMarker],
++];
++for(const [label,matcher] of sections) {
++  if(countMatches(result, matcher)!==1) fail(`No puedo localizar de manera inequívoca ${label}.`);
++}
++if(countMatches(result,catalogKey)>1)fail('La tarjeta esfinge ya aparece más de una vez.');
++if(countMatches(result,/import\s*\{\s*createLabEsfingeView\s*\}\s*from\s*['"]\.\/labEsfingeView\.js['"];?/g)>1)fail('La importación está duplicada.');
++if(countMatches(result,/if\s*\(\s*opts\.exp\s*===\s*['"]esfinge['"]\s*\)/g)>1)fail('El enrutado de esfinge está duplicado.');
++const hasCatalog = countMatches(result,catalogKey)===1;
++const hasImport = result.includes(importStmt);
++const hasRoute = result.includes(viewLine);
++if (!hasImport) {
++  // Anteponer import no altera las importaciones y comentarios existentes.
++  const bom=result.startsWith('\ufeff')?'\ufeff':'';
++  result=bom+importStmt+eol+result.slice(bom.length);
++}
++if (!hasCatalog) {
++  const card = [
++    "", "  esfinge: {", "    id: 'esfinge', tab: 1, title: 'Esfinge · Diálogo dialéctico',",
++    "    desc: 'Examiná una tesis mediante premisas y sus consecuencias; distinguí posesión, actividad y fines.',",
++    "    tag: 'N1-U.19.1 · Exploratorio', icon: '❔', featured: false", "  },"
++  ].join(eol);
++  result=result.replace(catalogMarker, full => full + card);
++}
++if (!hasRoute) {
++  result=result.replace(viewMarker, full=>full+eol+"  // N1-U.19.1: nueva vista del Lab, sin modificar los experimentos existentes."+eol+"  "+viewLine);
++}
++if(!result.includes(importStmt)||!result.includes("esfinge: {")||!result.includes(viewLine))fail('La integración no produjo las tres piezas esperadas.');
++const additions=[!hasImport?'importación':null,!hasCatalog?'tarjeta':null,!hasRoute?'ruta':null].filter(Boolean);
++if(result===original){console.log('N1-U.19.1: la tarjeta, la ruta y la importación ya están instaladas.');process.exit(0);}
++const testFile=path.join(path.dirname(file),`.n1u191-verify-${process.pid}.mjs`);
++try {
++  fs.writeFileSync(testFile,result,'utf8');
++  const test=spawnSync(process.execPath,['--check',testFile],{encoding:'utf8'});
++  if(test.status!==0) fail(`El resultado no supera node --check: ${test.stderr||test.stdout}`);
++} finally {if(fs.existsSync(testFile))fs.unlinkSync(testFile);}
++if(checkOnly){console.log('N1-U.19.1: inserción compatible; se agregarían '+additions.join(', ')+'. Archivo sin cambios.');process.exit(0);}
++const backup=file+'.antes-n1u191.bak';
++if (fs.existsSync(backup))fail(`Ya existe respaldo ${backup}; no lo sobrescribo.`);
++fs.writeFileSync(backup,original,'utf8');
++fs.writeFileSync(file,result,'utf8');
++console.log('N1-U.19.1 instalado en lab.js ('+additions.join(', ')+').');
++console.log('Copia de seguridad: '+backup);
+diff --git a/public/css/lab-consulta-n1u16.css b/public/css/lab-consulta-n1u16.css
+index d7f20a8..8bd4221 100644
+--- a/public/css/lab-consulta-n1u16.css
++++ b/public/css/lab-consulta-n1u16.css
+@@ -106,3 +106,8 @@
+ .lq-view .lq-path{border-left:2px solid var(--border,#8886);margin:.8em 0;padding-left:1.6em}
+ .lq-view .lq-path small{display:block;color:var(--muted,inherit);opacity:.85}
+ .lq-view .lq-form input,.lq-view .lq-form select,.lq-view .lq-form textarea,.lq-view .lq-form button,.lq-view .lq-modes button{font-family:inherit;font-size:inherit}
++.lq-cy-controls{margin:.6rem 0;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
++.lq-cy-controls[hidden]{display:none}
++.lq-cy-controls p{flex-basis:100%;margin:.15rem 0}
++.lq-cy-controls button{font:inherit;padding:.35rem .6rem;border:1px solid currentColor;border-radius:.4rem;background:transparent;color:inherit;cursor:pointer}
++.lq-cy-controls button:disabled{opacity:.5;cursor:default}
+diff --git a/public/css/lab-esfinge-n1u191.css b/public/css/lab-esfinge-n1u191.css
+new file mode 100644
+index 0000000..84a9a2e
+--- /dev/null
++++ b/public/css/lab-esfinge-n1u191.css
+@@ -0,0 +1,8 @@
++.esfinge-view{font-family:var(--agora-reader-mono,ui-monospace,Consolas,monospace);font-size:var(--agora-reader-font-size,18px);line-height:1.65}
++.esfinge-inner{max-width:960px;margin:auto;padding:1.2rem;overflow-wrap:anywhere}
++.esfinge-inner h1{font-size:1.6em;margin:.6em 0}.esfinge-inner h2{font-size:1.25em}.esfinge-inner h3{font-size:1.12em}.esfinge-inner p{margin:.65em 0}
++.esfinge-note{opacity:.8;font-size:.9em}.esfinge-history article{margin:1em 0}.esfinge-bubble{margin-left:auto;width:fit-content;max-width:85%;border:1px solid currentColor;border-radius:1em;padding:.45em .8em;background:rgba(120,140,145,.12)}
++.esfinge-question,.esfinge-outcome{border-top:1px solid currentColor;padding:1em 0;margin:1em 0}
++.esfinge-choices,.esfinge-links{display:flex;flex-wrap:wrap;gap:.6em;margin:1em 0;align-items:center}
++.esfinge-choices button{font:inherit;line-height:1.4;background:transparent;color:inherit;border:1px solid currentColor;border-radius:.5em;padding:.5em .8em;cursor:pointer;text-align:left}.esfinge-choices button:disabled{opacity:.45;cursor:default}
++.esfinge-inner a{text-decoration:underline;text-underline-offset:.18em;color:inherit}.esfinge-inner button:focus-visible,.esfinge-inner a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+diff --git a/public/js/lab/esfinge.js b/public/js/lab/esfinge.js
+new file mode 100644
+index 0000000..111eab2
+--- /dev/null
++++ b/public/js/lab/esfinge.js
+@@ -0,0 +1,41 @@
++// Ejercicios provisionales de Ágora, no citas ni transcripciones de Colli.
++// Cada refutación tiene una condición explícita. No hay evaluación por mayoría de respuestas.
++export const desafios=Object.freeze([
++  {id:'posesion',titulo:'Posesión y ejercicio de la virtud',tesis:'La mera posesión de la virtud basta para ser feliz, incluso sin ejercerla.',
++    preguntas:[
++      '¿Admitís como caso posible que alguien posea la virtud, pero permanezca inactivo durante toda su vida?',
++      'En ese mismo caso hipotético, ¿admitís que esa persona no sería feliz?'
++    ],
++    inferencia:'La primera respuesta admite un caso posible de posesión sin ejercicio. La tesis inicial implica que esa persona sería feliz; la segunda premisa afirma que no lo sería. Las afirmaciones resultan incompatibles dentro del caso admitido.',
++    distincion:'Poseer una disposición (héxis) no es lo mismo que realizar una actividad (enérgeia) conforme a ella. El contraejemplo examina la suficiencia de la posesión, no demuestra por sí solo toda la definición de felicidad.',
++    referencias:'EN I.8, 1098b30–1099a3; I.10, 1100a3–5.',
++    apoyo:'Aristóteles distingue la disposición de su actividad y considera al que duerme o permanece inactivo; luego recuerda la exigencia de virtud completa en una vida entera.',
++    enlaces:[['#/fichas/felicidad','¿Qué es la felicidad?'],['#/grafos/felicidad','Mapa: Condiciones de la felicidad'],['#/grafos/confirmacion','Mapa: La confirmación']]},
++  {id:'fin',titulo:'El fin y lo que se elige por sí mismo',tesis:'La felicidad se elige exclusivamente como medio para conseguir otro bien.',
++    preguntas:[
++      '¿Admitís que podemos elegir la felicidad por sí misma, aun si no nos proporciona otro bien?',
++      '¿Admitís que elegir algo por sí mismo es incompatible con elegirlo exclusivamente como medio para otra cosa?'
++    ],
++    inferencia:'Si elegimos la felicidad por sí misma y esa elección excluye que se la elija exclusivamente como medio, no puede ser verdadero a la vez que se la elige exclusivamente como medio. Las premisas admitidas refutan la tesis inicial.',
++    distincion:'Un bien puede elegirse por sí mismo y también en vista de otro. Lo que aquí se refuta es la exclusividad de la relación instrumental, no toda relación entre bienes.',
++    referencias:'EN I.7, 1097a25–b6.',
++    apoyo:'Aristóteles diferencia los fines por su completitud y caracteriza la felicidad como aquello que se elige siempre por sí mismo y nunca por otra cosa.',
++    enlaces:[['#/fichas/felicidad','¿Qué es la felicidad?'],['#/grafos/forma','Mapa: La forma del fin'],['#/grafos/felicidad','Mapa: Condiciones de la felicidad']]}
++]);
++export const opciones=Object.freeze([['si','Sí, lo admito'],['no','No lo admito'],['duda','Necesito distinguir o precisar']]);
++const get=id=>{const d=desafios.find(x=>x.id===id);if(!d)throw Error('Desafío desconocido.');return d;};
++export function iniciarEsfinge(id){get(id);return {id,respuestas:[]};}
++export function preguntasEsfinge(s){const d=get(s.id);return [d.tesis,...d.preguntas];}
++export function resultadoEsfinge(s){
++  const d=get(s.id),r=s.respuestas;
++  if(!r.length)return null;
++  if(r[0]!=='si')return {estado:'tesis_no_asumida',texto:'No asumiste la tesis inicial. Por lo tanto no hay tesis aceptada que refutar. Podés reiniciar, elegir otro desafío o examinar los pasajes.'};
++  if(r.length<1+d.preguntas.length)return null;
++  if(r.every(x=>x==='si'))return {estado:'refutacion',texto:d.inferencia};
++  return {estado:'sin_refutacion',texto:'No se obtuvo una refutación a partir de tus respuestas. Alguna de las premisas necesarias fue rechazada o quedó en duda; no se la puede usar como si hubiera sido admitida. Conviene precisar esa premisa y revisar el texto.'};
++}
++export function responderEsfinge(s,r){
++  if(!opciones.some(([id])=>id===r)||resultadoEsfinge(s))throw Error('Respuesta no admitida en este estado.');
++  return {...s,respuestas:[...s.respuestas,r]};
++}
++export function retrocederEsfinge(s){return {...s,respuestas:s.respuestas.slice(0,-1)};}
+diff --git a/public/js/lab/graphExpansion.js b/public/js/lab/graphExpansion.js
+new file mode 100644
+index 0000000..6fb6fc8
+--- /dev/null
++++ b/public/js/lab/graphExpansion.js
+@@ -0,0 +1,35 @@
++// Proyección visual de un catálogo editorial verificado. No cambia la consulta original.
++export function expandGraph(base, catalog, roots, depth=2){
++  const nodes=new Map(base.nodes.map(n=>[n.id,n]));
++  const edges=new Map(base.edges.map(e=>[e.id,e]));
++  const allNodes=new Map([...catalog.nodes,...base.nodes].map(n=>[n.id,n]));
++  const allEdges=[...new Map([...catalog.edges,...base.edges].map(e=>[e.id,e])).values()]
++    .filter(e=>allNodes.has(e.from)&&allNodes.has(e.to));
++  const adjacency=new Map();
++  for(const e of allEdges){for(const [a,b] of [[e.from,e.to],[e.to,e.from]]){
++    if(!adjacency.has(a))adjacency.set(a,[]);adjacency.get(a).push({b,e});
++  }}
++  for(const root of roots){
++    if(!allNodes.has(root))continue;
++    const distances=new Map([[root,0]]),queue=[root];
++    for(let i=0;i<queue.length;i++){
++      const a=queue[i],d=distances.get(a); if(d>=Math.min(2,Math.max(0,depth)))continue;
++      for(const {b,e} of adjacency.get(a)||[]){
++        if(!distances.has(b)){distances.set(b,d+1);queue.push(b);}
++        edges.set(e.id,e);nodes.set(b,allNodes.get(b));
++      }
++    }
++    nodes.set(root,allNodes.get(root));
++  }
++  return {nodes:[...nodes.values()],edges:[...edges.values()]};
++}
++// Al colapsar una raíz, las expansiones que dependen de ella desaparecen;
++// se conservan las raíces alcanzables desde el resultado y otras ramas abiertas.
++export function pruneRoots(base,catalog,roots){
++  const valid=new Set(), pending=new Set(roots);
++  let changed=true;
++  while(changed){changed=false;const reachable=new Set(expandGraph(base,catalog,valid).nodes.map(n=>n.id));
++    for(const id of pending){if(reachable.has(id)){valid.add(id);pending.delete(id);changed=true;}}
++  }
++  return valid;
++}
+diff --git a/public/js/lab/llmGraphView.js b/public/js/lab/llmGraphView.js
+index ee5091b..6495037 100644
+--- a/public/js/lab/llmGraphView.js
++++ b/public/js/lab/llmGraphView.js
+@@ -1,4 +1,5 @@
+ import { esc } from '../ui.js';
++import { expandGraph, pruneRoots } from './graphExpansion.js';
+ const arr=x=>Array.isArray(x)?x:[];
+ const safeURL=u=>typeof u==='string'&&/^\/#\/fichas\/[a-z]+$/.test(u);
+ const title=n=>n?.title||n?.reference||n?.id||'';
+@@ -21,16 +22,17 @@ export function graphViews(trace){
+   const paths=arr(trace?.paths).filter(p=>Array.isArray(p.ids)&&p.ids.length>=2&&p.ids.length<=4&&Array.isArray(p.edgeIds)&&p.edgeIds.length===p.ids.length-1&&p.ids.every(id=>byId.get(id)?.type==='ficha')&&p.edgeIds.every((id,i)=>{const e=edgeMap.get(id);return e&&((e.from===p.ids[i]&&e.to===p.ids[i+1])||(e.to===p.ids[i]&&e.from===p.ids[i+1]));}));
+   return {fichas,relations,support,paths,byId,passages:nodes.filter(n=>n.type==='pasaje')};
+ }
+-export function renderLLMGraph(trace){
++export function renderLLMGraph(trace,catalog=null){
+   if(!trace)return '';
+   const {fichas,relations,support,paths,byId,passages}=graphViews(trace);
+   const local=trace.state==='consulta_local';
+   const status=trace.state==='explorando'?'Consultando el catálogo editorial…':trace.state==='sin_consultas_validas'?'No se recuperaron relaciones válidas.':trace.state==='interrumpido'?'Exploración interrumpida.':trace.state==='parcial'?'Exploración limitada; se conservan los resultados válidos y la respuesta continúa con la evidencia disponible.':'Relaciones editoriales registradas; no equivalen a afirmaciones textuales de Aristóteles.';
+-  const graphData={nodes:fichas.map(({id,title,url})=>({id,title,url:safeURL(url)?url:null})),edges:relations.map(({id,from,to,label})=>({id,from,to,label}))};
++  const compact=n=>({id:n.id,title:title(n),url:safeURL(n.url)?n.url:null});
++  const graphData={nodes:fichas.map(compact),edges:relations.map(({id,from,to,label})=>({id,from,to,label})),catalog:local&&catalog?{nodes:arr(catalog.nodes).map(compact),edges:arr(catalog.edges).map(({id,from,to,label})=>({id,from,to,label}))}:null};
+   const pathMarkup=paths.length?`<details><summary>Caminos ${local?'encontrados':'consultados'} (${paths.length})</summary><p class="lq-hint">Caminos verificados por el intérprete. No equivalen necesariamente al recorrido pedagógico recomendado en la explicación.</p>${paths.slice(0,20).map(p=>`<ol class="lq-path">${p.ids.map((id,i)=>{const e=i?relations.find(x=>x.id===p.edgeIds[i-1]):null;return `<li>${e?`<small>${e.from===p.ids[i-1]?'↓':'↑'} ${esc(e.label)}${e.from!==p.ids[i-1]?' (sentido inverso)':''}</small>`:''}${nodeLink(byId.get(id))}</li>`;}).join('')}</ol>`).join('')}${paths.length>20?'<p>Se muestran los primeros 20 caminos.</p>':''}</details>`:'';
+   return `<details class="lq-graph-trace" ${local?'open':''}><summary>${local?'Grafo de la consulta local':'Recorrido del grafo'} · ${fichas.length} ${fichas.length===1?'ficha':'fichas'} · ${relations.length} ${relations.length===1?'relación':'relaciones'}</summary>
+     <p class="lq-hint">${status}</p>${pathMarkup}
+-    ${fichas.length?`<details class="lq-subgraph" open><summary>Subgrafo de fichas</summary><div data-lq-cy="${esc(JSON.stringify(graphData))}"><div class="lq-cy-host" hidden></div><div class="lq-graph-scroll">${svgFallback(fichas,relations)}</div><p class="lq-cy-selection" aria-live="polite"></p></div><ul>${relations.map(e=>`<li>${nodeLink(byId.get(e.from))} → <b>${esc(e.label)}</b> → ${nodeLink(byId.get(e.to))}</li>`).join('')}</ul><p>${fichas.map(nodeLink).join(' · ')}</p></details>`:''}
++    ${fichas.length?`<details class="lq-subgraph" open><summary>Subgrafo de fichas</summary><div data-lq-cy="${esc(JSON.stringify(graphData))}"><div class="lq-cy-host" hidden></div><div class="lq-graph-scroll">${svgFallback(fichas,relations)}</div><p class="lq-cy-selection" aria-live="polite"></p><div class="lq-cy-controls" hidden><button type="button" data-lq-expand disabled>Expandir / colapsar selección</button> <button type="button" data-lq-reset>Restaurar consulta</button><p class="lq-hint">Clic en una ficha: abrirla. Doble clic: expandir o colapsar vecinos hasta dos aristas. Los vecinos agregados tienen bordes discontinuos. Las expansiones son visuales; no cambian la consulta ni las citas.</p><p class="lq-cy-count" aria-live="polite"></p></div></div><ul>${relations.map(e=>`<li>${nodeLink(byId.get(e.from))} → <b>${esc(e.label)}</b> → ${nodeLink(byId.get(e.to))}</li>`).join('')}</ul><p>${fichas.map(nodeLink).join(' · ')}</p></details>`:''}
+     ${passages.length?`<details><summary>Apoyos documentales y pasajes encontrados (${passages.length})</summary>${fichas.map(n=>{const es=support.filter(e=>e.from===n.id);return es.length?`<section><strong>${nodeLink(n)}</strong><ul>${es.map(e=>`<li>${esc(byId.get(e.to).reference||e.to)} · ${esc(title(byId.get(e.to)))}${e.rol?` — ${esc(e.rol)}`:''}</li>`).join('')}</ul></section>`:'';}).join('')}${passages.filter(n=>!support.some(e=>e.to===n.id)).map(n=>`<p>${esc(n.reference||n.id)} · ${esc(title(n))} (sin arista de apoyo recuperada)</p>`).join('')}<p class="lq-hint">Los pasajes encontrados no son necesariamente los usados como fuentes de la respuesta. Consultá las fuentes verificadas aparte.</p></details>`:''}
+   </details>`;
+ }
+@@ -41,7 +43,8 @@ export function hydrateLLMGraphs(root,load=async()=>{const {cargarCytoscape}=awa
+   for(const panel of root.querySelectorAll('[data-lq-cy]')){
+     const host=panel.querySelector('.lq-cy-host'),fallback=panel.querySelector('.lq-graph-scroll'),selection=panel.querySelector('.lq-cy-selection');
+     const details=[];for(let p=panel.parentElement;p&&p!==root;p=p.parentElement)if(p.tagName==='DETAILS')details.push(p);
+-    let cy=null,loading=false,failed=false;
++    let cy=null,loading=false,failed=false,tapTimer=null;
++    let cleanupControls=()=>{};
+     const visible=()=>!disposed&&panel.isConnected&&details.every(d=>d.open);
+     async function mount(){
+       if(!visible()||loading||failed)return;
+@@ -50,19 +53,46 @@ export function hydrateLLMGraphs(root,load=async()=>{const {cargarCytoscape}=awa
+       try{
+         const cytoscape=await load();
+         if(!visible())return;
+-        const {nodes,edges}=JSON.parse(panel.dataset.lqCy);const style=getComputedStyle(root);const color=style.color||'#333';const size=Math.max(14,Math.min(30,parseFloat(style.getPropertyValue('--agora-reader-font-size'))||18));
++        const {nodes,edges,catalog}=JSON.parse(panel.dataset.lqCy);const style=getComputedStyle(root);const color=style.color||'#333';const size=Math.max(14,Math.min(30,parseFloat(style.getPropertyValue('--agora-reader-font-size'))||18));
+         host.hidden=false;
+         cy=cytoscape({container:host,elements:[...nodes.map(n=>({data:{id:n.id,label:n.title,url:n.url}})),...edges.map((e,i)=>({data:{id:`edge-${i}`,source:e.from,target:e.to,label:e.label}}))],layout:{name:'circle',padding:55},minZoom:.25,maxZoom:3,wheelSensitivity:.6,boxSelectionEnabled:false,style:[{selector:'node',style:{'label':'data(label)','shape':'round-rectangle','background-color':'#86a5ae','background-opacity':.28,'border-color':color,'border-width':1,'color':color,'font-family':'monospace','font-size':size,'text-wrap':'wrap','text-max-width':Math.max(175,size*11),'text-valign':'center','text-halign':'center','width':Math.max(195,size*12),'height':Math.max(76,size*4.6)}},{selector:'edge',style:{'curve-style':'bezier','line-color':color,'target-arrow-color':color,'target-arrow-shape':'triangle','width':1.5,'opacity':.55}},{selector:'edge:selected',style:{'label':'data(label)','font-size':size*.85,'font-family':'monospace','color':color,'text-wrap':'wrap','text-max-width':180,'opacity':1}},{selector:'node:selected',style:{'border-width':3,'background-opacity':.65}}]});
+-        cy.on('tap','node',event=>{const data=event.target.data();selection.replaceChildren();const text=document.createTextNode(data.label+' ');selection.appendChild(text);if(safeURL(data.url)){const a=document.createElement('a');a.href=data.url;a.textContent='Abrir ficha';selection.appendChild(a);}});
+-        cy.on('tap','edge',event=>{selection.textContent=event.target.data('label');});
++        const controls=panel.querySelector('.lq-cy-controls'),expandButton=controls?.querySelector('[data-lq-expand]'),resetButton=controls?.querySelector('[data-lq-reset]'),count=controls?.querySelector('.lq-cy-count');
++        let roots=new Set(),selected=null,lastTap=null;
++        const base={nodes,edges}, source=catalog||base;
++        const originalNodes=new Set(nodes.map(n=>n.id)),originalEdges=new Set(edges.map(e=>e.id));
++        const elements=g=>[...g.nodes.map(n=>({data:{id:n.id,label:n.title,url:n.url},classes:originalNodes.has(n.id)?'':'lq-expanded'})),...g.edges.map(e=>({data:{id:'rel:'+e.id,source:e.from,target:e.to,label:e.label},classes:originalEdges.has(e.id)?'':'lq-expanded'}))];
++        cy.style().selector('node.lq-expanded').style({'border-style':'dashed','background-opacity':.12}).selector('edge.lq-expanded').style({'line-style':'dashed','opacity':.5}).update();
++        function redraw(){
++          roots=pruneRoots(base,source,roots);const g=expandGraph(base,source,roots);
++          cy.batch(()=>{cy.elements().remove();cy.add(elements(g));});
++          cy.layout({name:'circle',padding:55}).run();
++          if(selected&&!g.nodes.some(n=>n.id===selected))selected=null;
++          if(expandButton)expandButton.disabled=!selected;
++          if(count)count.textContent=`${g.nodes.length} fichas visibles · ${g.edges.length} relaciones · ${roots.size} expansiones abiertas`;
++          if(!selected)selection.textContent='';
++        }
++        function toggle(id){if(!catalog)return;if(roots.has(id))roots.delete(id);else roots.add(id);redraw();}
++        function cancelTap(){if(tapTimer!==null)clearTimeout(tapTimer);tapTimer=null;lastTap=null;}
++        function select(data){selected=data.id;selection.replaceChildren();selection.appendChild(document.createTextNode(data.label+' '));if(safeURL(data.url)){const a=document.createElement('a');a.href=data.url;a.textContent='Abrir ficha';selection.appendChild(a);}if(expandButton)expandButton.disabled=!catalog;}
++        cy.on('tap','node',event=>{
++          const data=event.target.data();select(data);
++          if(catalog&&lastTap===data.id&&tapTimer!==null){cancelTap();toggle(data.id);return;}
++          cancelTap();lastTap=data.id;
++          tapTimer=setTimeout(()=>{tapTimer=null;lastTap=null;if(!disposed&&panel.isConnected&&safeURL(data.url))window.location.hash=data.url.slice(1);},350);
++        });
++        const onExpand=()=>{cancelTap();if(selected)toggle(selected);};
++        const onReset=()=>{cancelTap();roots.clear();selected=null;redraw();};
++        if(catalog&&controls){controls.hidden=false;expandButton?.addEventListener('click',onExpand);resetButton?.addEventListener('click',onReset);if(count)count.textContent=`${nodes.length} fichas visibles · ${edges.length} relaciones · consulta original`;}
++        cleanupControls=()=>{cancelTap();expandButton?.removeEventListener('click',onExpand);resetButton?.removeEventListener('click',onReset);};
++        cy.on('tap','edge',event=>{cancelTap();selected=null;if(expandButton)expandButton.disabled=true;selection.textContent=event.target.data('label');});
+         fallback.hidden=true;
+-      }catch{failed=true;cy?.destroy();cy=null;host.hidden=true;fallback.hidden=false;}
++      }catch{failed=true;cleanupControls();cy?.destroy();cy=null;host.hidden=true;fallback.hidden=false;}
+       finally{loading=false;}
+     }
+     const handler=()=>{if(visible())void mount();};
+     details.forEach(d=>d.addEventListener('toggle',handler));
+-    fontUpdates.push(size=>{if(cy){cy.nodes().style({'font-size':size,'height':Math.max(76,size*4.6),'width':Math.max(195,size*12),'text-max-width':Math.max(175,size*11)});cy.edges().style('font-size',size*.85);}});
+-    cleanups.push(()=>{details.forEach(d=>d.removeEventListener('toggle',handler));cy?.destroy();});
++    fontUpdates.push(size=>{if(cy){cy.style().selector('node').style({'font-size':size,'height':Math.max(76,size*4.6),'width':Math.max(195,size*12),'text-max-width':Math.max(175,size*11)}).selector('edge:selected').style('font-size',size*.85).update();}});
++    cleanups.push(()=>{details.forEach(d=>d.removeEventListener('toggle',handler));cleanupControls();cy?.destroy();});
+     if(visible())void mount();
+   }
+   const dispose=()=>{disposed=true;cleanups.forEach(fn=>fn());};
+diff --git a/public/js/views/labConsultaView.js b/public/js/views/labConsultaView.js
+index dd60464..48ed672 100644
+--- a/public/js/views/labConsultaView.js
++++ b/public/js/views/labConsultaView.js
+@@ -143,7 +143,7 @@ export function createLabConsultaView(_App) {
+   function renderLocalGraph(graph){
+     if(!graph.edges.length)return '';
+     const ids=[...new Set(graph.edges.flatMap(e=>[e.desde,e.hacia]))];
+-    return renderLLMGraph({state:'consulta_local',nodes:ids.map(id=>({...data.sheets.get(id),id,type:'ficha',url:data.sheets.get(id)?.url?.replace(/^#/, '/#')})),edges:graph.edges.map(e=>({id:e.id,from:e.desde,to:e.hacia,label:e.nombre,type:'relacion',estado:'relación editorial'})),steps:[],paths:(graph.paths||[]).map(p=>({ids:p.ids,edgeIds:p.edges.map(e=>e.id)}))});
++    return renderLLMGraph({state:'consulta_local',nodes:ids.map(id=>({...data.sheets.get(id),id,type:'ficha',url:data.sheets.get(id)?.url?.replace(/^#/, '/#')})),edges:graph.edges.map(e=>({id:e.id,from:e.desde,to:e.hacia,label:e.nombre,type:'relacion',estado:'relación editorial'})),steps:[],paths:(graph.paths||[]).map(p=>({ids:p.ids,edgeIds:p.edges.map(e=>e.id)}))},data.editorialReady?{nodes:[...data.sheets].map(([id,n])=>({...n,id,url:n.url?.replace(/^#/, '/#')})),edges:data.relations.filter(e=>data.sheets.has(e.desde)&&data.sheets.has(e.hacia)).map(e=>({id:e.id,from:e.desde,to:e.hacia,label:e.nombre}))}:null);
+   }
+   function renderResults(){
+     if(state.error)return `<div class="lq-alert" role="alert">${esc(state.error)}</div>`;
+diff --git a/public/js/views/labEsfingeView.js b/public/js/views/labEsfingeView.js
+new file mode 100644
+index 0000000..dc7dba9
+--- /dev/null
++++ b/public/js/views/labEsfingeView.js
+@@ -0,0 +1,30 @@
++import { esc } from '../ui.js';
++import { controlesTamanoLector, actualizarLectura, cambiarTamanoLector } from '../reader/fontPreferences.js';
++import { desafios, opciones, iniciarEsfinge, preguntasEsfinge, resultadoEsfinge, responderEsfinge, retrocederEsfinge } from '../lab/esfinge.js';
++export function createLabEsfingeView(){
++  const el=document.createElement('div');el.className='scrollable has-scroll lq-view esfinge-view';
++  if(!document.querySelector('link[data-esfinge-styles]')){const css=document.createElement('link');css.rel='stylesheet';css.href='/css/lab-esfinge-n1u191.css';css.dataset.esfingeStyles='1';document.head.appendChild(css);}
++  let s=null;
++  const label=r=>opciones.find(([id])=>id===r)?.[1]||'';
++  function render(){
++    const d=s&&desafios.find(x=>x.id===s.id),resultado=s&&resultadoEsfinge(s),preguntas=s?preguntasEsfinge(s):[];
++    el.innerHTML=`<div class="esfinge-inner"><nav><a href="#/lab">← Laboratorio</a> · N1-U.19.1</nav>${controlesTamanoLector()}
++      <h1>Esfinge</h1><p>Examiná las consecuencias de una tesis mediante tus propias respuestas. El objetivo no es acertar, sino descubrir qué puede sostenerse sin contradicción.</p>
++      <p class="esfinge-note">Piloto de diálogo dialéctico inspirado en Giorgio Colli. Ejercicios predefinidos de Ágora, pendientes de revisión editorial; no son citas ni una reproducción literal de su obra. No utiliza la LLM ni consume créditos.</p>
++      ${!s?`<h2>Elegí un desafío</h2><div class="esfinge-choices">${desafios.map(x=>`<button type="button" data-esfinge-start="${esc(x.id)}">${esc(x.titulo)}</button>`).join('')}</div>`:`<h2>${esc(d.titulo)}</h2><div class="esfinge-history">${s.respuestas.map((r,i)=>`<article><p>${i===0?'Tesis: ':'Premisa '+i+': '}${esc(preguntas[i])}</p><div class="esfinge-bubble">${esc(label(r))}</div></article>`).join('')}</div>
++      ${!resultado?`<section class="esfinge-question" aria-live="polite"><small>${s.respuestas.length?'Premisa '+s.respuestas.length+' de '+d.preguntas.length:'Tesis inicial'}</small><h3 tabindex="-1" data-esfinge-focus>${esc(preguntas[s.respuestas.length])}</h3>${!s.respuestas.length?'<p>¿Aceptás esta tesis como punto de partida?</p>':''}<div class="esfinge-choices">${opciones.map(([id,text])=>`<button type="button" data-esfinge-answer="${esc(id)}">${esc(text)}</button>`).join('')}</div></section>`:`<section class="esfinge-outcome" aria-live="polite"><h3 tabindex="-1" data-esfinge-focus>${resultado.estado==='refutacion'?'Refutación de la tesis':resultado.estado==='tesis_no_asumida'?'Tesis no asumida':'No se obtuvo una refutación'}</h3><p>${esc(resultado.texto)}</p><h4>Distinción para examinar</h4><p>${esc(d.distincion)}</p><h4>Lectura aristotélica</h4><p><strong>${esc(d.referencias)}</strong> ${esc(d.apoyo)}</p><div class="esfinge-links">${d.enlaces.map(([url,title])=>`<a href="${esc(url)}">${esc(title)}</a>`).join('')}<a href="#/reading">Biblioteca bilingüe</a><a href="#/chat">FAQ y diálogo</a></div></section>`}
++      <div class="esfinge-choices"><button type="button" data-esfinge-back ${s.respuestas.length?'':'disabled'}>Revisar última respuesta</button><button type="button" data-esfinge-restart>Reiniciar desafío</button><button type="button" data-esfinge-home>Elegir otro desafío</button></div>`}
++      </div>`;
++    actualizarLectura(el);
++  }
++  function click(e){const b=e.target.closest('button');if(!b||!el.contains(b)||b.disabled)return;
++    if(b.dataset.readerFontStep!==undefined){cambiarTamanoLector(el,Number(b.dataset.readerFontStep));return;}
++    if(b.dataset.esfingeStart)s=iniciarEsfinge(b.dataset.esfingeStart);
++    else if(b.dataset.esfingeAnswer&&s)s=responderEsfinge(s,b.dataset.esfingeAnswer);
++    else if(b.hasAttribute('data-esfinge-back')&&s)s=retrocederEsfinge(s);
++    else if(b.hasAttribute('data-esfinge-restart')&&s)s=iniciarEsfinge(s.id);
++    else if(b.hasAttribute('data-esfinge-home'))s=null;else return;
++    render();el.querySelector('[data-esfinge-focus]')?.focus();
++  }
++  el.addEventListener('click',click);render();return {el,destroy(){el.removeEventListener('click',click);}};
++}
+diff --git a/public/scripts/check-n1u191.mjs b/public/scripts/check-n1u191.mjs
+new file mode 100644
+index 0000000..5aa76f3
+--- /dev/null
++++ b/public/scripts/check-n1u191.mjs
+@@ -0,0 +1,66 @@
++import assert from 'node:assert/strict';
++import { test } from 'node:test';
++import { desafios,iniciarEsfinge,responderEsfinge,resultadoEsfinge,retrocederEsfinge } from '../js/lab/esfinge.js';
++import { expandGraph,pruneRoots } from '../js/lab/graphExpansion.js';
++const graph={nodes:['a','b','c','d','e','f'].map(id=>({id,title:id})),edges:[['a','b'],['b','c'],['c','d'],['d','e'],['e','f'],['d','b']].map(([from,to],i)=>({id:'r'+i,from,to}))};
++const base={nodes:graph.nodes.slice(0,2),edges:graph.edges.slice(0,1)};
++for(const d of desafios){
++  test(`${d.id}: refutación solo con tesis y todas las premisas admitidas`,()=>{
++    for(const a of ['si','no','duda'])for(const b of ['si','no','duda'])for(const c of ['si','no','duda']){
++      let s=responderEsfinge(iniciarEsfinge(d.id),a);
++      if(a!=='si'){assert.equal(resultadoEsfinge(s).estado,'tesis_no_asumida');continue;}
++      s=responderEsfinge(s,b);assert.equal(resultadoEsfinge(s),null);s=responderEsfinge(s,c);
++      assert.equal(resultadoEsfinge(s).estado,b==='si'&&c==='si'?'refutacion':'sin_refutacion');
++      assert.equal(resultadoEsfinge(retrocederEsfinge(s)),null);
++      assert.throws(()=>responderEsfinge(s,'si'));
++    }
++  });
++}
++test('expansión bidireccional: dos generaciones, preservación de aristas originales y dirección',()=>{
++  const g=expandGraph(base,graph,new Set(['a']));assert.deepEqual(g.nodes.map(x=>x.id).sort(),['a','b','c','d']);assert.ok(g.edges.every(e=>graph.edges.includes(e)));assert.ok(!g.nodes.some(x=>x.id==='e'));assert.deepEqual(expandGraph(base,graph,new Set()),base);
++});
++test('ramas compartidas y poda al colapsar: conserva lo que aún es alcanzable',()=>{
++  const g=expandGraph(base,graph,new Set(['a','d']));assert.ok(g.nodes.some(x=>x.id==='f'));assert.deepEqual([...pruneRoots(base,graph,new Set(['d']))],[]);assert.deepEqual([...pruneRoots(base,graph,new Set(['b','d']))].sort(),['b','d']);assert.deepEqual(expandGraph(base,graph,new Set(['b'])).nodes.map(x=>x.id).sort(),['a','b','c','d','e']);
++});
++test('no inventa nodos de raíces inexistentes y no modifica entradas',()=>{
++  const before=JSON.stringify({base,graph});assert.deepEqual(expandGraph(base,graph,new Set(['x'])),base);assert.equal(JSON.stringify({base,graph}),before);
++});
++
++import { renderLLMGraph,hydrateLLMGraphs } from '../js/lab/llmGraphView.js';
++import { createLabEsfingeView } from '../js/views/labEsfingeView.js';
++const originalTrace={state:'consulta_local',nodes:[{id:'a',type:'ficha',title:'Felicidad',url:'/#/fichas/felicidad'},{id:'b',type:'ficha',title:'Érgon',url:'/#/fichas/ergon'}],edges:[{id:'r0',from:'a',to:'b',label:'relación'}],paths:[{ids:['a','b'],edgeIds:['r0']}]};
++test('la ampliación local no altera el recorrido original ni se incorpora a trazas de la LLM',()=>{
++  const local=renderLLMGraph(originalTrace,graph);assert.match(local,/Caminos encontrados \(1\)/);assert.match(local,/2 fichas · 1 relación/);assert.match(local,/dos aristas/);
++  assert.match(local,/&quot;catalog&quot;:\{/);assert.match(renderLLMGraph({...originalTrace,state:'consultado'},graph),/&quot;catalog&quot;:null/);
++});
++test('hidratación simulada: doble clic expande y colapsa sin navegar, clic abre ficha y dispose cancela navegación',async()=>{
++  const stub=()=>({hidden:false,textContent:'',disabled:false,addEventListener(){},removeEventListener(){},replaceChildren(){},appendChild(){}});
++  const prev={document:globalThis.document,window:globalThis.window,getComputedStyle:globalThis.getComputedStyle};
++  const controls=stub(),expand=stub(),reset=stub(),count=stub(),host=stub(),fallback=stub(),selection=stub();
++  controls.querySelector=s=>({'[data-lq-expand]':expand,'[data-lq-reset]':reset,'.lq-cy-count':count}[s]);
++  const panel={...stub(),isConnected:true,dataset:{lqCy:JSON.stringify({...base,nodes:originalTrace.nodes,catalog:{...graph,nodes:[...originalTrace.nodes,...graph.nodes.slice(2)]}})},querySelector:s=>({'.lq-cy-host':host,'.lq-graph-scroll':fallback,'.lq-cy-selection':selection,'.lq-cy-controls':controls}[s])};
++  const root={querySelectorAll:()=>[panel]};panel.parentElement=root;
++  const handlers=new Map();let displayed=[],destroyed=false;
++  const sty={selector(){return this;},style(){return this;},update(){return this;}};
++  const cy={on(name,type,fn){handlers.set(name+type,fn);},style:()=>sty,batch:fn=>fn(),elements:()=>({remove(){displayed=[];}}),add:g=>{displayed=g;},layout:()=>({run(){}}),destroy(){destroyed=true;},resize(){}};
++  globalThis.document={createTextNode:s=>s,createElement:()=>stub()};globalThis.window={location:{hash:''}};globalThis.getComputedStyle=()=>({color:'#333',getPropertyValue:()=>18});
++  let dispose;
++  try{
++    dispose=hydrateLLMGraphs(root,async()=>opts=>{displayed=opts.elements;return cy;});await Promise.resolve();await Promise.resolve();
++    assert.equal(fallback.hidden,true);const tap=()=>handlers.get('tapnode')({target:{data:()=>({id:'a',label:'Felicidad',url:'/#/fichas/felicidad'})}});
++    tap();tap();assert.equal(window.location.hash,'');assert.equal(displayed.filter(n=>!n.data.source).length,4);assert.match(count.textContent,/4 fichas/);assert.ok(displayed.some(n=>n.classes==='lq-expanded'));
++    tap();tap();assert.equal(displayed.filter(n=>!n.data.source).length,2);assert.equal(window.location.hash,'');
++    tap();await new Promise(r=>setTimeout(r,380));assert.equal(window.location.hash,'#/fichas/felicidad');
++    window.location.hash='';tap();dispose();assert.equal(destroyed,true);await new Promise(r=>setTimeout(r,380));assert.equal(window.location.hash,'');
++  }finally{dispose?.();Object.assign(globalThis,prev);}
++});
++test('vista Esfinge simulada: inicia, conserva las respuestas, muestra refutación y permite retroceder',()=>{
++  const prev=globalThis.document;let click;
++  const el={innerHTML:'',style:{setProperty(){}},querySelectorAll:()=>[],querySelector:()=>null,contains:()=>true,addEventListener:(event,fn)=>{click=fn;},removeEventListener(){}};
++  globalThis.document={createElement:()=>el,querySelector:()=>({})};
++  try{const v=createLabEsfingeView();assert.match(el.innerHTML,/Elegí un desafío/);
++    const press=(dataset,attrs=[])=>click({target:{closest:()=>({dataset,hasAttribute:k=>attrs.includes(k)})}});
++    press({esfingeStart:'posesion'});assert.match(el.innerHTML,/mera posesión/);press({esfingeAnswer:'si'});press({esfingeAnswer:'si'});press({esfingeAnswer:'si'});assert.match(el.innerHTML,/Refutación de la tesis/);assert.match(el.innerHTML,/1100a3/);assert.match(el.innerHTML,/#\/grafos\/felicidad/);
++    press({},['data-esfinge-back']);assert.doesNotMatch(el.innerHTML,/Refutación de la tesis/);press({esfingeAnswer:'duda'});assert.match(el.innerHTML,/No se obtuvo una refutación/);v.destroy();
++  }finally{globalThis.document=prev;}
++});

@@ -1,0 +1,21 @@
+diff --git a/test/llm/n1u182.test.mjs b/test/llm/n1u182.test.mjs
+index 12eda64..7406371 100644
+--- a/test/llm/n1u182.test.mjs
++++ b/test/llm/n1u182.test.mjs
+@@ -1,6 +1,7 @@
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import { readFile } from 'node:fs/promises';
++import { fileURLToPath } from 'node:url';
+ import { createLLMGateway } from '../../src/llm/gateway.js';
+ import { createSessionStore } from '../../src/llm/session.js';
+ import { buildEditorialGraph,runGraphTool,loadEditorialGraph } from '../../src/llm/graph.js';
+@@ -42,7 +43,7 @@ test('grafo piloto real: 7 fichas, 8 relaciones dirigidas, apoyo central y camin
+   const p=tool('buscar_caminos',{from:a,to:c});assert.ok(p.found);assert.equal(p.edges.length,2);
+   assert.throws(()=>tool('explorar_subgrafo',{id:a,depth:4}));assert.throws(()=>tool('obtener_evidencia',{ids:['sub:inventado']}));
+   assert.throws(()=>tool('sql',{query:'DROP TABLE x'}));assert.throws(()=>buildEditorialGraph(files,'otra',index));
+-  const g=await loadEditorialGraph(new URL('../../public/',import.meta.url).pathname,revision,index);assert.equal(g.edges.length,graph.edges.length);
++  const g=await loadEditorialGraph(fileURLToPath(new URL('../../public/',import.meta.url)),revision,index);assert.equal(g.edges.length,graph.edges.length);
+ });
+ test('dos rondas reales simuladas, evidencia nueva verificada, un crédito y traza persistible',async()=>{
+   const f=fixture({respond:(p,n)=>{

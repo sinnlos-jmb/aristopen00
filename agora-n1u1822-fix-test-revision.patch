@@ -1,0 +1,11 @@
+--- a/test/llm/n1u182.test.mjs
++++ b/test/llm/n1u182.test.mjs
+@@ -43,7 +43,7 @@
+   const p=tool('buscar_caminos',{from:a,to:c});assert.ok(p.found);assert.equal(p.edges.length,2);
+   assert.throws(()=>tool('explorar_subgrafo',{id:a,depth:4}));assert.throws(()=>tool('obtener_evidencia',{ids:['sub:inventado']}));
+   assert.throws(()=>tool('sql',{query:'DROP TABLE x'}));assert.throws(()=>buildEditorialGraph(files,'otra',index));
+-  const g=await loadEditorialGraph(fileURLToPath(new URL('../../public/',import.meta.url)));assert.equal(g.edges.length,graph.edges.length);
++  const g=await loadEditorialGraph(fileURLToPath(new URL('../../public/',import.meta.url)),revision,index);assert.equal(g.edges.length,graph.edges.length);
+ });
+ test('dos rondas reales simuladas, evidencia nueva verificada, un crédito y traza persistible',async()=>{
+   const f=fixture({respond:(p,n)=>{

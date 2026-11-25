@@ -1,0 +1,346 @@
+diff --git a/instalar-lab-n1u192.mjs b/instalar-lab-n1u192.mjs
+new file mode 100644
+index 0000000..cb52dfa
+--- /dev/null
++++ b/instalar-lab-n1u192.mjs
+@@ -0,0 +1,68 @@
++// Ágora N1-U.19.2: registra la vista de enigma sin reescribir ni sustituir el resto del Lab.
++// Uso desde la raíz del repositorio: node instalar-lab-n1u192.mjs [--check]
++import fs from 'node:fs';
++import path from 'node:path';
++import { spawnSync } from 'node:child_process';
++
++const checkOnly = process.argv.includes('--check');
++const file = path.resolve('public/js/views/lab.js');
++if (!fs.existsSync(file)) {
++  console.error(`No existe ${file}. Ejecutá el script desde la raíz de Ágora.`);
++  process.exit(1);
++}
++const original = fs.readFileSync(file, 'utf8');
++const eol = original.includes('\r\n') ? '\r\n' : '\n';
++let result = original;
++const importStmt = "import { createLabEnigmaView } from './labEnigmaView.js';";
++const catalogMarker = /export\s+const\s+EXPERIMENTS\s*=\s*Object\.freeze\s*\(\s*\{/g;
++const viewMarker = /export\s+function\s+createLabView\s*\(\s*App\s*,\s*opts\s*=\s*\{\s*\}\s*\)\s*\{/g;
++const viewLine = "if (opts.exp === 'enigma') return createLabEnigmaView(App);";
++const catalogKey = /\benigma\s*:/g;
++
++function countMatches(text, re) { return Array.from(text.matchAll(re)).length; }
++function fail(msg) { console.error(`N1-U.19.2: ${msg} No se modificó lab.js.`); process.exit(1); }
++const sections = [
++  ['EXPERIMENTS',catalogMarker],
++  ['createLabView',viewMarker],
++];
++for(const [label,matcher] of sections) {
++  if(countMatches(result, matcher)!==1) fail(`No puedo localizar de manera inequívoca ${label}.`);
++}
++if(countMatches(result,catalogKey)>1)fail('La tarjeta enigma ya aparece más de una vez.');
++if(countMatches(result,/import\s*\{\s*createLabEnigmaView\s*\}\s*from\s*['"]\.\/labEnigmaView\.js['"];?/g)>1)fail('La importación está duplicada.');
++if(countMatches(result,/if\s*\(\s*opts\.exp\s*===\s*['"]enigma['"]\s*\)/g)>1)fail('El enrutado de enigma está duplicado.');
++const hasCatalog = countMatches(result,catalogKey)===1;
++const hasImport = result.includes(importStmt);
++const hasRoute = result.includes(viewLine);
++if (!hasImport) {
++  // Anteponer import no altera las importaciones y comentarios existentes.
++  const bom=result.startsWith('\ufeff')?'\ufeff':'';
++  result=bom+importStmt+eol+result.slice(bom.length);
++}
++if (!hasCatalog) {
++  const card = [
++    "", "  enigma: {", "    id: 'enigma', tab: 1, title: 'Enigma · Desafíos conceptuales',",
++    "    desc: 'Descubrí conceptos y distinciones del Libro I a partir de enigmas, pistas y pasajes.',",
++    "    tag: 'N1-U.19.2 · Exploratorio', icon: '❔', featured: false", "  },"
++  ].join(eol);
++  result=result.replace(catalogMarker, full => full + card);
++}
++if (!hasRoute) {
++  result=result.replace(viewMarker, full=>full+eol+"  // N1-U.19.2: nueva vista del Lab, sin modificar los experimentos existentes."+eol+"  "+viewLine);
++}
++if(!result.includes(importStmt)||!result.includes("enigma: {")||!result.includes(viewLine))fail('La integración no produjo las tres piezas esperadas.');
++const additions=[!hasImport?'importación':null,!hasCatalog?'tarjeta':null,!hasRoute?'ruta':null].filter(Boolean);
++if(result===original){console.log('N1-U.19.2: la tarjeta, la ruta y la importación ya están instaladas.');process.exit(0);}
++const testFile=path.join(path.dirname(file),`.n1u192-verify-${process.pid}.mjs`);
++try {
++  fs.writeFileSync(testFile,result,'utf8');
++  const test=spawnSync(process.execPath,['--check',testFile],{encoding:'utf8'});
++  if(test.status!==0) fail(`El resultado no supera node --check: ${test.stderr||test.stdout}`);
++} finally {if(fs.existsSync(testFile))fs.unlinkSync(testFile);}
++if(checkOnly){console.log('N1-U.19.2: inserción compatible; se agregarían '+additions.join(', ')+'. Archivo sin cambios.');process.exit(0);}
++const backup=file+'.antes-n1u192.bak';
++if (fs.existsSync(backup))fail(`Ya existe respaldo ${backup}; no lo sobrescribo.`);
++fs.writeFileSync(backup,original,'utf8');
++fs.writeFileSync(file,result,'utf8');
++console.log('N1-U.19.2 instalado en lab.js ('+additions.join(', ')+').');
++console.log('Copia de seguridad: '+backup);
+diff --git a/public/css/lab-consulta-n1u16.css b/public/css/lab-consulta-n1u16.css
+index 8bd4221..5e72ecc 100644
+--- a/public/css/lab-consulta-n1u16.css
++++ b/public/css/lab-consulta-n1u16.css
+@@ -111,3 +111,6 @@
+ .lq-cy-controls p{flex-basis:100%;margin:.15rem 0}
+ .lq-cy-controls button{font:inherit;padding:.35rem .6rem;border:1px solid currentColor;border-radius:.4rem;background:transparent;color:inherit;cursor:pointer}
+ .lq-cy-controls button:disabled{opacity:.5;cursor:default}
++.lq-ficha-dialog{box-sizing:border-box;width:min(780px,92vw);max-height:85vh;overflow:auto;padding:1.4em;border:1px solid var(--border,#888);border-radius:12px;background:var(--background,#fff);color:var(--text,#222);font:inherit;line-height:1.65;overflow-wrap:anywhere}
++.lq-ficha-dialog::backdrop{background:rgba(0,0,0,.35)}
++.lq-ficha-dialog h3{font-size:1.2em;margin:0 0 .8em}.lq-ficha-dialog form{text-align:right}.lq-ficha-dialog button{font:inherit;color:inherit;border:1px solid currentColor;border-radius:.4em;background:transparent;padding:.4em .8em;cursor:pointer}
+diff --git a/public/js/lab/enigma.js b/public/js/lab/enigma.js
+new file mode 100644
+index 0000000..b8e249f
+--- /dev/null
++++ b/public/js/lab/enigma.js
+@@ -0,0 +1,11 @@
++// Pilotos didácticos redactados para Ágora; no son citas de Aristóteles.
++export const enigmas=Object.freeze([
++  {id:'fin',titulo:'El bien que no es un medio',enigma:'Otros bienes pueden elegirse por sí mismos y también por mí. A mí se me elige siempre por mí mismo y nunca en vista de otra cosa. ¿Qué soy?',pistas:['Pensá en la diferencia entre un fin y aquello que se elige en vista de otro.','El Libro I me caracteriza como fin completo y autosuficiente.'],opciones:[['arete','Areté — virtud','La virtud puede elegirse también en vista de la felicidad.'],['eudaimonia','Eudaimonía — felicidad',''],['hedone','Hedoné — placer','El placer puede elegirse también en vista de otro fin.'],['ergon','Érgon — función propia','La función propia ayuda a determinar el contenido del bien humano.']],solucion:'eudaimonia',explicacion:'La felicidad es el fin que se elige siempre por sí mismo y nunca por otra cosa. La distinción formal no basta todavía para determinar en qué consiste: por eso se introduce el argumento del érgon.',referencias:'EN I.7, 1097a25–b6; 1097b20–25.',enlaces:[['#/fichas/felicidad','¿Qué es la felicidad?'],['#/grafos/forma','La forma del fin'],['#/grafos/felicidad','Condiciones de la felicidad']]},
++  {id:'actividad',titulo:'El citarista y el durmiente',enigma:'Un citarista puede poseer una capacidad sin tocar. Cuando la ejerce, ocurre algo que no se reduce a poseerla. ¿Qué concepto permite expresar ese ejercicio?',pistas:['Distinguí la disposición que alguien posee de su ejercicio.','El concepto aparece en la definición del bien humano.'],opciones:[['hexis','Héxis — disposición','Una disposición puede poseerse sin ejercerse.'],['energeia','Enérgeia — actividad',''],['telos','Télos — fin','El fin orienta la actividad, pero no es el término que aquí designa su ejercicio.'],['logos','Lógos — razón','La razón permite caracterizar la actividad humana, pero no designa aquí el ejercicio en general.']],solucion:'energeia',explicacion:'Enérgeia designa la actividad efectiva. El argumento no reduce la felicidad a cualquier actividad: la caracteriza como actividad del alma según la virtud, y la considera en una vida entera.',referencias:'EN I.7, 1098a7–18; I.8, 1098b30–1099a3.',enlaces:[['#/fichas/ergon','El argumento del érgon'],['#/fichas/felicidad','¿Qué es la felicidad?'],['#/grafos/confirmacion','La confirmación']]},
++  {id:'razon',titulo:'Escuchar sin razonar por sí mismo',enigma:'No soy la parte vegetativa ni la razón en sentido propio. Aunque irracional, puedo escuchar y obedecer a la razón. ¿Qué dimensión del alma soy?',pistas:['La amonestación y la exhortación pueden influir en mí.','Estoy relacionada con la formación del carácter y con los deseos.'],opciones:[['vegetativa','Parte vegetativa','Aristóteles la considera ajena a la razón.'],['desiderativa','Parte desiderativa',''],['racional','Razón en sentido propio','El enigma distingue esta parte de la capacidad racional en sentido propio.'],['percepcion','Percepción sensible','La capacidad de percibir no expresa por sí sola esa disposición a obedecer a la razón.']],solucion:'desiderativa',explicacion:'La parte desiderativa participa de la razón en cierto modo, al poder escucharla y obedecerla. Esa distinción prepara la clasificación de las virtudes éticas y dianoéticas, sin reducir el alma a dos partes separables.',referencias:'EN I.13, 1102b13–1103a7.',enlaces:[['#/fichas/alma','¿Cuáles son las partes del alma?'],['#/fichas/virtudes','¿Qué tipos de virtudes hay?'],['#/grafos/alma','El alma']]}
++]);
++const get=id=>{const d=enigmas.find(x=>x.id===id);if(!d)throw Error('Enigma desconocido.');return d;};
++export function iniciarEnigma(id){get(id);return {id,intentos:[],pistas:0,resuelto:false,revelado:false};}
++export function pedirPista(s){const d=get(s.id);return s.resuelto||s.revelado?s:{...s,pistas:Math.min(s.pistas+1,d.pistas.length)};}
++export function responderEnigma(s,id){const d=get(s.id);if(s.resuelto||s.revelado||!d.opciones.some(o=>o[0]===id)||s.intentos.includes(id))throw Error('Opción no disponible.');return {...s,intentos:[...s.intentos,id],resuelto:id===d.solucion};}
++export function revelarEnigma(s){get(s.id);return s.resuelto?s:{...s,revelado:true};}
+diff --git a/public/js/lab/llmGraphView.js b/public/js/lab/llmGraphView.js
+index 6495037..409d19a 100644
+--- a/public/js/lab/llmGraphView.js
++++ b/public/js/lab/llmGraphView.js
+@@ -22,28 +22,41 @@ export function graphViews(trace){
+   const paths=arr(trace?.paths).filter(p=>Array.isArray(p.ids)&&p.ids.length>=2&&p.ids.length<=4&&Array.isArray(p.edgeIds)&&p.edgeIds.length===p.ids.length-1&&p.ids.every(id=>byId.get(id)?.type==='ficha')&&p.edgeIds.every((id,i)=>{const e=edgeMap.get(id);return e&&((e.from===p.ids[i]&&e.to===p.ids[i+1])||(e.to===p.ids[i]&&e.from===p.ids[i+1]));}));
+   return {fichas,relations,support,paths,byId,passages:nodes.filter(n=>n.type==='pasaje')};
+ }
+-export function renderLLMGraph(trace,catalog=null){
++export function renderLLMGraph(trace,catalog=null,previews=new Map()){
+   if(!trace)return '';
+   const {fichas,relations,support,paths,byId,passages}=graphViews(trace);
+   const local=trace.state==='consulta_local';
+   const status=trace.state==='explorando'?'Consultando el catálogo editorial…':trace.state==='sin_consultas_validas'?'No se recuperaron relaciones válidas.':trace.state==='interrumpido'?'Exploración interrumpida.':trace.state==='parcial'?'Exploración limitada; se conservan los resultados válidos y la respuesta continúa con la evidencia disponible.':'Relaciones editoriales registradas; no equivalen a afirmaciones textuales de Aristóteles.';
+-  const compact=n=>({id:n.id,title:title(n),url:safeURL(n.url)?n.url:null});
++  const compact=n=>({id:n.id,title:title(n),url:safeURL(n.url)?n.url:null,preview:previews.get(n.id)||null});
+   const graphData={nodes:fichas.map(compact),edges:relations.map(({id,from,to,label})=>({id,from,to,label})),catalog:local&&catalog?{nodes:arr(catalog.nodes).map(compact),edges:arr(catalog.edges).map(({id,from,to,label})=>({id,from,to,label}))}:null};
+   const pathMarkup=paths.length?`<details><summary>Caminos ${local?'encontrados':'consultados'} (${paths.length})</summary><p class="lq-hint">Caminos verificados por el intérprete. No equivalen necesariamente al recorrido pedagógico recomendado en la explicación.</p>${paths.slice(0,20).map(p=>`<ol class="lq-path">${p.ids.map((id,i)=>{const e=i?relations.find(x=>x.id===p.edgeIds[i-1]):null;return `<li>${e?`<small>${e.from===p.ids[i-1]?'↓':'↑'} ${esc(e.label)}${e.from!==p.ids[i-1]?' (sentido inverso)':''}</small>`:''}${nodeLink(byId.get(id))}</li>`;}).join('')}</ol>`).join('')}${paths.length>20?'<p>Se muestran los primeros 20 caminos.</p>':''}</details>`:'';
+   return `<details class="lq-graph-trace" ${local?'open':''}><summary>${local?'Grafo de la consulta local':'Recorrido del grafo'} · ${fichas.length} ${fichas.length===1?'ficha':'fichas'} · ${relations.length} ${relations.length===1?'relación':'relaciones'}</summary>
+     <p class="lq-hint">${status}</p>${pathMarkup}
+-    ${fichas.length?`<details class="lq-subgraph" open><summary>Subgrafo de fichas</summary><div data-lq-cy="${esc(JSON.stringify(graphData))}"><div class="lq-cy-host" hidden></div><div class="lq-graph-scroll">${svgFallback(fichas,relations)}</div><p class="lq-cy-selection" aria-live="polite"></p><div class="lq-cy-controls" hidden><button type="button" data-lq-expand disabled>Expandir / colapsar selección</button> <button type="button" data-lq-reset>Restaurar consulta</button><p class="lq-hint">Clic en una ficha: abrirla. Doble clic: expandir o colapsar vecinos hasta dos aristas. Los vecinos agregados tienen bordes discontinuos. Las expansiones son visuales; no cambian la consulta ni las citas.</p><p class="lq-cy-count" aria-live="polite"></p></div></div><ul>${relations.map(e=>`<li>${nodeLink(byId.get(e.from))} → <b>${esc(e.label)}</b> → ${nodeLink(byId.get(e.to))}</li>`).join('')}</ul><p>${fichas.map(nodeLink).join(' · ')}</p></details>`:''}
++    ${fichas.length?`<details class="lq-subgraph" open><summary>Subgrafo de fichas</summary><div data-lq-cy="${esc(JSON.stringify(graphData))}"><div class="lq-cy-host" hidden></div><div class="lq-graph-scroll">${svgFallback(fichas,relations)}</div><p class="lq-cy-selection" aria-live="polite"></p><div class="lq-cy-controls" hidden><button type="button" data-lq-expand disabled>Expandir / colapsar selección</button> <button type="button" data-lq-reset>Restaurar consulta</button><p class="lq-hint">Clic en una ficha: ver resumen sin salir de la consulta. Doble clic: expandir o colapsar vecinos hasta dos aristas. Los vecinos agregados tienen bordes discontinuos. Las expansiones son visuales; no cambian la consulta ni las citas.</p><p class="lq-cy-count" aria-live="polite"></p></div></div><ul>${relations.map(e=>`<li>${nodeLink(byId.get(e.from))} → <b>${esc(e.label)}</b> → ${nodeLink(byId.get(e.to))}</li>`).join('')}</ul><p>${fichas.map(nodeLink).join(' · ')}</p></details>`:''}
+     ${passages.length?`<details><summary>Apoyos documentales y pasajes encontrados (${passages.length})</summary>${fichas.map(n=>{const es=support.filter(e=>e.from===n.id);return es.length?`<section><strong>${nodeLink(n)}</strong><ul>${es.map(e=>`<li>${esc(byId.get(e.to).reference||e.to)} · ${esc(title(byId.get(e.to)))}${e.rol?` — ${esc(e.rol)}`:''}</li>`).join('')}</ul></section>`:'';}).join('')}${passages.filter(n=>!support.some(e=>e.to===n.id)).map(n=>`<p>${esc(n.reference||n.id)} · ${esc(title(n))} (sin arista de apoyo recuperada)</p>`).join('')}<p class="lq-hint">Los pasajes encontrados no son necesariamente los usados como fuentes de la respuesta. Consultá las fuentes verificadas aparte.</p></details>`:''}
+   </details>`;
+ }
+ // Carga diferida del mismo motor que usa Arquitectura. Si no está disponible,
+ // el SVG y los enlaces permanecen utilizables. No se carga una segunda biblioteca.
++// Vista previa editorial: dialog nativo, sin alterar URL, historial ni consulta.
++export function previewMarkup(n){
++  const p=n.preview;
++  return `<h3>${esc(n.title)}</h3>${p?`<p class="lq-hint">Material editorial · ${esc(p.estado)}</p>${arr(p.introduccion).map(t=>`<p>${esc(t)}</p>`).join('')}${arr(p.referencias).length?`<h4>Referencias</h4><ul>${p.referencias.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>`:''}`:'<p>No hay un resumen editorial compatible disponible para esta ficha.</p>'}${safeURL(n.url)?`<p><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer">Abrir ficha completa en otra pestaña</a></p>`:''}<form method="dialog"><button autofocus>Cerrar</button></form>`;
++}
+ export function hydrateLLMGraphs(root,load=async()=>{const {cargarCytoscape}=await import('./cytoscapeLoader.js');return cargarCytoscape();}){
+   let disposed=false;const cleanups=[],fontUpdates=[];
+   for(const panel of root.querySelectorAll('[data-lq-cy]')){
+     const host=panel.querySelector('.lq-cy-host'),fallback=panel.querySelector('.lq-graph-scroll'),selection=panel.querySelector('.lq-cy-selection');
+     const details=[];for(let p=panel.parentElement;p&&p!==root;p=p.parentElement)if(p.tagName==='DETAILS')details.push(p);
+-    let cy=null,loading=false,failed=false,tapTimer=null;
++    let cy=null,loading=false,failed=false,tapTimer=null,dialog=null;
++    const parsed=JSON.parse(panel.dataset.lqCy);
++    const lookup=new Map([...arr(parsed.catalog?.nodes),...arr(parsed.nodes)].map(n=>[n.id,n]));
++    function showPreview(id){const n=lookup.get(id);if(!n)return;
++      if(!dialog){dialog=document.createElement('dialog');dialog.className='lq-ficha-dialog';dialog.setAttribute('aria-label','Ficha editorial resumida');panel.appendChild(dialog);}
++      dialog.innerHTML=previewMarkup(n);if(!dialog.open)dialog.showModal();
++    }
++    const fallbackClick=e=>{const a=e.target.closest?.('a');if(!a)return;const n=[...lookup.values()].find(n=>n.url===a.getAttribute('href'));if(n){e.preventDefault();showPreview(n.id);}};
++    fallback.addEventListener('click',fallbackClick);
+     let cleanupControls=()=>{};
+     const visible=()=>!disposed&&panel.isConnected&&details.every(d=>d.open);
+     async function mount(){
+@@ -55,17 +68,31 @@ export function hydrateLLMGraphs(root,load=async()=>{const {cargarCytoscape}=awa
+         if(!visible())return;
+         const {nodes,edges,catalog}=JSON.parse(panel.dataset.lqCy);const style=getComputedStyle(root);const color=style.color||'#333';const size=Math.max(14,Math.min(30,parseFloat(style.getPropertyValue('--agora-reader-font-size'))||18));
+         host.hidden=false;
+-        cy=cytoscape({container:host,elements:[...nodes.map(n=>({data:{id:n.id,label:n.title,url:n.url}})),...edges.map((e,i)=>({data:{id:`edge-${i}`,source:e.from,target:e.to,label:e.label}}))],layout:{name:'circle',padding:55},minZoom:.25,maxZoom:3,wheelSensitivity:.6,boxSelectionEnabled:false,style:[{selector:'node',style:{'label':'data(label)','shape':'round-rectangle','background-color':'#86a5ae','background-opacity':.28,'border-color':color,'border-width':1,'color':color,'font-family':'monospace','font-size':size,'text-wrap':'wrap','text-max-width':Math.max(175,size*11),'text-valign':'center','text-halign':'center','width':Math.max(195,size*12),'height':Math.max(76,size*4.6)}},{selector:'edge',style:{'curve-style':'bezier','line-color':color,'target-arrow-color':color,'target-arrow-shape':'triangle','width':1.5,'opacity':.55}},{selector:'edge:selected',style:{'label':'data(label)','font-size':size*.85,'font-family':'monospace','color':color,'text-wrap':'wrap','text-max-width':180,'opacity':1}},{selector:'node:selected',style:{'border-width':3,'background-opacity':.65}}]});
++        cy=cytoscape({container:host,elements:[...nodes.map(n=>({data:{id:n.id,label:n.title,url:n.url}})),...edges.map((e,i)=>({data:{id:`rel:${e.id}`,source:e.from,target:e.to,label:e.label}}))],layout:{name:'circle',padding:55},minZoom:.25,maxZoom:3,wheelSensitivity:.6,boxSelectionEnabled:false,style:[{selector:'node',style:{'label':'data(label)','shape':'round-rectangle','background-color':'#86a5ae','background-opacity':.28,'border-color':color,'border-width':1,'color':color,'font-family':'monospace','font-size':size,'text-wrap':'wrap','text-max-width':Math.max(175,size*11),'text-valign':'center','text-halign':'center','width':Math.max(195,size*12),'height':Math.max(76,size*4.6)}},{selector:'edge',style:{'curve-style':'bezier','line-color':color,'target-arrow-color':color,'target-arrow-shape':'triangle','width':1.5,'opacity':.55}},{selector:'edge:selected',style:{'label':'data(label)','font-size':size*.85,'font-family':'monospace','color':color,'text-wrap':'wrap','text-max-width':180,'opacity':1}},{selector:'node:selected',style:{'border-width':3,'background-opacity':.65}}]});
+         const controls=panel.querySelector('.lq-cy-controls'),expandButton=controls?.querySelector('[data-lq-expand]'),resetButton=controls?.querySelector('[data-lq-reset]'),count=controls?.querySelector('.lq-cy-count');
+-        let roots=new Set(),selected=null,lastTap=null;
++        let roots=new Set(),selected=null,lastTap=null;const positions=new Map();
+         const base={nodes,edges}, source=catalog||base;
+         const originalNodes=new Set(nodes.map(n=>n.id)),originalEdges=new Set(edges.map(e=>e.id));
+         const elements=g=>[...g.nodes.map(n=>({data:{id:n.id,label:n.title,url:n.url},classes:originalNodes.has(n.id)?'':'lq-expanded'})),...g.edges.map(e=>({data:{id:'rel:'+e.id,source:e.from,target:e.to,label:e.label},classes:originalEdges.has(e.id)?'':'lq-expanded'}))];
+         cy.style().selector('node.lq-expanded').style({'border-style':'dashed','background-opacity':.12}).selector('edge.lq-expanded').style({'line-style':'dashed','opacity':.5}).update();
+         function redraw(){
+           roots=pruneRoots(base,source,roots);const g=expandGraph(base,source,roots);
+-          cy.batch(()=>{cy.elements().remove();cy.add(elements(g));});
+-          cy.layout({name:'circle',padding:55}).run();
++          // No volver a ejecutar un layout: conservar posición, zoom y pan del usuario.
++          cy.nodes().forEach(n=>positions.set(n.id(),{...n.position()}));
++          const wanted=elements(g),ids=new Set(wanted.map(x=>x.data.id));
++          cy.batch(()=>{
++            cy.elements().filter(e=>!ids.has(e.id())).remove();
++            const occupied=cy.nodes().map(n=>n.position());
++            for(const e of wanted.filter(e=>!e.data.source)){
++              if(cy.getElementById(e.data.id).length)continue;
++              const neighbor=g.edges.find(r=>(r.from===e.data.id&&cy.getElementById(r.to).length)||(r.to===e.data.id&&cy.getElementById(r.from).length));
++              const anchor=neighbor?cy.getElementById(neighbor.from===e.data.id?neighbor.to:neighbor.from).position():{x:0,y:0};
++              let pos=positions.get(e.data.id);
++              if(!pos){for(let k=0;k<100;k++){const angle=k*2.39996323,r=280+Math.floor(k/8)*200;const candidate={x:anchor.x+r*Math.cos(angle),y:anchor.y+r*Math.sin(angle)};if(!occupied.some(p=>Math.abs(p.x-candidate.x)<Math.max(230,size*13)&&Math.abs(p.y-candidate.y)<Math.max(110,size*5))){pos=candidate;break;}}}
++              pos=pos||{x:anchor.x+300*(occupied.length+1),y:anchor.y};occupied.push(pos);cy.add({...e,position:pos});
++            }
++            for(const e of wanted.filter(e=>e.data.source))if(!cy.getElementById(e.data.id).length)cy.add(e);
++          });
+           if(selected&&!g.nodes.some(n=>n.id===selected))selected=null;
+           if(expandButton)expandButton.disabled=!selected;
+           if(count)count.textContent=`${g.nodes.length} fichas visibles · ${g.edges.length} relaciones · ${roots.size} expansiones abiertas`;
+@@ -73,12 +100,12 @@ export function hydrateLLMGraphs(root,load=async()=>{const {cargarCytoscape}=awa
+         }
+         function toggle(id){if(!catalog)return;if(roots.has(id))roots.delete(id);else roots.add(id);redraw();}
+         function cancelTap(){if(tapTimer!==null)clearTimeout(tapTimer);tapTimer=null;lastTap=null;}
+-        function select(data){selected=data.id;selection.replaceChildren();selection.appendChild(document.createTextNode(data.label+' '));if(safeURL(data.url)){const a=document.createElement('a');a.href=data.url;a.textContent='Abrir ficha';selection.appendChild(a);}if(expandButton)expandButton.disabled=!catalog;}
++        function select(data){selected=data.id;selection.replaceChildren();selection.appendChild(document.createTextNode(data.label+' '));if(safeURL(data.url)){const a=document.createElement('a');a.href=data.url;a.textContent='Ver ficha resumida';a.addEventListener('click',e=>{e.preventDefault();showPreview(data.id);});selection.appendChild(a);}if(expandButton)expandButton.disabled=!catalog;}
+         cy.on('tap','node',event=>{
+           const data=event.target.data();select(data);
+           if(catalog&&lastTap===data.id&&tapTimer!==null){cancelTap();toggle(data.id);return;}
+           cancelTap();lastTap=data.id;
+-          tapTimer=setTimeout(()=>{tapTimer=null;lastTap=null;if(!disposed&&panel.isConnected&&safeURL(data.url))window.location.hash=data.url.slice(1);},350);
++          tapTimer=setTimeout(()=>{tapTimer=null;lastTap=null;if(!disposed&&panel.isConnected)showPreview(data.id);},350);
+         });
+         const onExpand=()=>{cancelTap();if(selected)toggle(selected);};
+         const onReset=()=>{cancelTap();roots.clear();selected=null;redraw();};
+@@ -92,7 +119,7 @@ export function hydrateLLMGraphs(root,load=async()=>{const {cargarCytoscape}=awa
+     const handler=()=>{if(visible())void mount();};
+     details.forEach(d=>d.addEventListener('toggle',handler));
+     fontUpdates.push(size=>{if(cy){cy.style().selector('node').style({'font-size':size,'height':Math.max(76,size*4.6),'width':Math.max(195,size*12),'text-max-width':Math.max(175,size*11)}).selector('edge:selected').style('font-size',size*.85).update();}});
+-    cleanups.push(()=>{details.forEach(d=>d.removeEventListener('toggle',handler));cleanupControls();cy?.destroy();});
++    cleanups.push(()=>{details.forEach(d=>d.removeEventListener('toggle',handler));cleanupControls();fallback.removeEventListener('click',fallbackClick);dialog?.remove();cy?.destroy();});
+     if(visible())void mount();
+   }
+   const dispose=()=>{disposed=true;cleanups.forEach(fn=>fn());};
+diff --git a/public/js/views/labConsultaView.js b/public/js/views/labConsultaView.js
+index 48ed672..3b5a6bb 100644
+--- a/public/js/views/labConsultaView.js
++++ b/public/js/views/labConsultaView.js
+@@ -58,9 +58,10 @@ async function loadData(signal) {
+     if(!sheets.has(sheet.id))sheets.set(sheet.id,{...sheet,supports:[]});
+     sheets.get(sheet.id).supports.push(sub);
+   }
++  const previews=new Map(ready?[...arr(f5?.fichas),...arr(f7?.fichas)].map(f=>[f.id,{introduccion:arr(f.introduccion),referencias:arr(f.referencias),estado:f.fuente_editorial?.estado||'borrador_pedagogico_pendiente_curaduria'}]):[]);
+   const relations=ready?arr(f7?.red?.relaciones):[];
+   return {
+-    index, docs:corpus.documents,revision:lectura.revision,sheets,relations,bySub,
++    index, docs:corpus.documents,revision:lectura.revision,sheets,relations,bySub,previews,
+     staticChoices:categoryChoices(index.documents,'static'),
+     functionalChoices:categoryChoices(index.documents,'functional'),
+     editorialReady:ready,
+@@ -143,7 +144,7 @@ export function createLabConsultaView(_App) {
+   function renderLocalGraph(graph){
+     if(!graph.edges.length)return '';
+     const ids=[...new Set(graph.edges.flatMap(e=>[e.desde,e.hacia]))];
+-    return renderLLMGraph({state:'consulta_local',nodes:ids.map(id=>({...data.sheets.get(id),id,type:'ficha',url:data.sheets.get(id)?.url?.replace(/^#/, '/#')})),edges:graph.edges.map(e=>({id:e.id,from:e.desde,to:e.hacia,label:e.nombre,type:'relacion',estado:'relación editorial'})),steps:[],paths:(graph.paths||[]).map(p=>({ids:p.ids,edgeIds:p.edges.map(e=>e.id)}))},data.editorialReady?{nodes:[...data.sheets].map(([id,n])=>({...n,id,url:n.url?.replace(/^#/, '/#')})),edges:data.relations.filter(e=>data.sheets.has(e.desde)&&data.sheets.has(e.hacia)).map(e=>({id:e.id,from:e.desde,to:e.hacia,label:e.nombre}))}:null);
++    return renderLLMGraph({state:'consulta_local',nodes:ids.map(id=>({...data.sheets.get(id),id,type:'ficha',url:data.sheets.get(id)?.url?.replace(/^#/, '/#')})),edges:graph.edges.map(e=>({id:e.id,from:e.desde,to:e.hacia,label:e.nombre,type:'relacion',estado:'relación editorial'})),steps:[],paths:(graph.paths||[]).map(p=>({ids:p.ids,edgeIds:p.edges.map(e=>e.id)}))},data.editorialReady?{nodes:[...data.sheets].map(([id,n])=>({...n,id,url:n.url?.replace(/^#/, '/#')})),edges:data.relations.filter(e=>data.sheets.has(e.desde)&&data.sheets.has(e.hacia)).map(e=>({id:e.id,from:e.desde,to:e.hacia,label:e.nombre}))}:null,data.previews);
+   }
+   function renderResults(){
+     if(state.error)return `<div class="lq-alert" role="alert">${esc(state.error)}</div>`;
+@@ -188,7 +189,7 @@ export function createLabConsultaView(_App) {
+           ${m.mode!=='cypher'?curatedLinks(m.fichas||[],data.sheets):''}
+           <div class="lq-answer" data-llm-answer="${i}" aria-live="${m.pending?'polite':'off'}">${m.pending?esc(m.answer||''):renderLLMMarkdown(m.answer||'')}</div>
+           ${m.queries?`<section class="lq-suggestions"><strong>Consultas comprobadas</strong>${m.queries.accepted.map((q,j)=>`<div><pre>${esc(q.query)}</pre><button type="button" data-use-query="${i}:${j}">Probar en el Query Builder</button></div>`).join('')}${m.queries.rejected.length||!m.queries.accepted.length?'<p class="lq-hint">Alguna propuesta no fue admitida o no se recibió código válido. Solo se pueden cargar las consultas comprobadas.</p>':''}</section>`:''}
+-          <div data-llm-graph="${i}">${renderLLMGraph(m.graphTrace)}</div>
++          <div data-llm-graph="${i}">${renderLLMGraph(m.graphTrace,null,data.previews)}</div>
+           ${m.incomplete?'<p class="lq-alert">La generación alcanzó el límite de tokens: esta respuesta puede estar incompleta.</p>':''}
+           ${m.error?`<p class="lq-alert">${esc(m.error)}${m.answer?' Se conserva el fragmento recibido.':''}</p>`:''}
+           ${m.fichas?.length&&m.mode!=='cypher'?`<details><summary>${m.fichas.length} fichas explicativas relacionadas (interpretación editorial)</summary>${m.fichas.map(f=>`<div class="lq-source"><strong>${data.sheets.has(f.id)?`<a href="${esc(data.sheets.get(f.id).url)}">${esc(f.title)}</a>`:esc(f.title)}</strong> · <small>${esc(f.estado)}</small><p>${esc(f.introduccion)}</p></div>`).join('')}</details>`:''}
+diff --git a/public/js/views/labEnigmaView.js b/public/js/views/labEnigmaView.js
+new file mode 100644
+index 0000000..383110f
+--- /dev/null
++++ b/public/js/views/labEnigmaView.js
+@@ -0,0 +1,26 @@
++import { esc } from '../ui.js';
++import { controlesTamanoLector, actualizarLectura, cambiarTamanoLector } from '../reader/fontPreferences.js';
++import { enigmas,iniciarEnigma,pedirPista,responderEnigma,revelarEnigma } from '../lab/enigma.js';
++export function createLabEnigmaView(){
++  const el=document.createElement('div');el.className='scrollable has-scroll lq-view esfinge-view enigma-view';
++  if(!document.querySelector('link[data-esfinge-styles]')){const css=document.createElement('link');css.rel='stylesheet';css.href='/css/lab-esfinge-n1u191.css';css.dataset.esfingeStyles='1';document.head.appendChild(css);}
++  let s=null;
++  function render(){
++    const d=s&&enigmas.find(x=>x.id===s.id),done=s&&(s.resuelto||s.revelado),last=s&&d.opciones.find(o=>o[0]===s.intentos.at(-1));
++    el.innerHTML=`<div class="esfinge-inner"><nav><a href="#/lab">← Laboratorio</a> · N1-U.19.2</nav>${controlesTamanoLector()}<h1>Enigma</h1><p>Descubrí un concepto a partir de un desafío. Podés pedir pistas, reconsiderar tus respuestas y consultar el material filosófico al terminar.</p><p class="esfinge-note">Ejercicios de Ágora pendientes de revisión editorial. No son citas de Aristóteles. No requieren LLM ni créditos.</p>
++      ${!s?`<h2>Elegí un enigma</h2><div class="esfinge-choices">${enigmas.map(x=>`<button data-enigma-start="${esc(x.id)}">${esc(x.titulo)}</button>`).join('')}</div>`:`<h2>${esc(d.titulo)}</h2><section class="esfinge-question"><h3 tabindex="-1" data-enigma-focus>${esc(d.enigma)}</h3>${s.pistas?`<ol>${d.pistas.slice(0,s.pistas).map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`:''}
++      ${!done?`<div class="esfinge-choices">${d.opciones.map(([id,label])=>`<button data-enigma-answer="${esc(id)}" ${s.intentos.includes(id)?'disabled':''}>${esc(label)}${s.intentos.includes(id)?' — ya examinada':''}</button>`).join('')}</div><div role="status">${last?`<p>${esc(last[2])} Podés intentar otra opción.</p>`:''}</div><div class="esfinge-choices"><button data-enigma-hint ${s.pistas>=d.pistas.length?'disabled':''}>Pedir pista (${s.pistas}/${d.pistas.length})</button><button data-enigma-reveal>Ver resolución</button></div>`:`<section class="esfinge-outcome"><h3>${s.resuelto?'Enigma resuelto':'Resolución revelada'}</h3><p><strong>${esc(d.opciones.find(o=>o[0]===d.solucion)[1])}</strong></p><p>${esc(d.explicacion)}</p><h4>Lectura aristotélica</h4><p>${esc(d.referencias)}</p><div class="esfinge-links">${d.enlaces.map(([url,title])=>`<a href="${esc(url)}">${esc(title)}</a>`).join('')}<a href="#/reading">Biblioteca bilingüe</a><a href="#/chat">FAQ y diálogo</a></div></section>`}</section><div class="esfinge-choices"><button data-enigma-reset>Reiniciar enigma</button><button data-enigma-home>Elegir otro enigma</button></div>`}</div>`;
++    actualizarLectura(el);
++  }
++  function click(e){const b=e.target.closest('button');if(!b||b.disabled||!el.contains(b))return;
++    if(b.dataset.readerFontStep!==undefined){cambiarTamanoLector(el,Number(b.dataset.readerFontStep));return;}
++    if(b.dataset.enigmaStart)s=iniciarEnigma(b.dataset.enigmaStart);
++    else if(s&&b.dataset.enigmaAnswer)s=responderEnigma(s,b.dataset.enigmaAnswer);
++    else if(s&&b.hasAttribute('data-enigma-hint'))s=pedirPista(s);
++    else if(s&&b.hasAttribute('data-enigma-reveal'))s=revelarEnigma(s);
++    else if(s&&b.hasAttribute('data-enigma-reset'))s=iniciarEnigma(s.id);
++    else if(b.hasAttribute('data-enigma-home'))s=null;else return;
++    render();el.querySelector('[data-enigma-focus]')?.focus();
++  }
++  el.addEventListener('click',click);render();return {el,destroy(){el.removeEventListener('click',click);}};
++}
+diff --git a/public/scripts/check-n1u191.mjs b/public/scripts/check-n1u191.mjs
+index 5aa76f3..418b4c9 100644
+--- a/public/scripts/check-n1u191.mjs
++++ b/public/scripts/check-n1u191.mjs
+@@ -33,25 +33,27 @@ test('la ampliación local no altera el recorrido original ni se incorpora a tra
+   const local=renderLLMGraph(originalTrace,graph);assert.match(local,/Caminos encontrados \(1\)/);assert.match(local,/2 fichas · 1 relación/);assert.match(local,/dos aristas/);
+   assert.match(local,/&quot;catalog&quot;:\{/);assert.match(renderLLMGraph({...originalTrace,state:'consultado'},graph),/&quot;catalog&quot;:null/);
+ });
+-test('hidratación simulada: doble clic expande y colapsa sin navegar, clic abre ficha y dispose cancela navegación',async()=>{
+-  const stub=()=>({hidden:false,textContent:'',disabled:false,addEventListener(){},removeEventListener(){},replaceChildren(){},appendChild(){}});
++test('hidratación simulada: conserva posiciones al expandir/colapsar y abre modal sin navegar',async()=>{
++  const stub=()=>({hidden:false,textContent:'',disabled:false,innerHTML:'',open:false,addEventListener(){},removeEventListener(){},replaceChildren(){},appendChild(){},setAttribute(){},showModal(){this.open=true;},remove(){this.open=false;}});
+   const prev={document:globalThis.document,window:globalThis.window,getComputedStyle:globalThis.getComputedStyle};
+-  const controls=stub(),expand=stub(),reset=stub(),count=stub(),host=stub(),fallback=stub(),selection=stub();
++  const controls=stub(),expand=stub(),reset=stub(),count=stub(),host=stub(),fallback=stub(),selection=stub();let dialog;
+   controls.querySelector=s=>({'[data-lq-expand]':expand,'[data-lq-reset]':reset,'.lq-cy-count':count}[s]);
+-  const panel={...stub(),isConnected:true,dataset:{lqCy:JSON.stringify({...base,nodes:originalTrace.nodes,catalog:{...graph,nodes:[...originalTrace.nodes,...graph.nodes.slice(2)]}})},querySelector:s=>({'.lq-cy-host':host,'.lq-graph-scroll':fallback,'.lq-cy-selection':selection,'.lq-cy-controls':controls}[s])};
++  const panel={...stub(),isConnected:true,appendChild(n){dialog=n;},dataset:{lqCy:JSON.stringify({...base,nodes:originalTrace.nodes.map(n=>({...n,preview:{introduccion:['Texto editorial'],estado:'borrador'}})),catalog:{...graph,nodes:[...originalTrace.nodes,...graph.nodes.slice(2)]}})},querySelector:s=>({'.lq-cy-host':host,'.lq-graph-scroll':fallback,'.lq-cy-selection':selection,'.lq-cy-controls':controls}[s])};
+   const root={querySelectorAll:()=>[panel]};panel.parentElement=root;
+-  const handlers=new Map();let displayed=[],destroyed=false;
++  const handlers=new Map(),displayed=new Map();let destroyed=false,layouts=0;
+   const sty={selector(){return this;},style(){return this;},update(){return this;}};
+-  const cy={on(name,type,fn){handlers.set(name+type,fn);},style:()=>sty,batch:fn=>fn(),elements:()=>({remove(){displayed=[];}}),add:g=>{displayed=g;},layout:()=>({run(){}}),destroy(){destroyed=true;},resize(){}};
+-  globalThis.document={createTextNode:s=>s,createElement:()=>stub()};globalThis.window={location:{hash:''}};globalThis.getComputedStyle=()=>({color:'#333',getPropertyValue:()=>18});
++  const add=x=>{for(const e of Array.isArray(x)?x:[x]){const v={...e,pos:e.position||{x:0,y:0},id:()=>e.data.id,position(){return this.pos;}};displayed.set(e.data.id,v);}};
++  const cy={on(name,type,fn){handlers.set(name+type,fn);},style:()=>sty,batch:fn=>fn(),nodes:()=>[...displayed.values()].filter(e=>!e.data.source),elements:()=>({filter:fn=>({remove(){for(const e of displayed.values())if(fn(e))displayed.delete(e.id());}})}),getElementById:id=>displayed.has(id)?Object.assign(displayed.get(id),{length:1}):{length:0},add,layout:()=>({run(){layouts++;}}),destroy(){destroyed=true;},resize(){}};
++  globalThis.document={createTextNode:s=>s,createElement:()=>stub()};globalThis.window={location:{hash:'#/lab/consultas'}};globalThis.getComputedStyle=()=>({color:'#333',getPropertyValue:()=>18});
+   let dispose;
+   try{
+-    dispose=hydrateLLMGraphs(root,async()=>opts=>{displayed=opts.elements;return cy;});await Promise.resolve();await Promise.resolve();
++    dispose=hydrateLLMGraphs(root,async()=>opts=>{add(opts.elements);return cy;});await Promise.resolve();await Promise.resolve();
+     assert.equal(fallback.hidden,true);const tap=()=>handlers.get('tapnode')({target:{data:()=>({id:'a',label:'Felicidad',url:'/#/fichas/felicidad'})}});
+-    tap();tap();assert.equal(window.location.hash,'');assert.equal(displayed.filter(n=>!n.data.source).length,4);assert.match(count.textContent,/4 fichas/);assert.ok(displayed.some(n=>n.classes==='lq-expanded'));
+-    tap();tap();assert.equal(displayed.filter(n=>!n.data.source).length,2);assert.equal(window.location.hash,'');
+-    tap();await new Promise(r=>setTimeout(r,380));assert.equal(window.location.hash,'#/fichas/felicidad');
+-    window.location.hash='';tap();dispose();assert.equal(destroyed,true);await new Promise(r=>setTimeout(r,380));assert.equal(window.location.hash,'');
++    displayed.get('a').pos={x:321,y:456};
++    tap();tap();assert.equal(window.location.hash,'#/lab/consultas');assert.equal(cy.nodes().length,4);assert.match(count.textContent,/4 fichas/);assert.ok(cy.nodes().some(n=>n.classes==='lq-expanded'));assert.deepEqual(displayed.get('a').pos,{x:321,y:456});
++    displayed.get('c').pos={x:654,y:789};tap();tap();assert.equal(cy.nodes().length,2);tap();tap();assert.deepEqual(displayed.get('c').pos,{x:654,y:789});assert.equal(layouts,0);
++    tap();await new Promise(r=>setTimeout(r,380));assert.equal(window.location.hash,'#/lab/consultas');assert.equal(dialog.open,true);assert.match(dialog.innerHTML,/Texto editorial/);assert.match(dialog.innerHTML,/target="_blank"/);
++    tap();dispose();assert.equal(destroyed,true);assert.equal(dialog.open,false);await new Promise(r=>setTimeout(r,380));assert.equal(dialog.open,false);
+   }finally{dispose?.();Object.assign(globalThis,prev);}
+ });
+ test('vista Esfinge simulada: inicia, conserva las respuestas, muestra refutación y permite retroceder',()=>{
+diff --git a/public/scripts/check-n1u192.mjs b/public/scripts/check-n1u192.mjs
+new file mode 100644
+index 0000000..c702bcd
+--- /dev/null
++++ b/public/scripts/check-n1u192.mjs
+@@ -0,0 +1,18 @@
++import assert from 'node:assert/strict';
++import {test} from 'node:test';
++import {enigmas,iniciarEnigma,pedirPista,responderEnigma,revelarEnigma} from '../js/lab/enigma.js';
++import {createLabEnigmaView} from '../js/views/labEnigmaView.js';
++import {previewMarkup} from '../js/lab/llmGraphView.js';
++for(const d of enigmas)test(`${d.id}: pistas, opciones, reintentos y solución`,()=>{
++  let s=iniciarEnigma(d.id);assert.equal(s.pistas,0);for(let i=0;i<4;i++)s=pedirPista(s);assert.equal(s.pistas,d.pistas.length);assert.equal(s.resuelto,false);
++  for(const [id,,feedback] of d.opciones.filter(o=>o[0]!==d.solucion)){assert.ok(feedback);s=responderEnigma(s,id);assert.equal(s.resuelto,false);assert.throws(()=>responderEnigma(s,id));}
++  s=responderEnigma(s,d.solucion);assert.equal(s.resuelto,true);assert.equal(s.revelado,false);assert.throws(()=>responderEnigma(s,d.solucion));
++  const revealed=revelarEnigma(iniciarEnigma(d.id));assert.equal(revealed.revelado,true);assert.equal(revealed.resuelto,false);assert.throws(()=>responderEnigma(revealed,d.solucion));
++});
++test('modal usa texto editorial escapado y no navega automáticamente',()=>{
++  const h=previewMarkup({title:'<script>',url:'/#/fichas/felicidad',preview:{introduccion:['<img onerror=x>'],referencias:['1098a16–18'],estado:'borrador'}});assert.match(h,/&lt;script&gt;/);assert.match(h,/&lt;img/);assert.doesNotMatch(h,/<img/);assert.match(h,/1098a16/);assert.match(h,/target="_blank"/);assert.doesNotMatch(previewMarkup({url:'javascript:alert(1)'}),/href=/);
++});
++test('Enigma: interfaz simulada, pistas, error, resolución y enlaces',()=>{
++  const prev=globalThis.document;let click;const el={innerHTML:'',style:{setProperty(){}},querySelectorAll:()=>[],querySelector:()=>null,contains:()=>true,addEventListener:(e,f)=>{click=f;},removeEventListener(){}};
++  globalThis.document={createElement:()=>el,querySelector:()=>({})};try{const v=createLabEnigmaView();const press=(dataset,attrs=[])=>click({target:{closest:()=>({dataset,hasAttribute:k=>attrs.includes(k)})}});assert.match(el.innerHTML,/Elegí un enigma/);press({enigmaStart:'fin'});assert.doesNotMatch(el.innerHTML,/Enigma resuelto/);press({},['data-enigma-hint']);assert.match(el.innerHTML,/Pedir pista \(1\/2\)/);press({enigmaAnswer:'arete'});assert.match(el.innerHTML,/Podés intentar otra opción/);press({enigmaAnswer:'eudaimonia'});assert.match(el.innerHTML,/Enigma resuelto/);assert.match(el.innerHTML,/#\/grafos\/forma/);press({},['data-enigma-reset']);assert.doesNotMatch(el.innerHTML,/Enigma resuelto/);press({},['data-enigma-reveal']);assert.match(el.innerHTML,/Resolución revelada/);v.destroy();}finally{globalThis.document=prev;}
++});

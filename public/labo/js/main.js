@@ -1,6 +1,7 @@
 import { parse } from './router.js';
 import { loadConfig, loadInitial, saveConfig } from './store.js';
 import * as searchView from './views/busqueda.js';
+import * as vectorialView from './views/vectorial.js';
 import * as historyView from './views/historial.js';
 import * as configView from './views/config.js';
 import * as courseView from './views/recorrido.js';
@@ -36,6 +37,7 @@ async function mount() {
   });
   try {
     if (route.section === 'buscar') await searchView.render(root, app, route);
+    else if (route.section === 'vectorial') await vectorialView.render(root, app, route);
     else if (route.section === 'recorrido') await zeroView.render(root, app);
     else if (route.section === 'recorrido-stream') await streamView.render(root, app);
     else if (route.section === 'recorrido-anterior') await courseView.render(root, app);

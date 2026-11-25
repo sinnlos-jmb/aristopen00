@@ -1,3 +1,6 @@
+import { createLabEnigmaView } from './labEnigmaView.js';
+import { createLabEsfingeView } from './labEsfingeView.js';
+import { createLabConsultaView } from './labConsultaView.js';
 import { renderCatalogHeader, renderCatalogCard } from './shared.js';
 import { renderTrajectoriesView } from './labTrajectoriesView.js';
 import { renderAuditView } from './labAuditView.js';
@@ -13,6 +16,21 @@ import { openTrayectoEditor } from './labTrayectoEditor.js';
 
 // Catálogo de experimentos para la maqueta grid
 export const EXPERIMENTS = Object.freeze({
+  enigma: {
+    id: 'enigma', tab: 1, title: 'Enigma · Desafíos conceptuales',
+    desc: 'Descubrí conceptos y distinciones del Libro I a partir de enigmas, pistas y pasajes.',
+    tag: 'N1-U.19.2 · Exploratorio', icon: '❔', featured: false
+  },
+  esfinge: {
+    id: 'esfinge', tab: 1, title: 'Esfinge · Diálogo dialéctico',
+    desc: 'Examiná una tesis mediante premisas y sus consecuencias; distinguí posesión, actividad y fines.',
+    tag: 'N1-U.19.1 · Exploratorio', icon: '❔', featured: false
+  },
+  consultas: {
+    id: 'consultas', tab: 1, title: 'Consultas y recuperación',
+    desc: 'Explorá citas y fichas con preguntas, filtros visuales y patrones de grafos estilo Cypher.',
+    tag: 'N1-U.16 · Exploratorio', icon: '🔎', featured: false
+  },
   arquitectura: {
     id: 'arquitectura', tab: 7, title: 'Arquitectura argumentativa del Libro I',
     desc: 'Explorá macrounidades, unidades, momentos y subunidades con datos reales y propuestas editoriales diferenciadas.',
@@ -109,6 +127,12 @@ const EXAMPLES = [
 ];
 
 export function createLabView(App, opts = {}) {
+  // N1-U.19.2: nueva vista del Lab, sin modificar los experimentos existentes.
+  if (opts.exp === 'enigma') return createLabEnigmaView(App);
+  // N1-U.19.1: nueva vista del Lab, sin modificar los experimentos existentes.
+  if (opts.exp === 'esfinge') return createLabEsfingeView(App);
+  // N1-U.16: nueva vista del Lab, sin modificar los experimentos existentes.
+  if (opts.exp === 'consultas') return createLabConsultaView(App);
   const S = App.S;
 
   // Mapeo inteligente del experimento recibido por opciones o URL

@@ -3,11 +3,14 @@ import path from 'node:path';
 import { config } from './config.js';
 import { apiRouter, crearApiRouter } from './routes/index.js';
 import { errorHandler } from './middleware/error-handler.js';
+import { crearLLMRouter } from './llm/routes.js';
 
 export function createApp({ servicioLabo } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '5mb' }));
+  // N1-U.17: antes del router general, cuyo final responde 404 para rutas desconocidas.
+  app.use('/api/llm', crearLLMRouter({ servicio: servicioLabo }));
   app.use('/api', servicioLabo ? crearApiRouter({ servicio: servicioLabo }) : apiRouter);
   app.use(express.static(config.publicDir));
   // Fallback de la SPA compatible con Express 4 y 5.

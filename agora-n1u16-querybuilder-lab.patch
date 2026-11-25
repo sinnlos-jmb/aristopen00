@@ -1,0 +1,553 @@
+diff --git a/docs/AGORA_N1U16_QUERY_BUILDER.md b/docs/AGORA_N1U16_QUERY_BUILDER.md
+new file mode 100644
+index 0000000..e4fa25e
+--- /dev/null
++++ b/docs/AGORA_N1U16_QUERY_BUILDER.md
+@@ -0,0 +1,93 @@
++# Ágora · N1-U.16 · Laboratorio principal de consultas multimodales
++
++**Estado:** experimento de solo lectura; no publica FAQ, modifica etiquetas ni escribe en MariaDB.
++
++## Qué cambia
++
++- Una tarjeta propia **Consultas y recuperación** en `/#/lab` abre `/#/lab/consultas`. No hace falta entrar en `/labo/` para utilizar el índice de N1-U.15.
++- Se importa el **mismo motor** `public/labo/js/vectorial-engine.js` de N1-U.15: TF-IDF y coseno léxico, no embeddings neuronales.
++- Cuatro modos de expresar la pregunta: lenguaje natural; constructor visual con etiquetas estáticas y funcionales; patrón de grafo tipo Cypher; DSL híbrido inspirado en SQL.
++- Los cuatro compilan a un AST normalizado y verificable (`agora.query.v1`). El intérprete jamás ejecuta SQL arbitrario ni envía cadenas de consulta técnica al backend.
++- Para consultar relaciones de fichas, se usan solo aristas explícitas de `n1u7-fichas-red-piloto.json`. El motor no convierte coincidencias temáticas en relaciones filosóficas.
++- Una búsqueda muestra el desglose del ranking, texto bilingüe, coincidencias y enlaces a fichas cuando existe anclaje editorial de la misma revisión.
++
++## Fuentes y compatibilidad
++
++Requiere N1-U.15 instalado. Utiliza:
++
++1. `GET /api/labo/lectura` (unidades, subunidades y revisión activa de MariaDB).
++2. `GET /api/texto/EN_libro1_v8.txt` (texto griego y castellano).
++3. `/lab/n1u5-fichas-explicativas.json`, `/lab/n1u6-puentes-explicativos.json` y `/lab/n1u7-fichas-red-piloto.json`.
++
++Las conexiones y los filtros por ficha **solo se habilitan si coinciden todas las revisiones editoriales**. En caso de diferencia, la búsqueda textual continúa operativa sin presentar enlaces hipotéticos como evidencia válida.
++
++## Sintaxis admitida
++
++### Natural
++
++> ¿Qué relación hay entre actividad, virtud y felicidad?
++
++Se trata como consulta de recuperación textual; puede complementarse con filtros visuales. No se usa todavía una LLM para interpretarla.
++
++### Visual
++
++Se seleccionan tipo de pasaje, ficha/FAQ, categorías estáticas y funcionales, modo de ponderación y límite. Etiquetas de párrafo: **proyección desde subunidades por anclas verificadas**, no etiquetado canónico del párrafo.
++
++### Grafo tipo Cypher (subconjunto)
++
++```cypher
++MATCH (f:Ficha)-[:RELACIONADA_CON]->(g:Ficha)
++WHERE f.id = 'faq.lab.felicidad' RETURN f, g
++SEARCH 'actividad virtud'
++```
++
++Admite únicamente un patrón dirigido de fichas y el tipo `RELACIONADA_CON`, un origen por ID, un retorno de variables presentes en el patrón y una cláusula `SEARCH` opcional. Sin `SEARCH`, devuelve solo relaciones editoriales; no inventa citas rankeadas. No es Cypher completo ni depende de Neo4j.
++
++### Híbrido SQL/grafos (subconjunto)
++
++```sql
++SELECT PASAJES WHERE TEXTO CONTAINS 'felicidad actividad'
++AND TIPO = 'parrafo'
++AND FICHA = 'faq.lab.felicidad'
++AND ESTATICA = 'arete'
++AND FUNCIONAL = 'definicion'
++AND MODO = 'restrict'
++LIMIT 12
++```
++
++La sintaxis admite `SELECT PASAJES`, `WHERE TEXTO CONTAINS '…'`, cláusulas `AND` restringidas a `TIPO`, `FICHA`, `ESTATICA`, `FUNCIONAL`, `MODO`, y `LIMIT`. No acepta joins, SQL general, DDL/DML, subconsultas, condiciones dinámicas ni ejecución remota de código. `FICHA` aplica un alcance por subunidades expresamente seleccionadas en las fichas.
++
++## Riesgos interpretativos y ampliaciones
++
++- `lógos`/`logos` puede significar razón, argumento o discurso. El prototipo **advierte la ambigüedad** sin pretender inferir su sentido. Se propone un futuro identificador `sense:logos#razon`, `sense:logos#argumento`, etc. con apoyo griego y revisión editorial, sin activarlo en el ranking actual.
++- El puntaje léxico no es probabilidad de corrección filosófica ni clasifica un pasaje como prueba favorable o adversa de una lectura.
++- Este trabajo facilita N1-U.17 (chat LLM mediante API) pero no incorpora todavía llamadas a ninguna LLM ni sistema de créditos. Mantener seis generaciones por sesión como cupo futuro del piloto, controlado en backend.
++- El antiguo `/labo/` permanece instalado como referencia y para recuperar otros experimentos todavía no migrados. **No se elimina todavía** para evitar pérdida de funciones.
++
++## Instalación CMD / Git Bash
++
++Con N1-U.15 instalado y desde la raíz del repositorio:
++
++```cmd
++git apply --check agora-n1u16-querybuilder-lab.patch
++git apply agora-n1u16-querybuilder-lab.patch
++node public/scripts/check-n1u15-vectorial.mjs
++node public/scripts/check-n1u16-querybuilder.mjs
++node public/scripts/check-views.mjs
++```
++
++Abrir `/#/lab`, seleccionar **Consultas y recuperación**. La ruta es `/#/lab/consultas`.
++
++## Pruebas sugeridas
++
++1. Natural: `felicidad actividad virtud`.
++2. Visual: misma consulta, solo párrafos, ficha felicidad, etiqueta `arete` si figura en el catálogo y modo restringir; observar cambios en el ranking.
++3. Técnico Cypher: ejecutar el ejemplo y verificar que las relaciones se limitan a aristas editoriales, no a coincidencias temáticas.
++4. Híbrido: ejecutar el ejemplo, abrir la cita bilingüe y revisar la puntuación; probar `DROP TABLE` y comprobar que se rechaza.
++5. Buscar `eudaimonia logos`: debe aparecer una nota de ambigüedad de sentido y no una etiqueta de razón inventada.
++6. Alterar temporalmente una revisión editorial de prueba y comprobar que las relaciones de fichas se desactivan.
++7. En las rutas públicas de fichas, verificar que la navegación, zoom y tipografía del lector no hayan cambiado.
++
++## Verificaciones automáticas
++
++`check-n1u16-querybuilder.mjs` comprueba gramáticas, rechazo de consultas peligrosas o desconocidas, coincidencia de AST entre modalidades equivalentes, alcance por apoyos de fichas, integridad de aristas y búsqueda sobre un índice sintético. Son pruebas **sin navegador ni MariaDB**, que deben complementarse con validación visual y con la API real.
+diff --git a/public/css/lab-consulta-n1u16.css b/public/css/lab-consulta-n1u16.css
+new file mode 100644
+index 0000000..bc2f97f
+--- /dev/null
++++ b/public/css/lab-consulta-n1u16.css
+@@ -0,0 +1,41 @@
++/* Ágora · N1-U.16 · Laboratorio de consultas. Encapsulado bajo .lq-view. */
++.lq-view{min-height:100%;overflow:auto;color:var(--text,inherit)}
++.lq-inner{max-width:1420px;margin:auto;padding:clamp(14px,2vw,30px);display:grid;gap:16px}
++.lq-inner h1{font-size:clamp(1.4rem,2vw,2.2rem);margin:.3rem 0 .6rem}
++.lq-inner h2,.lq-inner h3{margin:0 0 .5rem}
++.lq-inner p{line-height:1.5}
++.lq-nav{display:flex;justify-content:space-between;align-items:center;font-size:.87rem;gap:10px}
++.lq-nav a,.lq-links a{text-decoration:underline}
++.lq-hint{font-size:.86rem;opacity:.76;line-height:1.5}
++.lq-modes{display:flex;flex-wrap:wrap;gap:8px}
++.lq-modes button,.lq-actions button,.lq-output button,.lq-link{cursor:pointer;border:1px solid var(--border,#8886);border-radius:8px;padding:8px 12px;color:inherit;background:var(--surface,#8882);font:inherit}
++.lq-modes button[aria-pressed=true],.lq-primary{background:#315d80!important;color:#fff!important;border-color:#315d80!important}
++.lq-form{border:1px solid var(--border,#8886);border-radius:12px;padding:16px;display:grid;gap:13px;background:var(--surface,#8881)}
++.lq-form label:not(.lq-tag){display:grid;gap:5px;font-size:.9rem}
++.lq-form textarea,.lq-form input:not([type=checkbox]),.lq-form select{width:100%;box-sizing:border-box;min-width:0;padding:9px;border-radius:6px;border:1px solid var(--border,#8888);background:var(--background,#fff);color:var(--text,inherit);font:inherit}
++.lq-form textarea[name=cypher],.lq-form textarea[name=hybrid],.lq-output pre{font: .91rem/1.5 ui-monospace,"DejaVu Sans Mono",Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
++.lq-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
++.lq-facets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
++.lq-facets fieldset{border:1px solid var(--border,#8885);border-radius:8px;display:flex;flex-wrap:wrap;gap:6px;min-width:0;padding:11px}
++.lq-facets legend{font-size:.9rem;font-weight:600;padding:0 4px}
++.lq-tag{border:1px solid var(--border,#8885);border-radius:6px;display:flex;gap:7px;align-items:center;padding:4px 7px;font-size:.8rem;cursor:pointer}
++.lq-tag:has(input:checked){background:#315d8020;border-color:#315d80}
++.lq-tag small{opacity:.65}.lq-tag input{accent-color:#315d80}
++.lq-actions,.lq-links{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
++.lq-link{justify-self:start;background:transparent;border:0;text-decoration:underline;padding:3px}
++.lq-output{display:grid;gap:12px;margin-bottom:20px}
++.lq-summary{display:flex;justify-content:space-between;align-items:center;gap:12px}
++.lq-output details{border:1px solid var(--border,#8885);padding:10px;border-radius:8px;min-width:0}
++.lq-output summary{cursor:pointer}
++.lq-output pre{max-height:300px;overflow:auto}
++.lq-hit{padding:14px;border:1px solid var(--border,#8886);border-radius:9px;overflow-wrap:anywhere}
++.lq-hit header{display:flex;align-items:start;gap:9px}.lq-hit header>div{flex:1;min-width:0}.lq-hit header small{display:block;opacity:.7;margin-top:3px}.lq-hit header b{font:600 .95rem ui-monospace,monospace}
++.lq-hit>p{margin:8px 0 12px;font-size:.92rem}
++.lq-rank{flex:0 0 26px;display:grid;place-items:center;height:26px;border-radius:50%;background:#315d8020}
++.lq-bilingual{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:14px}
++.lq-bilingual h4{margin:10px 0}.lq-bilingual p{font-family:"DejaVu Sans Mono","Noto Sans Mono",Consolas,monospace;font-size:var(--agora-reader-font-size,17px);line-height:1.65;white-space:pre-line;text-align:justify;overflow-wrap:anywhere}
++.lq-edges{display:grid;gap:9px}.lq-edges article{border:1px solid var(--border,#8886);padding:12px;border-radius:8px}.lq-edges p{margin:.4rem 0}
++.lq-alert{border-left:3px solid #ac8140;padding:10px 12px;background:#ac814015}
++.lq-intro{border:1px dashed var(--border,#8888);padding:22px;border-radius:9px}
++@media(max-width:900px){.lq-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
++@media(max-width:670px){.lq-filters,.lq-facets,.lq-bilingual{grid-template-columns:1fr}.lq-summary{align-items:start;flex-direction:column}}
+diff --git a/public/js/lab/queryMultimodal.js b/public/js/lab/queryMultimodal.js
+new file mode 100644
+index 0000000..3cb1135
+--- /dev/null
++++ b/public/js/lab/queryMultimodal.js
+@@ -0,0 +1,122 @@
++// Ágora N1-U.16: AST compartido y gramáticas de consulta de SOLO LECTURA.
++// Ni Cypher ni SQL se ejecutan en MariaDB: se interpretan contra índices locales.
++const unique = items => [...new Set((items || []).filter(Boolean))];
++export const TYPES = Object.freeze(['ambos', 'subunidad', 'parrafo']);
++export const MODES = Object.freeze(['natural', 'visual', 'cypher', 'hibrido']);
++const MAX_LEN = 1500;
++const ALLOWED_ID = /^[a-zA-Z0-9_.:-]{1,100}$/;
++const BAD = message => { throw new Error(`Consulta inválida: ${message}`); };
++const quoted = (value, what) => {
++  if (!value || value.length > 400) BAD(`${what}: texto vacío o demasiado largo.`);
++  return value;
++};
++function normalize(input) {
++  const type = input.type || 'ambos';
++  if (!TYPES.includes(type)) BAD(`tipo desconocido: ${type}`);
++  const filterMode = input.filterMode || 'boost';
++  if (!['boost','restrict'].includes(filterMode)) BAD('modo de etiquetas desconocido.');
++  const limit = Number(input.limit || 12);
++  if (!Number.isInteger(limit) || limit < 1 || limit > 50) BAD('límite fuera de 1–50.');
++  const tags = key => unique(input[key]).map(id=>{
++    if(!ALLOWED_ID.test(id)) BAD(`etiqueta ${key} inválida.`);
++    return id;
++  });
++  const sheetId = input.sheetId || '';
++  if(sheetId && !ALLOWED_ID.test(sheetId)) BAD('identificador de ficha inválido.');
++  return {
++    schema:'agora.query.v1', query:String(input.query || '').trim(), type,
++    sheetId, staticTags:tags('staticTags'), functionalTags:tags('functionalTags'),
++    filterMode, limit,
++    graph: input.graph || null,
++  };
++}
++export function compileNatural(query, base = {}) {
++  return normalize({ ...base, query:quoted(String(query).trim(),'pregunta'), graph:null });
++}
++export function compileVisual(options) { return normalize({...options,graph:null}); }
++
++// Patrón deliberadamente pequeño. Ejemplo:
++// MATCH (f:Ficha)-[:RELACIONADA_CON]->(g:Ficha)
++// WHERE f.id = 'faq.lab.felicidad' RETURN f, g
++// SEARCH 'actividad racional'
++export function compileCypher(src) {
++  const text=String(src).trim();
++  if(text.length>MAX_LEN) BAD('consulta técnica demasiado larga.');
++  const match=/^MATCH\s*\(([a-z]\w*):Ficha\)\s*-\s*\[:RELACIONADA_CON\]\s*->\s*\(([a-z]\w*):Ficha\)\s+WHERE\s+([a-z]\w*)\.id\s*=\s*'([a-zA-Z0-9_.:-]+)'\s+RETURN\s+([a-z]\w*)(?:\s*,\s*([a-z]\w*))?(?:\s+SEARCH\s+'([^']{1,400})')?\s*;?$/is.exec(text);
++  if (!match) BAD('se admite MATCH (f:Ficha)-[:RELACIONADA_CON]->(g:Ficha) WHERE f.id = \'…\' RETURN f, g [SEARCH \'…\'].');
++  const [,from,to,whereVar,source,ret1,ret2,search] = match;
++  if(from===to || whereVar!==from || ![from,to].includes(ret1) || (ret2 && (![from,to].includes(ret2) || ret1===ret2))) BAD('variables de patrón incoherentes.');
++  if(!ALLOWED_ID.test(source)) BAD('identificador de ficha inválido.');
++  return normalize({ query:search||'', graph:{relation:'RELACIONADA_CON',fromId:source,returned:unique([ret1,ret2]).map(v=>v===from?'origen':'destino')}, limit:12 });
++}
++
++// Híbrido declarativo (NO SQL arbitrario):
++// SELECT PASAJES WHERE TEXTO CONTAINS 'felicidad actividad'
++// AND TIPO = 'parrafo' AND FICHA = 'faq.lab.felicidad' AND ESTATICA = 'arete' LIMIT 12
++export function compileHybrid(src) {
++  let text=String(src).trim();
++  if (text.length>MAX_LEN) BAD('consulta técnica demasiado larga.');
++  const head=/^SELECT\s+PASAJES\s+WHERE\s+TEXTO\s+CONTAINS\s+'([^']{1,400})'/i.exec(text);
++  if(!head) BAD("se exige SELECT PASAJES WHERE TEXTO CONTAINS '…'.");
++  const input={query:quoted(head[1],'TEXTO'),staticTags:[],functionalTags:[],filterMode:'restrict'};
++  text=text.slice(head[0].length).trim();
++  const used=new Set();
++  while(/^AND\b/i.test(text)) {
++    text=text.replace(/^AND\s+/i,'');
++    const clause=/^(TIPO|FICHA|ESTATICA|FUNCIONAL|MODO)\s*=\s*'([^']{1,120})'/i.exec(text);
++    if(!clause) BAD('condición AND desconocida o mal escrita.');
++    const field=clause[1].toUpperCase();const val=clause[2];
++    if(field!=='ESTATICA'&&field!=='FUNCIONAL'&&used.has(field)) BAD(`campo ${field} repetido.`);
++    used.add(field);
++    if(field==='TIPO')input.type=val;
++    if(field==='FICHA')input.sheetId=val;
++    if(field==='ESTATICA')input.staticTags.push(val);
++    if(field==='FUNCIONAL')input.functionalTags.push(val);
++    if(field==='MODO')input.filterMode=val;
++    text=text.slice(clause[0].length).trim();
++  }
++  const lim=/^LIMIT\s+(\d{1,2})\s*;?$/i.exec(text);
++  if(lim){input.limit=Number(lim[1]);text='';}
++  if(text && text!==';') BAD('sólo se permiten AND campo = \'valor\' y LIMIT n.');
++  return normalize(input);
++}
++
++export function parseQuery(mode,source,visual={}) {
++  if (mode==='natural')return compileNatural(source,visual);
++  if (mode==='visual')return compileVisual(visual);
++  if (mode==='cypher')return compileCypher(source);
++  if (mode==='hibrido')return compileHybrid(source);
++  BAD('modalidad desconocida.');
++}
++
++// Las aristas registradas en el JSON son la única base de los recorridos.
++// La similitud textual NUNCA crea una arista.
++export function graphMatches(ast, graphLinks, sheetMap) {
++  if(!ast.graph) return { edges:[], sheetIds: ast.sheetId ? [ast.sheetId] : [] };
++  const edges=(graphLinks||[]).filter(e=>e.desde===ast.graph.fromId && sheetMap.has(e.desde) && sheetMap.has(e.hacia));
++  const ids = new Set();
++  for (const e of edges) {
++    if(ast.graph.returned.includes('origen')) ids.add(e.desde);
++    if(ast.graph.returned.includes('destino')) ids.add(e.hacia);
++  }
++  return {edges,sheetIds:[...ids]};
++}
++
++// Con una ficha (o patrón) restringimos exclusivamente a apoyos seleccionados por editor.
++export function scopeFor(ast, sheets, matches) {
++  const ids=ast.graph ? matches.sheetIds : ast.sheetId ? [ast.sheetId] : null;
++  if(ids===null)return null;
++  const scope=new Set();
++  for (const id of ids) {
++    if(!sheets.has(id)) BAD(`ficha inexistente o de otra revisión: ${id}`);
++    for(const sub of sheets.get(id).supports)scope.add(sub);
++  }
++  return [...scope];
++}
++
++export function queryWarning(query) {
++  const normalized=String(query).normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
++  return /\blogos\b/.test(normalized)
++    ? 'Atención: «lógos» presenta sentidos distintos (razón, argumento, discurso, etc.). Este índice todavía no desambigua sentidos: revisá cada cita en contexto.'
++    : '';
++}
+diff --git a/public/js/views/lab.js b/public/js/views/lab.js
+index 5f9efa8..cabf5ae 100644
+--- a/public/js/views/lab.js
++++ b/public/js/views/lab.js
+@@ -1,3 +1,4 @@
+ import { renderCatalogHeader, renderCatalogCard } from './shared.js';
++import { createLabConsultaView } from './labConsultaView.js';
+ import { simulate } from '../lab/simulate.js';
+ import { buildAllTrajectories, renderTrajectorySVG } from '../lab/trajectories.js';
+@@ -46,4 +47,9 @@ export const EXPERIMENTS = Object.freeze({
+     icon: '✍️', 
+     featured: false 
++  },
++  consultas: {
++    id: 'consultas', tab: 1, title: 'Consultas y recuperación',
++    desc: 'Explorá citas y fichas con preguntas, filtros visuales y patrones seguros de grafos estilo Cypher.',
++    tag: 'N1-U.16 · Exploratorio', icon: '🔎', featured: false
+   }
+ });
+@@ -122,4 +128,6 @@ function buildComposedPreview(S, adj, traj) {
+ 
+ export function createLabView(App, opts = {}) {
++  // N1-U.16 · Vista propia del Lab principal; reutiliza el índice N1-U.15.
++  if (opts.exp === 'consultas') return createLabConsultaView(App);
+   const S = App.S;
+   
+diff --git a/public/js/views/labConsultaView.js b/public/js/views/labConsultaView.js
+new file mode 100644
+index 0000000..86942d2
+--- /dev/null
++++ b/public/js/views/labConsultaView.js
+@@ -0,0 +1,180 @@
++// Ágora N1-U.16 · Recuperación y Query Builder EN el Lab principal.
++// Reutiliza el índice local N1-U.15; sin duplicación, SQL ni consultas remotas arbitrarias.
++import { esc } from '../ui.js';
++import { parseBook } from '../reader/text.js';
++import { buildEvidenceDocuments, buildSheetLinks, makeIndex, searchIndex, categoryChoices } from '../../labo/js/vectorial-engine.js';
++import { parseQuery, graphMatches, scopeFor, queryWarning } from '../lab/queryMultimodal.js';
++
++const arr = x => Array.isArray(x) ? x : [];
++const LIMIT = 12;
++const DEFAULT_CYPHER = "MATCH (f:Ficha)-[:RELACIONADA_CON]->(g:Ficha)\nWHERE f.id = 'faq.lab.felicidad' RETURN f, g\nSEARCH 'actividad virtud'";
++const DEFAULT_HYBRID = "SELECT PASAJES WHERE TEXTO CONTAINS 'felicidad actividad'\nAND TIPO = 'parrafo' AND FICHA = 'faq.lab.felicidad' LIMIT 12";
++const modes = [
++  ['natural','Lenguaje natural'], ['visual','Constructor visual'],
++  ['cypher','Grafo · estilo Cypher'], ['hibrido','Híbrido · SQL/grafos'],
++];
++const options = (choices, current) => choices.map(([value,label]) => `<option value="${esc(value)}" ${value===current?'selected':''}>${esc(label)}</option>`).join('');
++
++async function fetchJSON(url, signal) {
++  const response = await fetch(url,{cache:'no-store',signal});
++  if(!response.ok) throw Error(`${url}: HTTP ${response.status}`);
++  return response.json();
++}
++async function loadData(signal) {
++  const [lectura,raw,f5,f6,f7] = await Promise.all([
++    fetchJSON('/api/labo/lectura',signal),
++    fetch('/api/texto/EN_libro1_v8.txt',{cache:'no-store',signal}).then(r=>{if(!r.ok)throw Error('Texto bilingüe no disponible.');return r.text();}),
++    fetchJSON('/lab/n1u5-fichas-explicativas.json',signal).catch(()=>null),
++    fetchJSON('/lab/n1u6-puentes-explicativos.json',signal).catch(()=>null),
++    fetchJSON('/lab/n1u7-fichas-red-piloto.json',signal).catch(()=>null),
++  ]);
++  const corpus=buildEvidenceDocuments(lectura,parseBook(raw));
++  const index=makeIndex(corpus.documents);
++  const rev=[f5?.fuente?.revision,f6?.fuente?.revision,f7?.fuente?.revision];
++  const ready=rev.every(r=>r && r===lectura.revision);
++  const bySub=ready?buildSheetLinks([f5,f7],f6):new Map();
++  const sheets=new Map();
++  for(const [sub,records] of bySub) for(const sheet of records) {
++    if(!sheets.has(sheet.id))sheets.set(sheet.id,{...sheet,supports:[]});
++    sheets.get(sheet.id).supports.push(sub);
++  }
++  const relations=ready?arr(f7?.red?.relaciones):[];
++  return {
++    index, docs:corpus.documents,revision:lectura.revision,sheets,relations,bySub,
++    staticChoices:categoryChoices(index.documents,'static'),
++    functionalChoices:categoryChoices(index.documents,'functional'),
++    editorialReady:ready,
++  };
++}
++
++function resultMarkup(hit,data,i) {
++  const linked=[...new Map(hit.relatedSubunits.flatMap(s=>data.bySub.get(s)||[]).map(f=>[f.id,f])).values()];
++  return `<article class="lq-hit">
++    <header><span class="lq-rank">${i+1}</span><div><strong>${esc(hit.title)}</strong><small>${esc(hit.reference)} · ${esc(hit.kind)} · ${esc(hit.unit)}</small></div><b title="Puntaje relativo, no probabilidad de verdad">${hit.score.toFixed(3)}</b></header>
++    <p>${esc(hit.es.slice(0,260))}${hit.es.length>260?'…':''}</p>
++    <details><summary>Texto bilingüe y puntuación</summary>
++      <div class="lq-bilingual"><div><h4>Castellano</h4><p>${esc(hit.es)}</p></div><div><h4>Griego</h4><p lang="grc">${esc(hit.gr)}</p></div></div>
++      <p class="lq-hint">TF-IDF/coseno ${hit.cosine.toFixed(3)} · frase ${hit.exact.toFixed(3)} · etiquetas ${hit.tagBonus.toFixed(3)}</p>
++      <p class="lq-hint">Origen de etiquetas: ${esc(hit.tagOrigin)}. Términos coincidentes: ${esc(hit.matchedTerms.join(', ')||'ninguno')}.</p>
++    </details>
++    <div class="lq-links">${linked.map(f=>`<a href="${esc(f.url)}">Ficha: ${esc(f.title)}</a>`).join('')}
++      <a href="#/reading">Abrir biblioteca bilingüe</a></div>
++  </article>`;
++}
++
++export function createLabConsultaView(_App) {
++  const el=document.createElement('div');
++  el.className='scrollable has-scroll lq-view';
++  // La hoja de estilos se importa solo cuando se abre este experimento.
++  if(!document.querySelector('link[data-lq-styles]')){
++    const stylesheet=document.createElement('link');stylesheet.rel='stylesheet';
++    stylesheet.href='/css/lab-consulta-n1u16.css';stylesheet.dataset.lqStyles='1';
++    document.head.appendChild(stylesheet);
++  }
++  let destroyed=false;
++  const abort=new AbortController();
++  const state={
++    mode:'natural', natural:'felicidad actividad virtud', visualQuery:'felicidad actividad',
++    visualType:'ambos', visualSheet:'',visualFilter:'boost',visualLimit:LIMIT,
++    staticTags:[],functionalTags:[],cypher:DEFAULT_CYPHER,hybrid:DEFAULT_HYBRID,
++    showAllTags:false, result:null, error:'',
++  };
++  let data=null;
++  el.innerHTML='<div class="lq-loading">Preparando índice bilingüe y relaciones de fichas…</div>';
++
++  function rememberFields(){
++    const f=el.querySelector('#lq-form');if(!f)return;
++    if(f.elements.natural)state.natural=f.elements.natural.value;
++    if(f.elements.visualQuery)state.visualQuery=f.elements.visualQuery.value;
++    if(f.elements.type)state.visualType=f.elements.type.value;
++    if(f.elements.sheet)state.visualSheet=f.elements.sheet.value;
++    if(f.elements.filter)state.visualFilter=f.elements.filter.value;
++    if(f.elements.limit)state.visualLimit=Number(f.elements.limit.value);
++    if(f.elements.cypher)state.cypher=f.elements.cypher.value;
++    if(f.elements.hybrid)state.hybrid=f.elements.hybrid.value;
++  }
++  function visualAST(){return {
++    query:state.visualQuery,type:state.visualType,sheetId:state.visualSheet,
++    staticTags:state.staticTags,functionalTags:state.functionalTags,
++    filterMode:state.visualFilter,limit:state.visualLimit,
++  };}
++  function execute(){
++    state.result=null;state.error='';
++    try{
++      const source=state.mode==='natural'?state.natural:state.mode==='cypher'?state.cypher:state.mode==='hibrido'?state.hybrid:'';
++      const ast=parseQuery(state.mode,source,visualAST());
++      const graph=graphMatches(ast,data.relations,data.sheets);
++      const scoped=scopeFor(ast,data.sheets,graph);
++      const hits=searchIndex(data.index,{...ast,supportSubIds:scoped});
++      state.result={ast,graph,hits,warning:queryWarning(ast.query)};
++    }catch(err){state.error=err.message;}
++  }
++  function facets(name,choices,selected){
++    const visible=state.showAllTags?choices:choices.slice(0,12);
++    return `<fieldset><legend>${name==='static'?'Categorías estáticas':'Categorías funcionales'}</legend>
++      ${visible.map(({id,count})=>`<label class="lq-tag"><input data-tag="${name}" type="checkbox" value="${esc(id)}" ${selected.includes(id)?'checked':''}>${esc(id)} <small>${count}</small></label>`).join('')||'<p>Sin categorías registradas.</p>'}</fieldset>`;
++  }
++  function renderResults(){
++    if(state.error)return `<div class="lq-alert" role="alert">${esc(state.error)}</div>`;
++    if(!state.result)return '<section class="lq-intro">Elegí un modo, construí una consulta y presioná «Ejecutar». Los cuatro modos generan un modelo interno auditable.</section>';
++    const {ast,graph,hits,warning}=state.result;
++    return `<section class="lq-output">
++      <div class="lq-summary"><h2>Resultados</h2><span>${hits.length} citas · ${graph.edges.length} relaciones editoriales</span></div>
++      ${warning?`<p class="lq-alert">${esc(warning)}</p>`:''}
++      <details><summary>Consulta normalizada (AST de solo lectura)</summary><pre>${esc(JSON.stringify(ast,null,2))}</pre></details>
++      ${graph.edges.length?`<section class="lq-edges"><h3>Conexiones de fichas</h3>${graph.edges.map(e=>`<article><strong>${esc(e.nombre)}</strong><p>${esc(e.explicacion)}</p><small>${esc(data.sheets.get(e.desde)?.title||e.desde)} → ${esc(data.sheets.get(e.hacia)?.title||e.hacia)}</small><p><a href="${esc(data.sheets.get(e.hacia)?.url||'#/fichas')}">Abrir ficha vinculada</a></p></article>`).join('')}</section>`:''}
++      ${ast.graph && !graph.edges.length?'<p class="lq-hint">No existen aristas del tipo indicado para esta ficha en la revisión editorial activa.</p>':''}
++      <h3>Citas candidatas</h3>
++      ${!ast.query && !ast.staticTags.length&&!ast.functionalTags.length?'<p class="lq-hint">Este patrón de grafo no incluye SEARCH; se muestran conexiones editoriales sin puntuar pasajes. Añadí SEARCH para recuperar citas.</p>':hits.length?hits.map((h,i)=>resultMarkup(h,data,i)).join(''):'<p class="lq-hint">Sin coincidencias con los filtros o el alcance. Esto no demuestra ausencia del concepto.</p>'}
++      <button type="button" class="lq-button" data-export>Exportar consulta y resultados JSON</button>
++      <p class="lq-hint">Las citas se ordenan por similitud léxica TF-IDF y etiquetas, no por verdad filosófica. Las aristas solo proceden del catálogo editorial.</p>
++    </section>`;
++  }
++  function render(){
++    if(destroyed || !data)return;
++    el.innerHTML=`<div class="lq-inner">
++      <nav class="lq-nav"><a href="#/lab">← Laboratorio</a> <span>Ágora · N1-U.16</span></nav>
++      <header><h1>Consultas y recuperación</h1><p>Compará preguntas, filtros visuales y patrones de grafos sobre el mismo Libro I. El resultado es exploratorio y no crea relaciones nuevas.</p></header>
++      <p class="lq-hint">${data.docs.length} documentos · revisión ${esc(data.revision.slice(0,14))} · ${data.editorialReady?'Fichas compatibles con el corpus':'Las fichas y sus aristas están desactivadas: falta coincidencia de revisión'}.</p>
++      <div class="lq-modes" role="group" aria-label="Lenguaje de consulta">${modes.map(([id,name])=>`<button type="button" data-mode="${id}" aria-pressed="${id===state.mode}" class="${id===state.mode?'active':''}">${name}</button>`).join('')}</div>
++      <form id="lq-form" class="lq-form">
++      ${state.mode==='natural'?`<label>Pregunta en lenguaje natural<textarea name="natural" rows="3" placeholder="¿Qué relación hay entre felicidad y virtud?">${esc(state.natural)}</textarea></label><p class="lq-hint">Puede combinarse con filtros visuales sin modificar la pregunta.</p>`:''}
++      ${state.mode==='visual'?`<label>Conceptos o texto que querés encontrar<input name="visualQuery" value="${esc(state.visualQuery)}" placeholder="felicidad actividad"></label>`:''}
++      ${state.mode==='cypher'?`<label>Patrón de grafo (subconjunto seguro de Cypher)<textarea name="cypher" rows="5" spellcheck="false">${esc(state.cypher)}</textarea></label><p class="lq-hint">Soporta relaciones <code>RELACIONADA_CON</code> entre fichas y <code>SEARCH 'texto'</code> opcional. No ejecuta Cypher ni consulta grafos externos.</p>`:''}
++      ${state.mode==='hibrido'?`<label>Consulta híbrida (sintaxis restringida inspirada en SQL)<textarea name="hybrid" rows="5" spellcheck="false">${esc(state.hybrid)}</textarea></label><p class="lq-hint">Campos permitidos: TIPO, FICHA, ESTATICA, FUNCIONAL, MODO y LIMIT. No acepta sentencias SQL arbitrarias.</p>`:''}
++      ${(state.mode==='visual'||state.mode==='natural')?`<div class="lq-filters">
++        <label>Tipo<select name="type">${options([['ambos','Subunidades y párrafos'],['subunidad','Subunidades'],['parrafo','Párrafos']],state.visualType)}</select></label>
++        <label>Ficha / FAQ<select name="sheet"><option value="">Todas las fichas y pasajes</option>${[...data.sheets.values()].map(f=>`<option value="${esc(f.id)}" ${f.id===state.visualSheet?'selected':''}>${esc(f.title)}</option>`).join('')}</select></label>
++        <label>Etiquetas<select name="filter">${options([['boost','Priorizar'],['restrict','Restringir']],state.visualFilter)}</select></label>
++        <label>Máximo<select name="limit">${options([['6','6'],['12','12'],['20','20'],['30','30']].map(([n,t])=>[n,t]),String(state.visualLimit))}</select></label>
++      </div><div class="lq-facets">${facets('static',data.staticChoices,state.staticTags)}${facets('functional',data.functionalChoices,state.functionalTags)}</div><button type="button" class="lq-link" data-more>${state.showAllTags?'Mostrar menos categorías':'Mostrar todas las categorías'}</button>`:''}
++      <div class="lq-actions"><button class="lq-primary" type="submit">Ejecutar consulta</button> <button type="button" data-clear>Limpiar resultados</button></div>
++      </form>
++      ${renderResults()}
++      <footer class="lq-hint">El término <em>lógos</em> puede designar razón, argumento o discurso; el índice todavía no diferencia esos sentidos. Esta observación se conserva para el contrato de tagueo del Libro II.</footer>
++    </div>`;
++    el.querySelectorAll('[data-mode]').forEach(btn=>btn.addEventListener('click',()=>{
++      rememberFields();state.mode=btn.dataset.mode;state.result=null;state.error='';render();
++    }));
++    el.querySelector('#lq-form').addEventListener('submit',e=>{e.preventDefault();rememberFields();execute();render();});
++    el.querySelectorAll('[data-tag]').forEach(input=>input.addEventListener('change',()=>{
++      rememberFields();const key=input.dataset.tag==='static'?'staticTags':'functionalTags';
++      state[key]=input.checked?[...new Set([...state[key],input.value])]:state[key].filter(x=>x!==input.value);
++    }));
++    el.querySelector('[data-more]')?.addEventListener('click',()=>{rememberFields();state.showAllTags=!state.showAllTags;render();});
++    el.querySelector('[data-clear]')?.addEventListener('click',()=>{state.result=null;state.error='';render();});
++    el.querySelector('[data-export]')?.addEventListener('click',()=>{
++      const payload={schema:'agora.query-result.v1',revision:data.revision,
++        ast:state.result.ast,relations:state.result.graph.edges,
++        citations:state.result.hits.map(h=>({id:h.id,reference:h.reference,score:h.score,cosine:h.cosine,tagBonus:h.tagBonus,matchedTerms:h.matchedTerms})),
++        note:'Coincidencia léxica y relaciones editoriales; no prueba apoyo ni refutación'};
++      const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
++      const a=document.createElement('a');a.href=url;a.download='agora-n1u16-consulta.json';a.click();
++      setTimeout(()=>URL.revokeObjectURL(url),1000);
++    });
++  }
++  loadData(abort.signal).then(d=>{if(destroyed)return;data=d;render();}).catch(error=>{
++    if(destroyed)return;el.innerHTML=`<div class="lq-inner" role="alert"><a href="#/lab">← Laboratorio</a><h2>No se pudo preparar el experimento</h2><p>${esc(error.message)}</p></div>`;
++  });
++  return {el,destroy(){destroyed=true;abort.abort();}};
++}
+diff --git a/public/scripts/check-n1u16-querybuilder.mjs b/public/scripts/check-n1u16-querybuilder.mjs
+new file mode 100644
+index 0000000..20545a9
+--- /dev/null
++++ b/public/scripts/check-n1u16-querybuilder.mjs
+@@ -0,0 +1,61 @@
++// Ágora · N1-U.16. Pruebas sin navegador, API ni MariaDB.
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++import { dirname,resolve,join } from 'node:path';
++import { compileNatural,compileVisual,compileCypher,compileHybrid,graphMatches,scopeFor,queryWarning,parseQuery } from '../js/lab/queryMultimodal.js';
++import { makeIndex, searchIndex } from '../labo/js/vectorial-engine.js';
++const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
++const src=name=>readFileSync(join(root,name),'utf8');
++const source='felicidad actividad virtud';
++const visual={query:source,type:'parrafo',sheetId:'faq.lab.felicidad',limit:12,staticTags:['arete'],functionalTags:['definicion'],filterMode:'restrict'};
++const a=compileNatural(source,visual),b=compileVisual(visual);
++assert.deepEqual(a,b,'natural y visual deben compilar al mismo AST con idénticos parámetros');
++assert.equal(parseQuery('visual','',visual).query,source);
++const hybrid=compileHybrid("SELECT PASAJES WHERE TEXTO CONTAINS 'felicidad actividad virtud' AND TIPO = 'parrafo' AND FICHA = 'faq.lab.felicidad' AND ESTATICA = 'arete' AND FUNCIONAL = 'definicion' AND MODO = 'restrict' LIMIT 12");
++assert.deepEqual(hybrid,b,'el lenguaje híbrido debe reproducir el mismo plan textual');
++const cypher=compileCypher("MATCH (f:Ficha)-[:RELACIONADA_CON]->(g:Ficha) WHERE f.id = 'faq.lab.felicidad' RETURN f, g SEARCH 'actividad virtud'");
++assert.equal(cypher.graph.fromId,'faq.lab.felicidad');
++assert.equal(cypher.query,'actividad virtud');
++assert.deepEqual(cypher.graph.returned,['origen','destino']);
++for(const q of [
++  'MATCH (f:Ficha) DETACH DELETE f',
++  "MATCH (f:Ficha)-[:RELACIONADA_CON]->(g:Ficha) WHERE f.id = 'a' RETURN h",
++  "MATCH (f:Ficha)-[:INVENTADA]->(g:Ficha) WHERE f.id = 'a' RETURN g",
++]) assert.throws(()=>compileCypher(q),/Consulta inválida/);
++for (const q of [
++  'DELETE FROM corpus',
++  "SELECT PASAJES WHERE TEXTO CONTAINS 'felicidad'; DROP TABLE faqs",
++  "SELECT PASAJES WHERE TEXTO CONTAINS 'felicidad' AND foo = 'bar'",
++  "SELECT PASAJES WHERE TEXTO CONTAINS 'felicidad' LIMIT 99",
++])assert.throws(()=>compileHybrid(q),/Consulta inválida/);
++const sheets=new Map([
++  ['faq.lab.felicidad',{supports:['1098a16-20','1098a20-22']}],
++  ['faq.lab.ergon',{supports:['1097b24-30']}],
++  ['faq.lab.alma',{supports:['1102a5-10']}],
++]);
++const edges=[{id:'r1',desde:'faq.lab.felicidad',hacia:'faq.lab.ergon',nombre:'requiere determinación',explicacion:'Apoyo editorial'},
++  {id:'r2',desde:'faq.lab.ergon',hacia:'faq.lab.alma',nombre:'motiva examinar el alma',explicacion:'Apoyo editorial'}];
++const gm=graphMatches(cypher,edges,sheets);
++assert.deepEqual(gm.sheetIds,['faq.lab.felicidad','faq.lab.ergon']);
++assert.equal(gm.edges.length,1);
++assert.deepEqual(scopeFor(cypher,sheets,gm),['1098a16-20','1098a20-22','1097b24-30']);
++assert.deepEqual(scopeFor(b,sheets,{sheetIds:[]}),['1098a16-20','1098a20-22']);
++assert.equal(scopeFor(compileNatural('felicidad'),sheets,{sheetIds:[]}),null);
++assert.throws(()=>scopeFor({...b,sheetId:'inexistente'},sheets,{sheetIds:[]}),/revisión/);
++assert.match(queryWarning('Eudaimonía y lógos'),/sentidos distintos/);
++assert.equal(queryWarning('felicidad y actividad'),'');
++const docs=[
++  {id:'p1',kind:'parrafo',title:'Actividad racional',es:'La felicidad consiste en actividad del alma según virtud.',gr:'',intro:'',staticTags:['arete'],functionalTags:['definicion'],relatedSubunits:['1098a16-20']},
++  {id:'p2',kind:'parrafo',title:'Placer',es:'El placer se busca.',gr:'',intro:'',staticTags:['hedone'],functionalTags:[],relatedSubunits:['1098a16-20']},
++  {id:'p3',kind:'parrafo',title:'Érgon',es:'La actividad propia es un tipo de vida racional.',gr:'',intro:'',staticTags:['ergon'],functionalTags:[],relatedSubunits:['1097b24-30']},
++];
++const index=makeIndex(docs);
++const hits=searchIndex(index,{...b,supportSubIds:scopeFor(b,sheets,{sheetIds:[]})});
++assert.equal(hits.length,1);assert.equal(hits[0].id,'p1');
++const script=src('js/views/lab.js'),view=src('js/views/labConsultaView.js');
++assert(script.includes("id: 'consultas'") && script.includes("opts.exp === 'consultas'"));
++assert(view.includes('/api/labo/lectura') && view.includes("../../labo/js/vectorial-engine.js"));
++assert(view.includes('revisión') && view.includes('data.sheets'));
++assert(!view.includes('new Function(')&&!view.includes('eval('));
++console.log('N1-U.16 OK: 4 modos, AST común, solo lectura, grafos editoriales, alcance por ficha, ranking y tarjeta Lab.');
