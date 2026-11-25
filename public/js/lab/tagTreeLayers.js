@@ -1,3 +1,4 @@
+import {branchVisibility} from './tagTreeNavigation.js';
 // N1-U.19.3.2: pure view projection, never writes the catalogue.
 export const TREE_LAYERS = Object.freeze([
  ['roots','Raíces y categorías'], ['main','Conceptos principales'],
@@ -13,15 +14,16 @@ const uid = (...parts) => parts.map(x=>encodeURIComponent(str(x))).join(':');
 export function maxTreeDepth(graph, tree) {
  return Math.max(0, ...graph.nodes.filter(n=>n.tree===tree).map(n=>n.depth));
 }
-export function layeredTree(graph, tree, {layers=ESSENTIAL, depth=1, root='', faqs=[]}={}) {
+export function layeredTree(graph, tree, {layers=ESSENTIAL, depth=1, root='', faqs=[], branches=new Map(), span=2}={}) {
  const on = new Set(layers), index = new Map(graph.nodes.map(n=>[n.uid,n]));
  const max = maxTreeDepth(graph,tree), level=Math.max(0,Math.min(max, Number.isFinite(Number(depth))?Math.floor(Number(depth)):1));
  const branch = n => { if(!root)return true; const seen=new Set(); for(let x=n;x&&!seen.has(x.uid);x=index.get(x.parent)){if(x.uid===root)return true;seen.add(x.uid);}return false; };
  const nodes=new Map(), edges=new Map();
+ const {added,hidden}=branchVisibility(graph,tree,branches,span);
  const add=n=>{if(!nodes.has(n.uid))nodes.set(n.uid,n);};
  const edge=e=>{if(nodes.has(e.desde)&&nodes.has(e.hacia)&&!edges.has(e.uid))edges.set(e.uid,e);};
  for(const n of graph.nodes){
-   if(n.tree!==tree||n.depth<0||n.depth>level||!branch(n))continue;
+   if(n.tree!==tree||n.depth<0||(n.depth>level&&!added.has(n.uid))||hidden.has(n.uid)||!branch(n))continue;
    if(on.has(n.depth===0?'roots':n.depth===1?'main':'deep'))add(n);
  }
  // Category nodes are registered metadata, not a fabricated hierarchy.
