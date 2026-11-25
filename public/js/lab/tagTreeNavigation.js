@@ -12,17 +12,20 @@ export function branchDescendants(index,id,depth=2){
 }
 export function toggleTreeBranch(index,prefs,id,visible){
  if(!index.children.get(id)?.length)return false;
- const descendants=branchDescendants(index,id,Infinity),near=branchDescendants(index,id,prefs.span);
- const open=near.length>0&&near.every(n=>visible.has(n));
+ const descendants=branchDescendants(index,id,Infinity);
+ // The first gesture collapses a partly or fully visible branch. Afterwards
+ // its explicit state wins, even if filters hide some of the descendants.
+ const mode=prefs.branches.get(id);
+ const open=mode==='open'||(mode!=='closed'&&descendants.some(n=>visible.has(n)));
  for(const child of descendants)prefs.branches.delete(child);
  prefs.branches.set(id,open?'closed':'open');
- if(!open&&near.some(n=>index.nodes.get(n).depth>=2))prefs.layers.add('deep');
- if(!open&&near.some(n=>index.nodes.get(n).depth===1))prefs.layers.add('main');
+ if(!open&&descendants.some(n=>index.nodes.get(n).depth>=2))prefs.layers.add('deep');
+ if(!open&&descendants.some(n=>index.nodes.get(n).depth===1))prefs.layers.add('main');
  return true;
 }
-export function branchVisibility(graph,tree,branches,span=2){
+export function branchVisibility(graph,tree,branches){
  const index=hierarchyIndex(graph,tree),added=new Set(),hidden=new Set();
- for(const [id,mode] of branches||[]){if(!index.nodes.has(id))continue;for(const n of branchDescendants(index,id,mode==='closed'?Infinity:span))(mode==='closed'?hidden:added).add(n);}
+ for(const [id,mode] of branches||[]){if(!index.nodes.has(id))continue;for(const n of branchDescendants(index,id,Infinity))(mode==='closed'?hidden:added).add(n);}
  return {added,hidden};
 }
 export const newTreeLayout=()=>({positions:new Map(),camera:null});
@@ -40,7 +43,7 @@ export function positionTreeElements(elements,layout){
  });
 }
 export function exportTreeLayouts(revision,layouts,prefs){
- return {schema:'agora.tag-tree-layouts.v1',revision,trees:Object.fromEntries(Object.entries(layouts).map(([tree,l])=>[tree,{positions:Object.fromEntries(l.positions),camera:l.camera,layers:[...prefs[tree].layers],depth:prefs[tree].depth,root:prefs[tree].root,span:prefs[tree].span,branches:Object.fromEntries(prefs[tree].branches)}]))};
+ return {schema:'agora.tag-tree-layouts.v1',revision,trees:Object.fromEntries(Object.entries(layouts).map(([tree,l])=>[tree,{positions:Object.fromEntries(l.positions),camera:l.camera,layers:[...prefs[tree].layers],depth:prefs[tree].depth,root:prefs[tree].root,span:'all',branches:Object.fromEntries(prefs[tree].branches)}]))};
 }
 // Incremental update: never rerun layout or change the camera on filter/branch changes.
 export function syncTreeElements(cy,elements){
