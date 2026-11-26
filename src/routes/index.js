@@ -10,6 +10,7 @@ import { textoLibro } from '../services/texto.service.js';
 import { notFoundApi } from '../middleware/error-handler.js';
 import { crearLaboRouter } from '../labo/routes.js';
 import { servicioCorpus } from '../labo/instancia.js';
+import { createTreeLayoutsRouter } from './tree-layouts.routes.js';
 
 export const crearApiRouter = ({ servicio = servicioCorpus } = {}) => Router()
   .get('/health', h(health))
@@ -19,6 +20,7 @@ export const crearApiRouter = ({ servicio = servicioCorpus } = {}) => Router()
   .use('/faqs', faqsRouter)
   .use('/user-queries', userQueriesRouter)
   .use('/trayectos', trayectosRouter)
+  .use('/grafo-disposiciones', createTreeLayoutsRouter())
   .use('/unidades', unidadesRouter)
   .use('/subunidades', subunidadesRouter)
   .use(notFoundApi);
