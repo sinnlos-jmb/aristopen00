@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {parseBook} from '../js/reader/text.js';
+import {inspectNuclei,continuations} from '../js/lab/semanticNuclei.js';
+import {orderedContinuations,openHorizons,inspectHorizons} from '../js/lab/semanticHorizon.js';
+const read=p=>JSON.parse(fs.readFileSync(p,'utf8'));
+const pilot=read(new URL('../lab/n1u1935d-nucleos-semanticos.json',import.meta.url));
+const prior=read(new URL('../lab/n1u1935c-nucleos-semanticos.json',import.meta.url));
+test('conserva los diez núcleos anteriores y las transiciones sin cambiar sus afirmaciones',()=>{assert.deepEqual(pilot.nucleos.slice(0,10),prior.nucleos);assert.deepEqual(pilot.transiciones.slice(0,11).map(({orientaciones,...t})=>t),prior.transiciones);assert.deepEqual(pilot.recorridos.slice(0,4).map(({horizonte,...r})=>r),prior.recorridos);});
+test('estructura de quince núcleos, veinte transiciones y seis recorridos',()=>{assert.equal(pilot.nucleos.length,15);assert.equal(pilot.transiciones.length,20);assert.equal(pilot.recorridos.length,6);assert.deepEqual(inspectHorizons(pilot),[]);});
+test('cada orientación solo reordena aristas de salida, nunca inventa ni oculta',()=>{for(const n of pilot.nucleos){const ts=continuations(pilot,n.id);for(const o of ['libre','praxis','principios']){const v=orderedContinuations(pilot,n.id,o);assert.deepEqual(new Set(v),new Set(ts));assert.equal(v.length,ts.length);if(o==='libre')assert.deepEqual(v,ts);else assert.deepEqual(v,[...ts.filter(t=>t.orientaciones?.includes(o)),...ts.filter(t=>!t.orientaciones?.includes(o))]);}}});
+test('dos orientaciones distintas priorizan continuaciones diferentes de n04',()=>{assert.equal(orderedContinuations(pilot,'n04','praxis')[0].a,'n08');assert.equal(orderedContinuations(pilot,'n04','principios')[0].a,'n14');});
+test('lógos comparte concepto, distingue sentidos y mantiene los dos usos',()=>{const a=pilot.nucleos.find(n=>n.id==='n11'),b=pilot.nucleos.find(n=>n.id==='n12');assert.ok(a.manifestaciones.some(m=>m.concepto==='estatico:logos'&&m.sentido==='argumento'));assert.ok(b.manifestaciones.some(m=>m.concepto==='estatico:logos'&&m.sentido==='razon'));assert.ok(pilot.nucleos.find(n=>n.id==='n13').manifestaciones.some(m=>m.concepto==='estatico:arche'&&m.sentido==='punto_partida'));assert.ok(pilot.nucleos.find(n=>n.id==='n14').manifestaciones.some(m=>m.concepto==='estatico:arche'&&m.sentido==='causa'));});
+test('horizontes pendientes no son nodos ni transiciones navegables',()=>{assert.equal(openHorizons(pilot,'n14').length,2);for(const h of pilot.horizontes_abiertos){assert.equal(h.estado,'pendiente');assert.ok(!pilot.transiciones.some(t=>t.a===h.id));assert.ok(!pilot.nucleos.some(n=>n.id===h.id));}const p=structuredClone(pilot);p.horizontes_abiertos[0].desde='no-existe';p.recorridos[0].horizonte=null;assert.equal(inspectHorizons(p).length,2);});
+const g=process.env.AGORA_TEST_TREE_JSON,txt=process.env.AGORA_TEST_BOOK_TXT;
+test('exportación histórica y texto bilingüe (opcional)',{skip:!g||!txt},()=>assert.deepEqual(inspectNuclei(pilot,read(g),parseBook(fs.readFileSync(txt,'utf8'))).issues,[]));
