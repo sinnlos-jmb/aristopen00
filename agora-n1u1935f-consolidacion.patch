@@ -1,0 +1,215 @@
+diff --git a/docs/AGORA_N1U1935F_CONSOLIDACION.md b/docs/AGORA_N1U1935F_CONSOLIDACION.md
+new file mode 100644
+index 0000000..6c5b6cd
+--- /dev/null
++++ b/docs/AGORA_N1U1935F_CONSOLIDACION.md
+@@ -0,0 +1,64 @@
++# Ágora · N1-U.19.3.5f — Expediente de consolidación filosófica y editorial
++
++Estado: propuesta para discusión y prueba local. Referencia: rama `updating` de `sinnlos-jmb/aristopen00`, catálogo `public/lab/n1u1935e-nucleos-semanticos.json` (blob `17b8df98f7fae0e69a0635684bb3792b769dcef6`). Complementa el contrato V1 y las notas de horizonte/bibliografía de 19.3.5e. No sustituye ni promueve el catálogo.
++
++## 1. Decisiones para discutir
++
++| Objeto | Recomendación | Límite |
++|---|---|---|
++| `energeia_acto`, `energeia_actividad` | Agrupación semántica en lugar de especie | No establecer dos realidades separadas ni resolver univocidad, analogía o evolución histórica por el árbol. |
++| `ergon_obra`, `ergon_funcion` | Agrupación semántica en lugar de especie | Distinguir obra aparte y función; EN I.1 y I.7. Conservar los IDs. |
++| `dunamis_capacidad`, `dunamis_potencia` | Aplazar | No extender por analogía las decisiones anteriores. |
++| `logos#lenguaje` | Favorable a incorporar el sentido, previa aprobación explícita | Política I.2, 1253a9–18 es referencia externa. EN I.13 mantiene `logos#razon` y la manifestación implícita candidata. |
++| `dunamis_capacidad#arte`, EN I.1 | Revisar la pertinencia de capacidad arquitectónica en 1094a9–16 | No identificar esta capacidad técnica con potencia metafísica. |
++| `excelencia`, EN I.13 | Examinar la excelencia común no humana de 1102b3–11 | No atribuir virtud humana afirmativamente a esa ocurrencia. |
++
++Ninguna de estas recomendaciones aplica escrituras a MariaDB. No cambiar definiciones, traducciones, estados editoriales, IDs ni aristas. «Virtud completa en una vida entera» permanece como formulación de Ágora.
++
++## 2. Lectura de Blair y diálogo con Berti/Owens
++
++George A. Blair, *Energeia and Entelecheia: “Act” in Aristotle*, University of Ottawa Press, II.6, especialmente «Ethical applications» (p. 72 ss. según índice) y la discusión previa de las aplicaciones de enérgeia. Fuente: documento compartido Books II on Aristotle, consultado en esta etapa. La sección y los pasajes fueron accesibles en texto extraído; no se ha comprobado toda la edición impresa ni su paginación/nota por nota. Se conserva la hipótesis diacrónica anterior como hipótesis interpretativa.
++
++- Blair utiliza «internal activity» para conservar el carácter activo de enérgeia. Contrasta EN I.1 (obra aparte o actividad como fin) con Metafísica Θ.8 (actividad como fin y érgon; materia, forma, actividad). La diferencia contextual de érgon no impone dos especies ontológicas.
++- Metafísica Θ.8: se posee vista para ver; el ejercicio no se reduce al estado de posesión. Relaciona esta prioridad con forma y fin. Esta interpretación requiere distinguir actividad inmanente y producción sin universalizar un esquema.
++- Blair vincula héxis y actividad y examina EN II.1: las disposiciones se adquieren a partir de actividades de cierto tipo; esto abre una investigación sobre formación. No se añade todavía un tag del Libro II.
++- En las aplicaciones éticas incluye virtud, felicidad, placer y amistad; examina EN I.7 como actividad excelente. No sustituir nuestra traducción por la suya sin una revisión textual específica.
++
++El vínculo con Berti (realización de la forma humana como actividad) es una hipótesis de investigación, no equivalencia doctrinal. El análisis de la forma y de la causalidad en Owens requiere lectura y contraste propios. Preservar voces de intérpretes, fuentes primarias y reconstrucciones nuestras. Aún no se integran automáticamente los grafos bibliográficos con los árboles.
++
++## 3. Retorno y apertura
++
++Se añaden seis notas de navegación, externas al catálogo histórico: n05→n03, n06→n02, n11→n13, n13→n14, n04→n14 y n06→n14. Las notas no añaden aristas, no invierten relaciones ni cambian la prioridad de las orientaciones. El visor muestra la nota correspondiente al paso efectivo cuando procede.
++
++Casos: «¿Ser virtuoso basta para ser feliz?» vuelve de la posesión al ejercicio y a la excelencia; «¿Para qué sirve la felicidad?» pasa del fin elegido por sí mismo a lo propio del ser humano y a su excelencia; «¿Qué significa lógos en la Ética?» permite volver a los principios del razonamiento y contrastarlos con la felicidad como principio de acción. Los recorridos existentes y las bifurcaciones no se modifican.
++
++«¿Ser feliz es hacer lo que me gusta?» queda como ensayo editorial incompleto: examinar placer, bien y actividad antes de abrir la pregunta por lo que merece ser elegido. No hay todavía un núcleo específico de placer en el piloto. EN I.5, I.7 e I.8 son referencias a estudiar; no inventamos una ruta ya validada. No atribuir hedonismo o relativismo a quien pregunta. Retorno y apertura son recursos para el diálogo, no reglas de inferencia o clases de usuario.
++
++## 4. Inventario y comprobaciones
++
++El expediente contiene 17 casos de subunidad que cubren los 16 núcleos del piloto; sus referencias se cotejaron contra el catálogo remoto. El panel recupera del catálogo el ancla registrada y las incidencias del núcleo ya producidas por el visor. Las notas son criterios de lectura, no certificación filosófica ni verificación de offsets. Incluye las dos propuestas históricas de tagueo pendientes y verifica si las cuatro agrupaciones coinciden con la base activa.
++
++El inventario funcional se calcula sobre las `arista_funcional` de `buildTagTrees`, excluyendo jerarquías, remisiones y asociaciones. Enumera el tipo original, cantidad, voces y ausencias de referencia. Si coincide exactamente con una etiqueta del diccionario de familias contextuales, se muestra como coincidencia nominal, no como equivalencia o clasificación aprobada. Las siete familias del piloto no se imponen automáticamente a las relaciones históricas. Los tipos activos y sus ejemplos deberán examinarse antes de aprobar una tabla de correspondencias. No se supone que la cantidad histórica de 42 tipos siga siendo la activa.
++
++## 5. Libro II e integración posterior
++
++Propuesta mínima de identidad: `EN:1:p27`, `EN:2:p27` distinguen párrafos locales, incluso si comparten numeración. Una subunidad conserva libro, unidad, ID y referencia Bekker; la edición y su versión/hash y anclas se conservan como datos separados. La estabilidad entre ediciones y cambios de segmentación requiere una tabla de concordancia, no se presume. Antes de migrar: inspeccionar el texto del Libro II, API, esquema de MariaDB, identidad de unidades y offsets. No alterar la numeración del Libro I.
++
++Siguiente: aprobación editorial de cambios; revisar tabla de relaciones con el inventario activo, confirmar identidad textual y evidencias. En 19.3.6, proyectar núcleo/manifestación/concepto/evidencia y transiciones con voces y estados separados. Las transiciones de navegación no son deducciones ni nuevas afirmaciones filosóficas. En 19.4, grafos sincrónicos de las fichas.
++
++## 6. Instalación y validación
++
++Desde la raíz del repositorio (con 19.3.5e instalado):
++
++```bat
++git apply --check agora-n1u1935f-consolidacion.patch
++git apply agora-n1u1935f-consolidacion.patch
++node --test public/scripts/check-n1u1935f.mjs
++node --test public/scripts/check-n1u1935c.mjs public/scripts/check-n1u1935d.mjs public/scripts/check-n1u1935e.mjs public/scripts/check-n1u1935f.mjs
++```
++
++Recargar con Ctrl+F5 y abrir Laboratorio → Articulaciones semánticas (`/#/lab/nucleos`). Abrir «19.3.5f · Consolidación filosófica y editorial». Verificar las cuatro propuestas, el sentido candidato, los 17 casos, las relaciones activas y una transición n05→n03. Revisar que las preguntas y el historial previos continúan funcionando. Si el parche no pasa `--check`, no forzarlo; comunicar la salida de Git.
++
++Validación de esta entrega: seis pruebas automatizadas con datos de ensayo; prueba adicional del catálogo instalado omitida en el entorno de preparación (se cotejaron por separado las 17 referencias y seis transiciones contra el catálogo remoto). Aplicación/reversión comprobadas contra fragmentos exactos consultados del código, no contra un clon completo. No hay acceso a MariaDB activa ni comprobación de navegador real. Ningún archivo remoto fue modificado. No requiere migraciones SQL, dependencias nuevas ni créditos de LLM.
++
++Reversión (solo si no se realizaron otros cambios sobre los mismos archivos): `git apply -R --check agora-n1u1935f-consolidacion.patch` y `git apply -R agora-n1u1935f-consolidacion.patch`.
+diff --git a/public/js/lab/semanticNuclei.js b/public/js/lab/semanticNuclei.js
+index 46962e1..30ba523 100644
+--- a/public/js/lab/semanticNuclei.js
++++ b/public/js/lab/semanticNuclei.js
+@@ -2,3 +2,3 @@
+  }
+- return {issues,nodes,concepts,paragraphs,transitions};
++ return {issues,nodes,concepts,paragraphs,transitions,graph};
+ }
+diff --git a/public/js/lab/semanticReview.js b/public/js/lab/semanticReview.js
+new file mode 100644
+index 0000000..c0479d2
+--- /dev/null
++++ b/public/js/lab/semanticReview.js
+@@ -0,0 +1,93 @@
++// N1-U.19.3.5f: expediente editorial de solo lectura. No cambia ni aprueba tags.
++const arr=x=>Array.isArray(x)?x:[];
++const GROUPS=Object.freeze(['energeia_acto','energeia_actividad','ergon_obra','ergon_funcion']);
++export const REVIEW_CASES=Object.freeze([
++ ['n01','1094a3-6','Actividad y obra: superioridad de la obra solo cuando el fin es aparte.'],
++ ['n02','1098a7-8','Función humana como actividad según razón; mantener la fórmula condicional.'],
++ ['n03','1098a8-12','Excelencia de la misma función en género; no confundir praxis y técnica.'],
++ ['n04','1098a16-18','Preservar la definición íntegra, con la cláusula de virtud completa.'],
++ ['n04','1098a18-20','Vida entera: condición temporal, no una segunda especie de virtud.'],
++ ['n05','1098b31-1099a3','Posesión y ejercicio: una disposición puede permanecer inactiva.'],
++ ['n06','1097a34-b6','Elegir virtud por sí misma y por la felicidad; no tratarla como instrumento externo.'],
++ ['n07','1103a7-10','Disposiciones elogiables: no anticipar la definición completa del Libro II.'],
++ ['n08','1100b7-11','Primacía de las actividades virtuosas; no negar la dependencia de bienes externos.'],
++ ['n09','1101a19-21','Bienaventuranza humana y finitud: no deducir una tesis sobre el alma separada.'],
++ ['n10','1099b18-20','Aprendizaje y cultivo: mantener abierta la investigación de habituación.'],
++ ['n11','1094b11-14','Rigor de argumentos según la naturaleza del asunto; no relativismo.'],
++ ['n12','1098a3-5','Poseer razón y obedecerla: no reducir la vida racional a argumentar.'],
++ ['n13','1095b4-8','El hecho como principio: no identificarlo con una mera certeza del interlocutor.'],
++ ['n14','1102a2-4','Felicidad como principio y causa: no identificar sin examen causas formal y final.'],
++ ['n15','1094b10-11','Lo más divino del bien común: no identificar el calificativo con el dios.'],
++ ['n16','1102b31-33','Palabra y deseo: la persuasión no garantiza virtud; lenguaje sigue candidato.']
++]);
++export const TRANSITION_NOTES=Object.freeze({
++ 'n05/n03':{movimiento:'Retorno a una distinción',nota:'Preguntar qué hace excelente la función, antes de concluir que basta con ejercerla.'},
++ 'n06/n02':{movimiento:'Retorno a una distinción',nota:'Reexaminar lo propio del ser humano para precisar el fin elegido por sí mismo.'},
++ 'n11/n13':{movimiento:'Retorno al principio del conocer',nota:'Examinar el punto de partida del razonamiento; no atribuir un presupuesto al lector.'},
++ 'n13/n14':{movimiento:'Apertura al fin',nota:'Contrastar principio del conocer y principio de la acción; no deducir uno del otro.'},
++ 'n04/n14':{movimiento:'Apertura al fin',nota:'Examinar en qué sentido el bien humano puede orientar las demás acciones.'},
++ 'n06/n14':{movimiento:'Apertura al fin',nota:'Desde lo elegido por sí mismo, preguntar cómo el fin puede ser principio.'}
++});
++// Inventario de relaciones explícitas del funcional; no incluye jerarquías o tags.
++export function inventoryFunctional(graph,families={}){
++ const byType=new Map();
++ for(const edge of arr(graph?.edges)){
++  if(edge.tipo!=='arista_funcional')continue;
++  const rel=typeof edge.rel==='string'&&edge.rel.trim()?edge.rel:'(sin tipo)';
++  if(!byType.has(rel))byType.set(rel,{rel,total:0,textual:0,nuestra:0,otraVoz:0,sinRef:0,coincidencia:Object.hasOwn(families,rel)?families[rel]:null});
++  const row=byType.get(rel);row.total++;
++  if(edge.voz==='textual')row.textual++;else if(edge.voz==='nuestra')row.nuestra++;else row.otraVoz++;
++  if(!String(edge.ref??'').trim())row.sinRef++;
++ }
++ return [...byType.values()].sort((a,b)=>a.rel.localeCompare(b.rel,'es'));
++}
++// Identidad propuesta: no pretende resolver offsets ni equivalencias entre ediciones.
++export function paragraphKey(e){
++ if(e?.obra!=='EN'||!Number.isInteger(e.libro)||e.libro<1||!Number.isInteger(e.parrafo_local)||e.parrafo_local<1)throw Error('Identidad documental incompleta');
++ return `${e.obra}:${e.libro}:p${e.parrafo_local}`;
++}
++export function reviewSnapshot(pilot,check){
++ const issues=[];const nodes=new Map(arr(pilot?.nucleos).map(n=>[n.id,n]));
++ const active=check?.concepts??new Map();const graph=check?.graph;
++ const cases=REVIEW_CASES.map(([id,subunidad,criterio])=>{
++  const n=nodes.get(id);const evidence=arr(n?.evidencias).find(e=>e.subunidad===subunidad);
++  if(!evidence)issues.push(`Caso sin evidencia: ${id}/${subunidad}`);
++  let key=null;if(evidence)try{key=paragraphKey(evidence);}catch{issues.push(`Identidad inválida: ${id}/${subunidad}`);}
++  return {id,subunidad,criterio,evidence,key,incidencias:arr(check?.issues).filter(x=>x.id===id).length};
++ });
++ const changes=GROUPS.map(id=>{
++  const p=arr(pilot?.cambios_jerarquia).find(c=>c.id===id);const n=active.get(`estatico:${id}`);
++  if(!p||p.actual!=='especie'||p.propuesta!=='agrupacion')issues.push(`Propuesta histórica no localizada: ${id}`);
++  const current=n?.source?.rel??null;
++  const status=!p||!n?'no_resuelto':n.parent!==p.padre?'padre_distinto':current===p.actual?'base_coincide':current===p.propuesta?'ya_agrupacion_revisar':'clasificacion_distinta';
++  return {id,padre:p?.padre,actual:current,propuesta:p?.propuesta,status};
++ });
++ const candidate=arr(pilot?.propuestas_sentidos).find(s=>s.concepto==='estatico:logos'&&s.id==='lenguaje');
++ const language=active.get('estatico:logos');
++ if(!candidate||candidate.estado==='confirmado')issues.push('Falta propuesta independiente de logos#lenguaje');
++ const languageStatus=!language?'concepto_ausente':arr(language.source?.sentidos).some(s=>s.id==='lenguaje')?'ya_registrado_revisar':'candidato';
++ const known=new Set(arr(pilot?.transiciones).map(t=>`${t.de}/${t.a}`));
++ for(const key of Object.keys(TRANSITION_NOTES))if(!known.has(key))issues.push(`Nota sin transición: ${key}`);
++ return {cases,changes,languageStatus,issues,functional:inventoryFunctional(graph,pilot?.familias_relacion),graphAvailable:Array.isArray(graph?.edges),graphIssues:arr(graph?.issues).length};
++}
++export function renderEditorialReview(pilot,check,history,esc){
++ const r=reviewSnapshot(pilot,check),e=x=>esc(String(x??'—'));
++ const row=history.length>1?TRANSITION_NOTES[`${history.at(-2)}/${history.at(-1)}`]:null;
++ const caseCount=r.cases.filter(c=>c.evidence&&c.key).length;
++ const candidates=arr(pilot.pruebas_tagueo);
++ return `<section class="nuc-card"><details><summary>19.3.5f · Consolidación filosófica y editorial (propuesta)</summary>
++ <p>Expediente de solo lectura. Ningún cambio se aplica al árbol, MariaDB, traducción ni catálogo de núcleos. Las coincidencias estructurales no constituyen aprobaciones editoriales.</p>
++ <h3>Enérgeia y érgon</h3><p>Recomendación: agrupaciones semánticas, sin comprometer una división unívoca en especies. Dýnamis queda pendiente.</p>
++ ${r.changes.map(c=>`<p><b>${e(c.id)}</b> · ${e(c.actual)} → ${e(c.propuesta)} · ${e(c.status)}</p>`).join('')}
++ <h3>Lógos y palabra</h3><p>Propuesta logos#lenguaje: ${e(r.languageStatus)}. Se conserva razón en EN I.13. Política I.2 es referencia externa.</p>
++ <h3>Casos de revisión</h3><p>${caseCount}/${r.cases.length} referencias del expediente localizadas en el catálogo. Incidencias del núcleo se indican por separado; no se certifican offsets ni interpretación.</p>
++ ${r.cases.map(c=>`<details><summary>${e(c.id)} · ${e(c.subunidad)} · ${c.incidencias} incidencias del núcleo</summary><p>${e(c.criterio)}</p><p lang="grc">${e(c.evidence?.gr_ancla)}</p><p>Identidad propuesta: ${e(c.key)}</p></details>`).join('')}
++ <h3>Dos pruebas de tagueo pendientes</h3>${candidates.map(c=>`<p><b>${e(c.subunidad)}</b> · ${e(c.concepto)} · ${e(c.propuesta)}<br><span lang="grc">${e(c.ancla)}</span></p>`).join('')}
++ <h3>Relaciones del funcional</h3><p>${r.graphAvailable?`${r.functional.length} tipos activos; ${r.graphIssues} incidencias del constructor del grafo.`:'Inventario activo no disponible.'} Coincidencia de nombre con una familia contextual no es clasificación confirmada. Sin referencia no equivale automáticamente a error filosófico.</p>
++ ${r.functional.map(f=>`<p><b>${e(f.rel)}</b> · ${f.total} aristas · textual ${f.textual} · nuestra ${f.nuestra} · otra voz ${f.otraVoz} · sin referencia ${f.sinRef}${f.coincidencia?' · coincidencia nominal: '+e(f.coincidencia):''}</p>`).join('')}
++ <h3>Retorno y apertura</h3>${Object.entries(TRANSITION_NOTES).map(([k,v])=>`<p><b>${e(k)} · ${e(v.movimiento)}</b> — ${e(v.nota)}</p>`).join('')}
++ <p>«¿Ser feliz es hacer lo que me gusta?» sigue como ensayo editorial: examinar placer, bien y actividad antes de abrir la pregunta por los fines. Aún falta un núcleo específico del placer; no fingir un recorrido textual completo.</p>
++ <h3>Preparación Libro II</h3><p>Propuesta de clave documental: obra/libro/párrafo local; subunidad con unidad y referencia Bekker; versión textual y ancla independientes. No migrar hasta verificar numeración y offsets de ambos libros.</p>
++ ${r.issues.length?`<p role="alert">${e(r.issues.join(' · '))}</p>`:'<p>Referencias internas del expediente localizadas. Aprobación editorial pendiente.</p>'}</details>
++ ${row?`<p class="nuc-note"><b>${e(row.movimiento)}:</b> ${e(row.nota)} (nota de navegación, no inferencia).</p>`:''}</section>`;
++}
+diff --git a/public/js/views/labNucleiView.js b/public/js/views/labNucleiView.js
+index 85167bf..4970b50 100644
+--- a/public/js/views/labNucleiView.js
++++ b/public/js/views/labNucleiView.js
+@@ -1 +1,2 @@
++import {renderEditorialReview} from '../lab/semanticReview.js';
+ import {inspectSemanticContract,inspectProposedSenses,notesFor} from '../lab/semanticContract.js';
+@@ -14,3 +15,3 @@ export function createLabNucleiView(){
+  if(!document.querySelector('link[data-nuclei-styles]')){const css=document.createElement('link');css.rel='stylesheet';css.href='/css/lab-nuclei-n1u1935c.css';css.dataset.nucleiStyles='1';document.head.appendChild(css);}
+- const shell=body=>`<main class="nuc-inner"><nav><a href="#/lab">← Laboratorio</a> · N1-U.19.3.5e</nav>${controlesTamanoLector()}<h1>Articulaciones semánticas</h1>${body}</main>`;
++ const shell=body=>`<main class="nuc-inner"><nav><a href="#/lab">← Laboratorio</a> · N1-U.19.3.5f</nav>${controlesTamanoLector()}<h1>Articulaciones semánticas</h1>${pilot&&check?renderEditorialReview(pilot,check,history,esc):''}${body}</main>`;
+  el.innerHTML=shell('<p>Cargando catálogo piloto y texto activo…</p>');
+diff --git a/public/scripts/check-n1u1935f.mjs b/public/scripts/check-n1u1935f.mjs
+new file mode 100644
+index 0000000..1494cd5
+--- /dev/null
++++ b/public/scripts/check-n1u1935f.mjs
+@@ -0,0 +1,19 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import {REVIEW_CASES,TRANSITION_NOTES,inventoryFunctional,paragraphKey,reviewSnapshot,renderEditorialReview} from '../js/lab/semanticReview.js';
++const fixture=()=>{
++ const nodes=new Map();for(const [id,subunidad] of REVIEW_CASES){if(!nodes.has(id))nodes.set(id,{id,evidencias:[]});nodes.get(id).evidencias.push({obra:'EN',libro:1,parrafo_local:1,subunidad,gr_ancla:'<ancla>'});}
++ const changes=[['energeia_acto','energeia'],['energeia_actividad','energeia'],['ergon_obra','ergon'],['ergon_funcion','ergon']].map(([id,padre])=>({id,padre:'estatico:'+padre,actual:'especie',propuesta:'agrupacion'}));
++ const pilot={nucleos:[...nodes.values()],cambios_jerarquia:changes,propuestas_sentidos:[{concepto:'estatico:logos',id:'lenguaje',estado:'propuesto'}],transiciones:Object.keys(TRANSITION_NOTES).map(k=>{const [de,a]=k.split('/');return {de,a};}),familias_relacion:{orienta:'teleologica'}};
++ const concepts=new Map(changes.map(c=>['estatico:'+c.id,{parent:c.padre,source:{rel:'especie'}}]));concepts.set('estatico:logos',{source:{sentidos:[]}});
++ const check={concepts,issues:[],graph:{issues:[],edges:[{tipo:'arista_funcional',rel:'orienta',voz:'nuestra',ref:'EN I'},{tipo:'arista_funcional',rel:'orienta',voz:'textual',ref:''},{tipo:'jerarquia',rel:'especie'}]}};return {pilot,check};
++};
++test('clave documental distingue libros y rechaza identidad incompleta',()=>{assert.notEqual(paragraphKey({obra:'EN',libro:1,parrafo_local:1}),paragraphKey({obra:'EN',libro:2,parrafo_local:1}));assert.throws(()=>paragraphKey({obra:'EN',parrafo_local:1}));});
++test('inventario preserva tipo original y excluye jerarquía; familia solo coincidencia',()=>{const {pilot,check}=fixture();assert.deepEqual(inventoryFunctional(check.graph,pilot.familias_relacion),[{rel:'orienta',total:2,textual:1,nuestra:1,otraVoz:0,sinRef:1,coincidencia:'teleologica'}]);});
++test('revisión de 17 pasajes y cuatro agrupaciones sin mutar catálogo o grafo',()=>{const {pilot,check}=fixture(),p=structuredClone(pilot),c=structuredClone(check);const r=reviewSnapshot(pilot,check);assert.equal(r.cases.length,17);assert.equal(r.changes.length,4);assert.ok(r.changes.every(x=>x.status==='base_coincide'));assert.equal(r.languageStatus,'candidato');assert.deepEqual(r.issues,[]);assert.deepEqual(pilot,p);assert.deepEqual(check,c);});
++test('detecta cambios de base, de padre y sentido ya registrado',()=>{const {pilot,check}=fixture();check.concepts.get('estatico:energeia_acto').source.rel='agrupacion';check.concepts.get('estatico:ergon_obra').parent='otro';check.concepts.get('estatico:logos').source.sentidos.push({id:'lenguaje'});const r=reviewSnapshot(pilot,check);assert.equal(r.changes[0].status,'ya_agrupacion_revisar');assert.equal(r.changes[2].status,'padre_distinto');assert.equal(r.languageStatus,'ya_registrado_revisar');});
++test('referencias faltantes no se inventan',()=>{const {pilot,check}=fixture();pilot.nucleos.shift();pilot.transiciones.shift();const r=reviewSnapshot(pilot,check);assert.ok(r.issues.some(x=>x.startsWith('Caso sin evidencia')));assert.ok(r.issues.some(x=>x.startsWith('Nota sin transición')));});
++test('marcado escapa fuentes y distingue nota de inferencia',()=>{const {pilot,check}=fixture();const esc=x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');const html=renderEditorialReview(pilot,check,['n05','n03'],esc);assert.ok(html.includes('&lt;ancla&gt;'));assert.ok(!html.includes('<ancla>'));assert.ok(html.includes('nota de navegación, no inferencia'));});
++const real=new URL('../lab/n1u1935e-nucleos-semanticos.json',import.meta.url);
++test('referencias contra el catálogo 19.3.5e instalado',{skip:!fs.existsSync(real)},()=>{const pilot=JSON.parse(fs.readFileSync(real,'utf8'));const r=reviewSnapshot(pilot,{concepts:new Map(),issues:[]});assert.deepEqual(r.issues,[]);assert.ok(r.cases.every(c=>c.evidence&&c.key));assert.equal(pilot.nucleos.length,16);assert.equal(pilot.propuestas_sentidos.find(s=>s.id==='lenguaje').estado,'propuesto');});

@@ -1,3 +1,4 @@
+import { createLabSemanticQueryView } from './labSemanticQueryView.js';
 import { createLabBibliographyView } from './labBibliographyView.js';
 import { createLabNucleiView } from './labNucleiView.js';
 import { createLabTreesView } from './labTreesView.js';
@@ -19,6 +20,11 @@ import { openTrayectoEditor } from './labTrayectoEditor.js';
 
 // Catálogo de experimentos para la maqueta grid
 export const EXPERIMENTS = Object.freeze({
+  'consultas-semanticas': {
+    id: 'consultas-semanticas', tab: 1, title: 'Consultas semánticas',
+    desc: 'Consultá manifestaciones, relaciones locales, evidencias y continuaciones; prepará contexto para el diálogo.',
+    tag: 'N1-U.19.3.6a · Solo lectura', icon: '🔎', featured: false
+  },
   bibliografia: {
     id: 'bibliografia', tab: 1, title: 'Bibliografía secundaria',
     desc: 'Consultá los grafos de Berti y Owens, sus textos y las propuestas de lectura propias.',
@@ -145,6 +151,7 @@ const EXAMPLES = [
 ];
 
 export function createLabView(App, opts = {}) {
+  if (opts.exp === 'consultas-semanticas') return createLabSemanticQueryView();
   if (opts.exp === 'bibliografia') return createLabBibliographyView();
   // N1-U.19.3.5c: nueva vista del Lab, sin modificar los experimentos existentes.
   if (opts.exp === 'nucleos') return createLabNucleiView(App);

@@ -1,3 +1,4 @@
+import {renderEditorialReview} from '../lab/semanticReview.js';
 import {inspectSemanticContract,inspectProposedSenses,notesFor} from '../lab/semanticContract.js';
 import {ORIENTATIONS,orderedContinuations,openHorizons,inspectHorizons} from '../lab/semanticHorizon.js';
 import {esc} from '../ui.js';
@@ -12,7 +13,7 @@ const title=id=>labels[id]||id;
 export function createLabNucleiView(){
  const el=document.createElement('div');el.className='scrollable has-scroll nuc-view';const controller=new AbortController();let destroyed=false,pilot,check,revision,route,history=[],inventory=false,orientation='libre';
  if(!document.querySelector('link[data-nuclei-styles]')){const css=document.createElement('link');css.rel='stylesheet';css.href='/css/lab-nuclei-n1u1935c.css';css.dataset.nucleiStyles='1';document.head.appendChild(css);}
- const shell=body=>`<main class="nuc-inner"><nav><a href="#/lab">← Laboratorio</a> · N1-U.19.3.5e</nav>${controlesTamanoLector()}<h1>Articulaciones semánticas</h1>${body}</main>`;
+ const shell=body=>`<main class="nuc-inner"><nav><a href="#/lab">← Laboratorio</a> · N1-U.19.3.5f</nav>${controlesTamanoLector()}<h1>Articulaciones semánticas</h1>${pilot&&check?renderEditorialReview(pilot,check,history,esc):''}${body}</main>`;
  el.innerHTML=shell('<p>Cargando catálogo piloto y texto activo…</p>');
  function render(){if(destroyed)return;const id=history.at(-1),n=check.nodes.get(id),r=pilot.recorridos.find(x=>x.id===route),previous=history.at(-2),transition=check.transitions.get(`${previous}/${id}`);const unresolved=check.issues.filter(x=>x.id===id);const status=check.issues.length?`${check.issues.length} incidencias; revisar antes de reutilizar.`:'Referencias y anclas de párrafo comprobadas en los datos activos.';
  const notes=notesFor(pilot,id);const proposals=(pilot.propuestas_sentidos||[]).filter(s=>n.manifestaciones.some(m=>m.concepto===s.concepto));

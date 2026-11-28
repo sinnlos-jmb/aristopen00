@@ -1,0 +1,207 @@
+diff --git a/public/js/views/lab.js b/public/js/views/lab.js
+index dd45171..71bb830 100644
+--- a/public/js/views/lab.js
++++ b/public/js/views/lab.js
+@@ -1 +1,2 @@
++import { createLabSemanticQueryView } from './labSemanticQueryView.js';
+ import { createLabBibliographyView } from './labBibliographyView.js';
+@@ -10,2 +11,7 @@ import { renderCatalogHeader, renderCatalogCard } from './shared.js';
+ export const EXPERIMENTS = Object.freeze({
++  'consultas-semanticas': {
++    id: 'consultas-semanticas', tab: 1, title: 'Consultas semánticas',
++    desc: 'Consultá manifestaciones, relaciones locales, evidencias y continuaciones; prepará contexto para el diálogo.',
++    tag: 'N1-U.19.3.6a · Solo lectura', icon: '🔎', featured: false
++  },
+   bibliografia: {
+@@ -17,2 +23,3 @@ export const EXPERIMENTS = Object.freeze({
+ export function createLabView(App, opts = {}) {
++  if (opts.exp === 'consultas-semanticas') return createLabSemanticQueryView();
+   if (opts.exp === 'bibliografia') return createLabBibliographyView();
+diff --git a/docs/AGORA_N1U1936A_CONSULTAS_SEMANTICAS.md b/docs/AGORA_N1U1936A_CONSULTAS_SEMANTICAS.md
+new file mode 100644
+index 0000000..2dcad82
+--- /dev/null
++++ b/docs/AGORA_N1U1936A_CONSULTAS_SEMANTICAS.md
+@@ -0,0 +1,44 @@
++# Ágora · N1-U.19.3.6a — Consultas semánticas y contexto verificable
++
++## Alcance
++
++Primer paso de 19.3.6. Requiere el contrato 19.3.5e y el expediente 19.3.5f ya instalados. La referencia remota consultada es `updating`, catálogo `public/lab/n1u1935e-nucleos-semanticos.json`, blob `17b8df98f7fae0e69a0635684bb3792b769dcef6`. El expediente 19.3.5f fue recuperado de la entrega anterior local, no del remoto. Se agrega una tarjeta independiente del Laboratorio y no se altera el intérprete previo de fichas. Sin cambios en MariaDB, textos, árboles, catálogo, estados, proveedor LLM o rutas de chat. No es Cypher completo ni un motor Neo4j. No ejecuta ni envía nada a OpenRouter.
++
++## Gramática de solo lectura
++
++```cypher
++MATCH (n:Nucleo)-[:CONTIENE]->(m:Manifestacion)-[:MANIFIESTA]->(c:Concepto) WHERE c.uid = 'estatico:logos' RETURN n, m, c LIMIT 20
++MATCH (n:Nucleo)-[:CONTIENE]->(a:Manifestacion)-[:RELACION_CONTEXTUAL]->(b:Manifestacion) WHERE n.id = 'n04' RETURN n, a, b LIMIT 20
++MATCH (n:Nucleo)-[:FUNDAMENTADO_EN]->(e:Evidencia) WHERE n.id = 'n04' RETURN n, e LIMIT 20
++MATCH (n:Nucleo)-[:CONTINUA_CON]->(s:Nucleo) WHERE n.id = 'n04' RETURN n, s LIMIT 20
++```
++
++Cada línea es una consulta independiente. Variables, etiquetas y tipos fijos; palabras clave y IDs distinguen mayúsculas. Se admite formato multilínea y `LIMIT` opcional (1–50; 20 por defecto). No se admiten escrituras, concatenación de consultas, filtros arbitrarios, inversión, transitividad ni caminos no registrados. El intérprete recorre registros JSON validados, no una base de grafos externa. Las relaciones locales conservan sus tipos, familia contextual, voz, dirección, justificación y estado; las transiciones son continuaciones editoriales, no deducciones. Las notas de retorno/apertura se leen del incremento 5f. Los sentidos candidatos conservan su estado y referencia; no sustituyen el campo `sentido`.
++
++## Resultados de referencia para la prueba local
++
++Cotejo directo del catálogo remoto: 16 núcleos, 54 manifestaciones, 22 transiciones; `estatico:logos` devuelve ocho manifestaciones (n02, n11, n12 tres, n13, n16 dos), de las cuales la palabra de n16 es implícita y candidata a lenguaje. n04: tres relaciones locales, dos evidencias, tres continuaciones (n08 fortuna, n09 vida mortal, n14 felicidad como principio). Los números pueden variar si el corpus cambia. No se ha ejecutado el navegador contra MariaDB activa. Las pruebas del paquete usan una fixture sintética para comprobar el intérprete; la prueba del catálogo completo se ejecuta cuando esté disponible localmente.
++
++## Contexto para el futuro LLM
++
++El visor obtiene los datos activos por `/api/labo/lectura` y el texto bilingüe por `/api/texto/EN_libro1_v8.txt`, comprueba los validadores históricos y el contrato, las referencias, anclas de párrafo, ausencia de duplicación de numeración de párrafos y la revisión. Bloquea ante incidencias. Calcula SHA-256 de los bytes de la respuesta de texto con Web Crypto (requiere contexto seguro, por ejemplo localhost); si difiere del hash histórico o no está disponible, permite revisar consultas con referencias resueltas, pero impide exportar el paquete de contexto. No certifica offsets exactos de subunidad, verdad filosófica, equivalencias entre revisiones o ediciones. El identificador documental sigue 5f: `EN:1:p27`. Los UIDs de manifestación y evidencia tienen alcance de catálogo (núcleo/ID local e índice respectivamente); los índices no son identificadores globales inmutables.
++
++Exportación JSON `agora.semantic-context.v1`: pregunta opcional (máximo 1000 caracteres), consulta ejecutada, revisión activa/histórica, archivo y hash, estado, total y truncado, filas con su procedencia, propuestas de sentidos relevantes y párrafos bilingües completos deduplicados. Máximo 12 filas y 60.000 caracteres; reducir LIMIT si se supera. El ancla seleccionada no necesariamente fundamenta toda la formulación; la traducción es del párrafo, no del fragmento. El expediente es inspeccionable y no se envía automáticamente al servidor ni al LLM. Un JSON exportado por cliente no es autoridad documental: en 19.3.6b el servidor deberá reconstruir y validar el contexto a partir de identificadores y fuentes activas antes de cualquier llamada al proveedor. No aceptar instrucciones de documentos recuperados ni referencias inventadas por el LLM. La formulación «virtud completa en una vida entera» permanece intacta.
++
++## Instalación y prueba
++
++Desde la raíz del repositorio, con 19.3.5f instalado:
++
++```bat
++git apply --check agora-n1u1936a-consultas-semanticas.patch
++git apply agora-n1u1936a-consultas-semanticas.patch
++node --test public/scripts/check-n1u1936a.mjs
++```
++
++Recargar con Ctrl+F5 y abrir Laboratorio → Consultas semánticas (`/#/lab/consultas-semanticas`). Elegir lógos, ejecutar y comprobar las ocho filas; inspeccionar n16 y su carácter candidato. Elegir las tres consultas de n04; comprobar límites, voces, referencias y nota de apertura al fin en n04/n14. Probar una consulta inválida (por ejemplo `DELETE n`), que debe rechazarse. Exportar contexto si el hash coincide; abrir el JSON y comprobar sus fuentes. Si hay incidencias, no eludir el bloqueo; informar el mensaje. La ruta usa la clave del catálogo de experimentos, que es la que registra el router actual.
++
++Validación de la entrega: 9 pruebas de modelo con fixture superadas; una adicional sobre catálogo real se omite en el entorno de preparación y se ejecuta en la instalación. Cotejo de resultados esperado realizado independientemente contra JSON remoto. Sintaxis JS comprobada. Aplicación/reversión verificadas contra fragmentos de `lab.js` y archivos nuevos, no contra un clon completo ni un navegador real. No se modificó GitHub. Reversión (si no se editaron los archivos nuevos): `git apply -R --check agora-n1u1936a-consultas-semanticas.patch` y `git apply -R agora-n1u1936a-consultas-semanticas.patch`.
++
++## Próximos incrementos
++
++19.3.6b: recuperación semántica del lado servidor, planificación acotada mediante la gramática, reconstrucción documental independiente, referencias de respuesta comprobables, diálogo OpenRouter y auditoría. 19.3.6c: selección opcional de continuaciones y retorno a principios/apertura a fines, sin clasificar al interlocutor ni convertir hipótesis en hechos. 19.4: grafos sincrónicos de fichas. No adelantar una migración al Libro II hasta resolver identidad y segmentación.
+diff --git a/public/js/lab/semanticQuery.js b/public/js/lab/semanticQuery.js
+new file mode 100644
+index 0000000..bb82c36
+--- /dev/null
++++ b/public/js/lab/semanticQuery.js
+@@ -0,0 +1,66 @@
++// N1-U.19.3.6a — intérprete local, estricto y de solo lectura. No ejecuta Cypher externo.
++const identifier = "([A-Za-z0-9_.:-]{1,100})";
++const patterns = [
++ ['manifestaciones',`MATCH \\(n:Nucleo\\)-\\[:CONTIENE\\]->\\(m:Manifestacion\\)-\\[:MANIFIESTA\\]->\\(c:Concepto\\) WHERE c.uid = '${identifier}' RETURN n, m, c`],
++ ['relaciones',`MATCH \\(n:Nucleo\\)-\\[:CONTIENE\\]->\\(a:Manifestacion\\)-\\[:RELACION_CONTEXTUAL\\]->\\(b:Manifestacion\\) WHERE n.id = '${identifier}' RETURN n, a, b`],
++ ['evidencias',`MATCH \\(n:Nucleo\\)-\\[:FUNDAMENTADO_EN\\]->\\(e:Evidencia\\) WHERE n.id = '${identifier}' RETURN n, e`],
++ ['continuaciones',`MATCH \\(n:Nucleo\\)-\\[:CONTINUA_CON\\]->\\(s:Nucleo\\) WHERE n.id = '${identifier}' RETURN n, s`]
++];
++export const SEMANTIC_EXAMPLES = Object.freeze([
++ ['Manifestaciones de lógos',"MATCH (n:Nucleo)-[:CONTIENE]->(m:Manifestacion)-[:MANIFIESTA]->(c:Concepto) WHERE c.uid = 'estatico:logos' RETURN n, m, c LIMIT 20"],
++ ['Actividad y virtud',"MATCH (n:Nucleo)-[:CONTIENE]->(a:Manifestacion)-[:RELACION_CONTEXTUAL]->(b:Manifestacion) WHERE n.id = 'n04' RETURN n, a, b LIMIT 20"],
++ ['Evidencia del bien humano',"MATCH (n:Nucleo)-[:FUNDAMENTADO_EN]->(e:Evidencia) WHERE n.id = 'n04' RETURN n, e LIMIT 20"],
++ ['Aperturas desde la felicidad',"MATCH (n:Nucleo)-[:CONTINUA_CON]->(s:Nucleo) WHERE n.id = 'n04' RETURN n, s LIMIT 20"]
++]);
++export function compileSemanticQuery(source) {
++ const input=String(source??'').trim();
++ if(input.length>1500)throw Error('Consulta demasiado larga.');
++ // Los espacios fuera de literales pueden variar; los IDs se mantienen exactos.
++ const normalized=input.replace(/\s+/g,' ').replace(/^MATCH (.*?) WHERE /,(_,graph)=>'MATCH '+graph.replace(/\s/g,'')+' WHERE ');
++ for(const [kind,pattern] of patterns){
++  const m=new RegExp(`^${pattern}(?: LIMIT ([0-9]{1,2}))?;?$`).exec(normalized);
++  if(!m)continue;
++  const limit=m[2]===undefined?20:Number(m[2]);
++  if(limit<1||limit>50)throw Error('LIMIT debe estar entre 1 y 50.');
++  if(kind==='manifestaciones'&&!/^(estatico|funcional):[A-Za-z0-9_.-]+$/.test(m[1]))throw Error('Usá el UID exacto con espacio de nombres.');
++  return {kind,id:m[1],limit};
++ }
++ throw Error('Patrón no admitido. Elegí uno de los cuatro ejemplos; solo lectura, dirección explícita y LIMIT 1–50.');
++}
++const pick=(n)=>({id:n.id,unidad:n.unidad,formulacion:n.formulacion,funcion_argumentativa:n.funcion_argumentativa,voz:n.voz,estado:n.estado,limite:n.limite});
++const manifestation=(n,m)=>({...m,uid:`${n.id}/${m.id}`,evidencia_uid:`${n.id}/e${m.evidencia}`});
++const evidence=(n,e,i)=>({...e,uid:`${n.id}/e${i}`,identidad_parrafo:`${e.obra}:${e.libro}:p${e.parrafo_local}`});
++// El resultado conserva la procedencia y la dirección; ninguna coaparición crea aristas.
++export function runSemanticQuery(source,pilot,check,{contractIssues=[],graphIssues=[],revision='',textHash=null,transitionNotes={}}={}){
++ const ast=compileSemanticQuery(source);
++ if(!check||!Array.isArray(check.issues)||check.issues.length||contractIssues.length||graphIssues.length)throw Error('Hay incidencias de integridad: no se generan resultados reutilizables.');
++ if(ast.kind==='manifestaciones'&&!check.concepts.has(ast.id))throw Error('Concepto ausente del catálogo activo.');
++ if(ast.kind!=='manifestaciones'&&!check.nodes.has(ast.id))throw Error('Núcleo inexistente.');
++ let rows=[];
++ const add=(n,other={},indices=n.evidencias.map((_,i)=>i))=>rows.push({n:pick(n),...other,evidencias:[...new Set(indices)].map(i=>evidence(n,n.evidencias[i],i))});
++ if(ast.kind==='manifestaciones'){
++  const c=check.concepts.get(ast.id);
++  for(const n of pilot.nucleos)for(const m of n.manifestaciones)if(m.concepto===ast.id)add(n,{m:manifestation(n,m),c:{uid:c.uid,id:c.id,label:c.label}},[m.evidencia]);
++ }else{
++  const n=check.nodes.get(ast.id);
++  if(ast.kind==='relaciones')for(const r of n.relaciones){const a=n.manifestaciones.find(m=>m.id===r.de),b=n.manifestaciones.find(m=>m.id===r.a);add(n,{a:manifestation(n,a),b:manifestation(n,b),relacion:{...r,familia:pilot.familias_relacion[r.rel]}},[a.evidencia,b.evidencia]);}
++  if(ast.kind==='evidencias')n.evidencias.forEach((e,i)=>add(n,{e:evidence(n,e,i)},[i]));
++  if(ast.kind==='continuaciones')for(const t of pilot.transiciones.filter(t=>t.de===n.id)){const s=check.nodes.get(t.a);add(n,{s:pick(s),transicion:{...t},nota_editorial:transitionNotes[`${t.de}/${t.a}`]??null,evidencias_destino:s.evidencias.map((e,i)=>evidence(s,e,i))});}
++ }
++ return {schema:'agora.semantic-query.v1',query:String(source).trim(),ast,revision_activa:revision,revision_catalogo:pilot.revision_catalogo,archivo:pilot.texto.archivo,sha256_esperado:pilot.texto.sha256,sha256_activo:textHash,estado_catalogo:pilot.estado,incremento_catalogo:pilot.incremento,propuestas_sentidos:(pilot.propuestas_sentidos||[]).filter(p=>rows.slice(0,ast.limit).some(r=>[r.m,r.a,r.b].some(m=>m?.concepto===p.concepto&&m?.sentido_candidato===p.id))),total:rows.length,truncado:rows.length>ast.limit,rows:rows.slice(0,ast.limit)};
++}
++export function buildSemanticContext(result,check,question=''){
++ if(!result.rows.length)throw Error('Sin resultados: no hay contexto semántico que exportar.');
++ if(!result.sha256_activo||result.sha256_activo!==result.sha256_esperado)throw Error('Para exportar contexto, el SHA-256 del texto debe coincidir con el catálogo.');
++ if(!result.revision_activa)throw Error('Falta la revisión activa del catálogo.');
++ if(result.rows.length>12)throw Error('Reducí LIMIT a 12 o menos para preparar contexto.');
++ const q=String(question).trim();if(q.length>1000)throw Error('Pregunta demasiado larga.');
++ const paragraphs=new Map();
++ for(const row of result.rows)for(const e of [...row.evidencias,...(row.evidencias_destino||[])]){
++  const p=check.paragraphs.get(e.parrafo_local);if(!p?.gr||!p?.es)throw Error('Falta un párrafo bilingüe.');
++  paragraphs.set(e.identidad_parrafo,{id:e.identidad_parrafo,gr:p.gr,es:p.es});
++ }
++ const packet={schema:'agora.semantic-context.v1',pregunta:q,consulta:result.query,revision_activa:result.revision_activa,revision_catalogo:result.revision_catalogo,archivo:result.archivo,sha256_activo:result.sha256_activo,estado_catalogo:result.estado_catalogo,incremento_catalogo:result.incremento_catalogo,total:result.total,truncado:result.truncado,alcance:'EN I; anclas comprobadas en párrafo, no offsets de subunidad; propuesta editorial, no validación filosófica.',reglas:['Distinguir texto bilingüe, reconstrucción editorial, sentidos candidatos y continuaciones.','No identificar coaparición con causalidad, ni invertir o encadenar relaciones como inferencias.','No atribuir presupuestos al interlocutor ni afirmar que una transición es una deducción.','Responder la pregunta, indicar límites y ofrecer una continuación opcional.','No inventar citas; usar las referencias y anclas incluidas. La traducción pertenece al párrafo completo. Un ancla recuperada no fundamenta necesariamente toda la formulación del núcleo.'],propuestas_sentidos:result.propuestas_sentidos||[],resultados:result.rows,parrafos:[...paragraphs.values()]};
++ if(JSON.stringify(packet).length>60000)throw Error('Contexto demasiado amplio; reducí LIMIT.');
++ return packet;
++}
+diff --git a/public/js/views/labSemanticQueryView.js b/public/js/views/labSemanticQueryView.js
+new file mode 100644
+index 0000000..004b18b
+--- /dev/null
++++ b/public/js/views/labSemanticQueryView.js
+@@ -0,0 +1,25 @@
++import {esc} from '../ui.js';
++import {parseBook} from '../reader/text.js';
++import {buildTagTrees} from '../lab/tagTreesGraph.js';
++import {inspectNuclei} from '../lab/semanticNuclei.js';
++import {inspectSemanticContract,inspectProposedSenses} from '../lab/semanticContract.js';
++import {inspectHorizons} from '../lab/semanticHorizon.js';
++import {SEMANTIC_EXAMPLES,runSemanticQuery,buildSemanticContext} from '../lab/semanticQuery.js';
++import {TRANSITION_NOTES} from '../lab/semanticReview.js';
++import {downloadJSON} from '../lab/session.js';
++const get=async(url,signal,json=true)=>{const r=await fetch(url,{cache:'no-store',signal});if(!r.ok)throw Error(`${url}: HTTP ${r.status}`);return json?r.json():r.arrayBuffer();};
++const hash=async raw=>globalThis.crypto?.subtle?Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',raw)),b=>b.toString(16).padStart(2,'0')).join(''):null;
++const manifest=m=>`<p><b>${esc(m.concepto)}${m.sentido?' #'+esc(m.sentido):''}</b>${m.sentido_candidato?' · candidato #'+esc(m.sentido_candidato):''} · ${m.expreso?'expreso':'implícito'}</p><p>${esc(m.determinacion)}</p>`;
++function rowHtml(row,check){return `<article class="nuc-card"><h3>${esc(row.n.id)} · ${esc(row.n.unidad)}</h3><p>${esc(row.n.formulacion)}</p><small>${esc(row.n.voz)} · ${esc(row.n.estado)}</small>${row.m?manifest(row.m):''}${row.relacion?`${manifest(row.a)}<p><b>${esc(row.relacion.rel)}</b> → ${esc(row.relacion.familia)} · ${esc(row.relacion.voz)} · ${esc(row.relacion.estado)}</p>${manifest(row.b)}<p>${esc(row.relacion.justificacion)}</p>`:''}${row.transicion?`<p><b>Continuación editorial (no deducción):</b> ${esc(row.transicion.pregunta)}</p><p>${esc(row.s.id)} · ${esc(row.s.formulacion)}</p><p>${esc(row.transicion.justificacion)}</p>${row.nota_editorial?`<p><small>${esc(row.nota_editorial.movimiento)}: ${esc(row.nota_editorial.nota)}</small></p>`:''}`:''}<details><summary>Límites y evidencias</summary><p>${esc(row.n.limite)}</p>${row.s?`<p>${esc(row.s.limite)}</p>`:''}${[...row.evidencias,...(row.evidencias_destino||[])].map(e=>{const p=check.paragraphs.get(e.parrafo_local);return `<details><summary>${esc(e.uid)} · EN I · ${esc(e.subunidad)} · §${esc(e.parrafo_local)}</summary><p lang="grc">${esc(e.gr_ancla)}</p><p>Contexto bilingüe del párrafo completo:</p><p>${esc(p.es)}</p><p lang="grc">${esc(p.gr)}</p></details>`}).join('')}</details></article>`;}
++export function createLabSemanticQueryView(){
++ const el=document.createElement('div');el.className='scrollable has-scroll nuc-view';const abort=new AbortController();let disposed=false,data=null,result=null;
++ if(!document.querySelector('link[data-nuclei-styles]')){const css=document.createElement('link');css.rel='stylesheet';css.href='/css/lab-nuclei-n1u1935c.css';css.dataset.nucleiStyles='1';document.head.appendChild(css);}
++ el.innerHTML=`<main class="nuc-inner"><nav><a href="#/lab">← Laboratorio</a> · <a href="#/lab/nucleos">Articulaciones semánticas</a></nav><h1>Consultas semánticas · N1-U.19.3.6a</h1><p>Subconjunto de Cypher de solo lectura. No ejecuta consultas externas ni llama a un LLM. Conserva las voces y los estados editoriales.</p><p data-status role="status">Cargando datos activos…</p><section class="nuc-card"><label>Ejemplos <select data-example>${SEMANTIC_EXAMPLES.map(([name],i)=>`<option value="${i}">${esc(name)}</option>`).join('')}</select></label><p><label>Patrón de consulta<br><textarea data-query rows="5" maxlength="1500" spellcheck="false" style="width:100%">${esc(SEMANTIC_EXAMPLES[0][1])}</textarea></label></p><button type="button" data-run disabled>Consultar</button><p role="alert" data-error></p></section><section data-results aria-live="polite"></section><section class="nuc-card"><h2>Contexto para el futuro diálogo</h2><p>Expediente JSON verificable, no respuesta generada. No se envía a OpenRouter; se exporta para revisión.</p><label>Pregunta del interlocutor (opcional)<textarea data-question rows="3" maxlength="1000" style="width:100%"></textarea></label><button type="button" data-export disabled>Exportar contexto JSON</button><p role="status" data-export-status></p></section></main>`;
++ const $=s=>el.querySelector(s);const reset=()=>{result=null;$('[data-results]').innerHTML='';$('[data-export]').disabled=true;$('[data-error]').textContent='';$('[data-export-status]').textContent='';};
++ $('[data-example]').addEventListener('change',e=>{$('[data-query]').value=SEMANTIC_EXAMPLES[Number(e.target.value)][1];reset();});
++ $('[data-query]').addEventListener('input',reset);
++ $('[data-run]').addEventListener('click',()=>{reset();try{result=runSemanticQuery($('[data-query]').value,data.pilot,data.check,data.options);$('[data-results]').innerHTML=`<h2>${result.rows.length} de ${result.total} resultados</h2>${result.truncado?'<p>Resultados limitados por LIMIT.</p>':''}${result.rows.map(r=>rowHtml(r,data.check)).join('')||'<p>No hay manifestaciones registradas para esta consulta.</p>'}`;$('[data-export]').disabled=!result.rows.length||result.sha256_activo!==result.sha256_esperado||!result.sha256_activo||!result.revision_activa;}catch(e){$('[data-error]').textContent=e.message;}});
++ $('[data-export]').addEventListener('click',()=>{try{if(!result)throw Error('Ejecutá una consulta primero.');const packet=buildSemanticContext(result,data.check,$('[data-question]').value);downloadJSON(packet,'agora-contexto-semantico.json');$('[data-export-status]').textContent='Expediente preparado para revisión; no se envió al LLM.';}catch(e){$('[data-export-status]').textContent=e.message;}});
++ Promise.all([get('/lab/n1u1935e-nucleos-semanticos.json',abort.signal),get('/api/labo/lectura',abort.signal),get('/api/texto/EN_libro1_v8.txt',abort.signal,false)]).then(async([pilot,lectura,raw])=>{const book=parseBook(new TextDecoder().decode(raw));const ids=book.chapters.flatMap(c=>c.paragraphs.map(p=>p.number));if(new Set(ids).size!==ids.length)throw Error('Identidad de párrafo ambigua en el Libro I.');const graph=buildTagTrees(lectura);const subs=new Set((lectura.tags?.unidades||[]).flatMap(u=>(u.subunidades||[]).map(s=>`${u.id}/${s.id}`)));const check=inspectNuclei(pilot,graph,book,subs);const contractIssues=[...inspectSemanticContract(pilot),...inspectHorizons(pilot),...inspectProposedSenses(pilot,graph).filter(s=>s.estado!=='propuesto').map(s=>({id:s.id,message:s.estado}))];const textHash=await hash(raw);if(disposed)return;data={pilot,check,options:{revision:lectura.revision,textHash,contractIssues,graphIssues:graph.issues,transitionNotes:TRANSITION_NOTES}};const issues=[...check.issues,...contractIssues,...graph.issues];if(issues.length){$('[data-status]').textContent=`${issues.length} incidencias; consulta bloqueada.`;$('[data-results]').textContent=issues.slice(0,20).map(i=>`${i.id||i.tipo}: ${i.message||i.referencia||i.desde||''}`).join(' · ');return;}$('[data-status]').textContent=`Referencias verificadas en párrafo. ${lectura.revision===pilot.revision_catalogo?'Revisión original.':'Revisión activa distinta de la histórica.'} ${textHash===pilot.texto.sha256?'SHA-256 coincide.':'SHA-256 diferente o no disponible: exportación deshabilitada.'}`;$('[data-run]').disabled=false;}).catch(e=>{if(!disposed)$('[data-status]').textContent=e.message;});
++ return {el,destroy(){disposed=true;abort.abort();}};
++}
+diff --git a/public/scripts/check-n1u1936a.mjs b/public/scripts/check-n1u1936a.mjs
+new file mode 100644
+index 0000000..30a43dd
+--- /dev/null
++++ b/public/scripts/check-n1u1936a.mjs
+@@ -0,0 +1,29 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import {compileSemanticQuery,runSemanticQuery,buildSemanticContext,SEMANTIC_EXAMPLES} from '../js/lab/semanticQuery.js';
++const queries=SEMANTIC_EXAMPLES.map(x=>x[1]);
++const fixture=()=>{
++ const e={obra:'EN',libro:1,unidad:'ergon',subunidad:'1098a16-18',parrafo_local:27,gr_ancla:'λόγος'};
++ const m={id:'razon',concepto:'estatico:logos',sentido:'razon',expreso:true,evidencia:0,determinacion:'Razón'};
++ const b={...m,id:'palabra',sentido:null,sentido_candidato:'lenguaje',expreso:false};
++ const n={id:'n04',unidad:'ergon',formulacion:'Actividad excelente',voz:'nuestra',estado:'propuesto',limite:'No deducir equivalencias.',evidencias:[e],manifestaciones:[m,b],relaciones:[{de:'razon',a:'palabra',rel:'contrasta_con',voz:'nuestra',estado:'propuesto'}]};
++ const s={...n,id:'n14',manifestaciones:[],relaciones:[]};
++ const t={de:'n04',a:'n14',tipo:'abre',pregunta:'¿En qué sentido es un principio?',voz:'nuestra',estado:'propuesto'};
++ const pilot={nucleos:[n,s],transiciones:[t],familias_relacion:{contrasta_con:'contrastiva'},revision_catalogo:'historica',texto:{archivo:'EN_libro1_v8.txt',sha256:'hash'},estado:'propuesto',incremento:'N1-U.19.3.5e'};
++ const check={issues:[],nodes:new Map([[n.id,n],[s.id,s]]),concepts:new Map([['estatico:logos',{uid:'estatico:logos',id:'logos',label:'Lógos'}]]),paragraphs:new Map([[27,{gr:'λόγος',es:'Razón'}]])};
++ return {pilot,check,opts:{revision:'activa',textHash:'hash'}};
++};
++const execute=(q,f)=>runSemanticQuery(q,f.pilot,f.check,f.opts);
++test('cuatro patrones y límite acotado',()=>{assert.deepEqual(queries.map(q=>compileSemanticQuery(q).kind),['manifestaciones','relaciones','evidencias','continuaciones']);assert.equal(compileSemanticQuery(queries[0].replace('LIMIT 20','LIMIT 1')).limit,1);assert.equal(compileSemanticQuery(queries[0].replace('-[:MANIFIESTA]', '\n  -[:MANIFIESTA]')).kind,'manifestaciones');for(const v of ['0','51','100'])assert.throws(()=>compileSemanticQuery(queries[0].replace('LIMIT 20',`LIMIT ${v}`)));});
++test('rechaza escrituras, cláusulas extra, inversión y espacios de nombres ambiguos',()=>{for(const q of ['DELETE n',queries[0]+' DELETE n',queries[1].replace('->(b','<-(b'),queries[0].replace('estatico:logos','logos'),queries[0].replace('RETURN n, m, c','RETURN *')])assert.throws(()=>compileSemanticQuery(q));});
++test('manifestaciones conservan sentido candidato sin promoverlo',()=>{const f=fixture();const r=execute(queries[0],f);assert.equal(r.total,2);assert.equal(r.rows[1].m.sentido,null);assert.equal(r.rows[1].m.sentido_candidato,'lenguaje');assert.equal(r.rows[1].m.expreso,false);assert.equal(r.rows[0].n.estado,'propuesto');});
++test('relación local, evidencia y continuación mantienen registros distintos',()=>{const f=fixture();const r=execute(queries[1],f).rows[0];assert.equal(r.a.uid,'n04/razon');assert.equal(r.b.uid,'n04/palabra');assert.equal(r.relacion.familia,'contrastiva');assert.equal(execute(queries[2],f).rows[0].e.identidad_parrafo,'EN:1:p27');f.opts.transitionNotes={'n04/n14':{movimiento:'Apertura al fin',nota:'Nota editorial'}};const t=execute(queries[3],f).rows[0];assert.equal(t.nota_editorial.movimiento,'Apertura al fin');assert.equal(t.s.id,'n14');assert.equal(t.transicion.tipo,'abre');assert.equal(t.relacion,undefined);assert.equal(t.evidencias_destino[0].uid,'n14/e0');});
++test('LIMIT conserva total y no fabrica resultados',()=>{const f=fixture();const r=execute(queries[0].replace('LIMIT 20','LIMIT 1'),f);assert.equal(r.total,2);assert.equal(r.rows.length,1);assert.equal(r.truncado,true);assert.equal(execute(queries[3].replace('n04','n14'),f).total,0);assert.throws(()=>execute(queries[2].replace('n04','n99'),f));});
++test('incidencias bloquean recuperación',()=>{for(const kind of ['contractIssues','graphIssues']){const f=fixture();f.opts[kind]=[{message:'error'}];assert.throws(()=>execute(queries[0],f));}const f=fixture();f.check.issues.push({message:'error'});assert.throws(()=>execute(queries[0],f));});
++test('contexto deduplica párrafos y conserva registros editoriales',()=>{const f=fixture();const r=execute(queries[0],f);const p=buildSemanticContext(r,f.check,'¿Qué es lógos?');assert.equal(p.parrafos.length,1);assert.equal(p.parrafos[0].gr,'λόγος');assert.equal(p.resultados.length,2);assert.equal(p.revision_activa,'activa');assert.equal(p.estado_catalogo,'propuesto');});
++test('no exporta sin hash, revisión, resultados o párrafo bilingüe',()=>{const f=fixture();const r=execute(queries[0],f);for(const patch of [{sha256_activo:null},{sha256_activo:'otro'},{revision_activa:''},{rows:[]}])assert.throws(()=>buildSemanticContext({...r,...patch},f.check));f.check.paragraphs.clear();assert.throws(()=>buildSemanticContext(r,f.check));});
++test('contexto acotado y sin mutar el catálogo',()=>{const f=fixture();const snapshot=JSON.stringify(f.pilot);const r=execute(queries[0],f);assert.throws(()=>buildSemanticContext({...r,rows:Array(13).fill(r.rows[0])},f.check));assert.throws(()=>buildSemanticContext(r,f.check,'x'.repeat(1001)));assert.equal(JSON.stringify(f.pilot),snapshot);});
++// Prueba adicional al instalar: usa el catálogo real versionado, sin fingir comprobar MariaDB.
++import fs from 'node:fs';
++const url=new URL('../lab/n1u1935e-nucleos-semanticos.json',import.meta.url);
++test('patrones contra el catálogo instalado (no comprueba texto ni base activa)',{skip:!fs.existsSync(url)},()=>{const p=JSON.parse(fs.readFileSync(url,'utf8'));const map=new Map(p.nucleos.map(n=>[n.id,n]));const c={issues:[],nodes:map,concepts:new Map([['estatico:logos',{uid:'estatico:logos',id:'logos',label:'Lógos'}]])};assert.ok(runSemanticQuery(queries[0],p,c).rows.some(r=>r.m.sentido_candidato==='lenguaje'));assert.equal(runSemanticQuery(queries[1],p,c).total,map.get('n04').relaciones.length);assert.equal(runSemanticQuery(queries[2],p,c).total,map.get('n04').evidencias.length);assert.equal(runSemanticQuery(queries[3],p,c).total,p.transiciones.filter(t=>t.de==='n04').length);});

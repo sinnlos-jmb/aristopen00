@@ -32,7 +32,7 @@ export function inspectNuclei(pilot,graph,book,subunits=null){
   if(!r.id||routeIds.has(r.id)||!r.orden?.length||r.orden.some(id=>!nodes.has(id)))issue('recorridos',`Recorrido inválido: ${r.id}`);
   routeIds.add(r.id);for(let i=1;i<(r.orden?.length??0);i++)if(!transitions.has(`${r.orden[i-1]}/${r.orden[i]}`))issue('recorridos',`Falta transición: ${r.orden[i-1]} → ${r.orden[i]}`);
  }
- return {issues,nodes,concepts,paragraphs,transitions};
+ return {issues,nodes,concepts,paragraphs,transitions,graph};
 }
 export function continuations(pilot,id){return arr(pilot.transiciones).filter(t=>t.de===id);}
 export function anchorMarkup(text,anchor,esc){const source=normalizeWithOffsets(text),needle=norm(anchor),i=needle?source.value.indexOf(needle):-1;if(i<0)return esc(text);const start=source.offsets[i],last=source.offsets[i+needle.length-1];let end=last+String.fromCodePoint(text.codePointAt(last)).length;while(end<text.length&&/\p{M}/u.test(text[end]))end++;return esc(text.slice(0,start))+'<mark>'+esc(text.slice(start,end))+'</mark>'+esc(text.slice(end));}
