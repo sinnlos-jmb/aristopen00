@@ -1,3 +1,4 @@
+import { createLabBibliographyView } from './labBibliographyView.js';
 import { createLabNucleiView } from './labNucleiView.js';
 import { createLabTreesView } from './labTreesView.js';
 import { createLabEnigmaView } from './labEnigmaView.js';
@@ -18,6 +19,11 @@ import { openTrayectoEditor } from './labTrayectoEditor.js';
 
 // Catálogo de experimentos para la maqueta grid
 export const EXPERIMENTS = Object.freeze({
+  bibliografia: {
+    id: 'bibliografia', tab: 1, title: 'Bibliografía secundaria',
+    desc: 'Consultá los grafos de Berti y Owens, sus textos y las propuestas de lectura propias.',
+    tag: 'Lecturas e interpretaciones', icon: '📚', featured: false
+  },
   nucleos: {
     id: 'nucleos', tab: 1, title: 'Articulaciones semánticas',
     desc: 'Explorá hilos de preguntas, núcleos semánticos y evidencia del Libro I.',
@@ -139,6 +145,7 @@ const EXAMPLES = [
 ];
 
 export function createLabView(App, opts = {}) {
+  if (opts.exp === 'bibliografia') return createLabBibliographyView();
   // N1-U.19.3.5c: nueva vista del Lab, sin modificar los experimentos existentes.
   if (opts.exp === 'nucleos') return createLabNucleiView(App);
   // N1-U.19.3: nueva vista del Lab, sin modificar los experimentos existentes.

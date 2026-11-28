@@ -1,0 +1,21 @@
+:root{--ink:#37352F;--muted:#787774;--line:#E9E9E7;--blue:#2783DE;--blue-soft:#E7F2FC;--mark:#FBF3DB;--mark-line:#D9A72E;--bg:#FFFFFF}
+*{box-sizing:border-box}
+html{scroll-padding-top:110px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Georgia,'Times New Roman',serif}
+header{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;justify-content:space-between;padding:14px 24px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--line);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}
+.kicker{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+h1{margin:2px 0 0;font-size:20px;line-height:1.25;font-weight:650}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tools a,.tools button,.tools select{font:inherit;font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:6px;padding:5px 10px;text-decoration:none;cursor:pointer}
+.tools a:hover,.tools button:hover{background:#F7F7F5}
+.tools a.go{border-color:var(--blue);color:var(--blue)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+main{max-width:720px;margin:0 auto;padding:24px 24px 120px}
+h2{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;letter-spacing:.08em;color:var(--muted);margin:38px 0 10px;padding-top:6px;border-top:1px solid var(--line)}
+.par{position:relative;margin:0 0 16px;padding:4px 10px 4px 0;border-left:3px solid transparent;transition:background .4s}
+.par .num{position:absolute;left:-58px;top:6px;width:46px;text-align:right;font:12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:var(--muted);text-decoration:none}
+.par .num:hover{color:var(--blue)}
+.par.on{background:var(--mark);border-left-color:var(--mark-line);padding-left:10px}
+.nota{font:13px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:var(--muted);background:#F7F7F5;border-radius:6px;padding:10px 12px;margin:0 0 20px}
+.error{color:#C4554D}
+@media (max-width:860px){.par{padding-left:0}.par .num{position:static;display:inline-block;width:auto;margin-right:6px}.par.on{padding-left:8px}}

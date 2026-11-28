@@ -1,0 +1,24 @@
+:root{--ink:#37352F;--muted:#787774;--line:#E9E9E7;--blue:#2783DE;--gold:#C9A227;--gold-ink:#9A7B12;--gold-soft:#FBF3DB}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);background:#fff;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}
+header{max-width:900px;margin:0 auto;padding:36px 24px 8px}
+.kicker{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+h1{margin:4px 0 8px;font-size:28px;line-height:1.2}
+.lead{color:var(--muted);margin:0}
+main{max-width:900px;margin:0 auto;padding:8px 24px 80px}
+h2{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:34px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
+.hilo p{font-family:Georgia,'Times New Roman',serif;font-size:17px}
+.fe{background:var(--gold-soft);border-left:3px solid var(--gold);border-radius:6px;padding:4px 20px 10px}
+.fe h2{color:var(--gold-ink);border-top:0}
+.fe ol{padding-left:20px;margin:0}
+.fe li{margin:0 0 12px}
+.fe a,.go a{color:var(--blue);text-decoration:none;white-space:nowrap}
+.fe a:hover,.go a:hover{text-decoration:underline}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{position:relative;border:1px solid var(--line);border-radius:8px;padding:14px 16px 12px}
+.card .n{position:absolute;top:12px;right:14px;font-size:12px;color:var(--muted)}
+.card h3{margin:0 24px 6px 0;font-size:16px;line-height:1.3}
+.card p{margin:0 0 8px;font-size:14px}
+.go{display:flex;flex-wrap:wrap;gap:6px}
+.go a{font-size:13px;border:1px solid var(--blue);border-radius:6px;padding:3px 8px}
+.pend p{color:var(--muted);font-size:14px}
