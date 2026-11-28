@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El bien · propuestas superadoras · Berti y nuestra idea</title>
+<link rel="stylesheet" href="../css/grafos.css">
+</head>
+<body>
+<header>
+  <h1>Propuestas superadoras</h1>
+  <span class="sub">Enrico Berti, <i>Il bene</i> · la salida de Berti y la nuestra · v2</span>
+  <div class="tools">
+    <div class="group" role="group" aria-label="Controles del diagrama">
+      <button id="expand" type="button">Expandir</button>
+      <button id="collapse" type="button">Colapsar</button>
+      <button id="fit" type="button">Recentrar</button>
+    </div>
+    <button id="keys" type="button" aria-haspopup="dialog"><span class="keysFull">Claves de lectura</span><span class="keysShort">Claves</span></button>
+  </div>
+</header>
+
+<div id="stage">
+  <svg id="svg" role="group" aria-label="Grafo interactivo de las dos propuestas: seleccioná nodos o aristas para leer su explicación">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#A9A6A0"></path>
+      </marker>
+      <marker id="arrowOn" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#2783DE"></path>
+      </marker>
+      <marker id="arrow-fphusis" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#4E9A5E"></path>
+      </marker>
+      <marker id="arrow-ftheion" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#3FA0CC"></path>
+      </marker>
+    </defs>
+    <g id="viewport">
+      <g id="gedges"></g>
+      <g id="gnodes"></g>
+    </g>
+  </svg>
+  <aside id="info" style="display:none" aria-label="Explicación de la selección"></aside>
+  <div id="zoomTools" role="group" aria-label="Zoom del grafo">
+    <button id="zoomOut" type="button" aria-label="Alejar" title="Alejar">−</button><output id="zoomLevel" aria-label="Nivel de zoom">100%</output><button id="zoomIn" type="button" aria-label="Acercar" title="Acercar">+</button>
+  </div>
+  <div id="modal" hidden>
+    <div id="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Claves de lectura</h2>
+<div class="thesis"><b>Dos salidas del mismo diagnóstico.</b> Berti y nosotros aceptamos lo mismo: la concepción clásica del bien se perdió y un retorno sin más sería inactual. Discrepamos en qué hay que recuperar primero. Berti retiene las tres adquisiciones modernas y ancla la ética a una metafísica nueva todavía por construir; nosotros sostenemos que lo primero es recuperar el acto y la phúsis, es decir el realismo naturalista aristotélico. Este grafo pone las dos ramas una al lado de la otra para compararlas.</div>
+<p><b>Explorar:</b> tocá o hacé clic en un nodo, una línea o su palabra griega. La ficha muestra el sentido de la relación y sus referencias. Con teclado: Tab y Enter o Espacio; Escape cierra la ficha. El signo <b>+</b> o <b>−</b> de cada propuesta abre o cierra su rama; se pueden tener las dos abiertas a la vez.</p>
+<p><b>Cómo se vuelve:</b> el encabezado tiene <b>↑ El bien · mapa general</b> y, si llegaste desde él, <b>← Volver</b>. También se vuelve cerrando las dos ramas con sus signos <b>−</b>: cuando Berti y Nuestra idea quedan cerradas, el grafo devuelve al mapa general, en el nodo <b>Propuestas superadoras</b>. Los nodos <b>El problema</b> y <b>Componentes de la respuesta</b> están acá solo como contexto: se despliegan en el mapa general.</p>
+<p><b>La rama de Berti:</b> tres adquisiciones irrenunciables de la modernidad (la libertad del sujeto, la historicidad, la crítica de la metafísica dogmática), ética <b>anclada</b> a una metafísica y no deducida de ella, y la rehabilitación alemana de la filosofía práctica como punto de partida. Lo que queda por hacer es esa metafísica crítica nueva: Berti la deja como tarea.</p>
+<p><b>Nuestra rama:</b> capa propia, en línea de guiones. Tomamos la tarea pendiente de Berti pero cambiamos el orden: primero el acto, no el fin. La phúsis devuelve el impulso y la medida interna; <i>to theîn</i> es hóros y no paradeigma —criterio, no modelo a copiar—, atrae siendo comprendido: separado pero no legislador.</p>
+<p><b>Campos:</b> al seleccionar Phúsis se resalta en verde el lado del impulso y la potencia, que es la línea que la modernidad corta primero; al seleccionar Lo Divino, en celeste el lado del acto puro y de la atracción, que ocupa el lugar estructural del bien absoluto de Berti con otra función.</p>
+<p><b>Nuestro desacuerdo:</b> para Berti la solución positiva llega con el cristianismo y alcanza su punto más alto en Agustín y Tomás. Sostenemos que phúsis y enérgeia se perdieron casi por completo fuera del mundo griego ateniense, y que Tomás y Maritain no las comprenden en su significación originaria.</p>
+<p><b>Una arista que no está:</b> <b>Acto recuperado</b> retoma el nodo <b>Acto</b> de la cadena aristotélica, que vive en el mapa general. La flecha que los unía quedaba partida entre los dos grafos y se quitó: la relación se explica en las dos fichas. Allá la enérgeia está planteada; acá se la vuelve a poner como medida.</p>
+<p><b>Una palabra por arista:</b> los rótulos griegos e italianos son claves de memoria elegidas para este diagrama, no necesariamente citas ni fórmulas técnicas del texto.</p>
+<div class="ref">Berti, <i>Il bene</i> §111–115 · Lectura propia · EN II.6 · Met. Λ.7 · Phys. II.1</div>
+<button id="modalClose" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="./js/grafo-berti-2.data.js"></script>
+<script src="../js/grafos.js"></script>
+<script>
+/* Puente de navegación entre los dos grafos. No modifica el motor compartido. */
+(function(){
+  var hash = decodeURIComponent((location.hash || '').replace('#','')).split(',')[0];
+  if (hash && typeof collapsed !== 'undefined' && collapsed.has(hash)) { collapsed.delete(hash); render(); fit(); }
+
+  /* Si la ficha de entrada ocupa el lado derecho, el encuadre se achica para no quedar debajo. */
+  var panel = document.getElementById('info');
+  if (hash && panel && panel.style.display !== 'none') {
+    var pw = panel.getBoundingClientRect().width + 24, W = svg.clientWidth, H = Math.max(80, svg.clientHeight - 64);
+    if (W - pw > 320) { var s = (W - pw) / W; view.k *= s; view.x *= s; view.y = H / 2 + (view.y - H / 2) * s; applyView(); }
+  }
+
+  function target(el){
+    var id = el.dataset.subId || el.dataset.linkId;
+    var n = NODES.find(function(x){ return x.id === id; });
+    if (!n) return null;
+    var list = el.classList.contains('subBadge') ? n.subs : n.links;
+    if (!list || !list.length) return null;
+    return { node:n, dest:list[0] };
+  }
+  function jump(el){
+    var t = target(el);
+    if (!t) return false;
+    goTo(t.dest.file, t.dest.concept, t.node.id);
+    return true;
+  }
+  document.addEventListener('pointerdown', function(e){
+    if (e.button !== 0) return;
+    var b = e.target.closest && e.target.closest('.subBadge,.linkBadge');
+    if (b && jump(b)) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var b = e.target.closest && e.target.closest('.subBadge,.linkBadge');
+    if (b && jump(b)) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
+  if (typeof BACK_WHEN_CLOSED === 'undefined') return;
+  var cfg = BACK_WHEN_CLOSED, armed = false;
+  document.addEventListener('pointerdown', function(e){
+    var b = e.target.closest && e.target.closest('.badge');
+    armed = !!(b && cfg.list.indexOf(b.dataset.badgeId) >= 0 && !collapsed.has(b.dataset.badgeId));
+  }, true);
+  svg.addEventListener('pointerup', function(){
+    if (!armed) return;
+    armed = false;
+    if (cfg.list.every(function(id){ return collapsed.has(id); })) goTo(cfg.file, cfg.concept, null);
+  });
+})();
+</script>
+</body>
+</html>

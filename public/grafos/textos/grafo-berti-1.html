@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El bien · Enrico Berti, Il bene · mapa general</title>
+<link rel="stylesheet" href="../css/grafos.css">
+</head>
+<body>
+<header>
+  <h1>El bien</h1>
+  <span class="sub">Enrico Berti, <i>Il bene</i> · mapa general · v2</span>
+  <div class="tools">
+    <div class="group" role="group" aria-label="Controles del diagrama">
+      <button id="expand" type="button">Expandir</button>
+      <button id="collapse" type="button">Colapsar</button>
+      <button id="fit" type="button">Recentrar</button>
+    </div>
+    <button id="keys" type="button" aria-haspopup="dialog"><span class="keysFull">Claves de lectura</span><span class="keysShort">Claves</span></button>
+  </div>
+</header>
+
+<div id="stage">
+  <svg id="svg" role="group" aria-label="Grafo interactivo del bien según Berti: seleccioná nodos o aristas para leer su explicación">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#A9A6A0"></path>
+      </marker>
+      <marker id="arrowOn" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#2783DE"></path>
+      </marker>
+      <marker id="arrow-fphusis" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#4E9A5E"></path>
+      </marker>
+      <marker id="arrow-ftheion" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#3FA0CC"></path>
+      </marker>
+    </defs>
+    <g id="viewport">
+      <g id="gedges"></g>
+      <g id="gnodes"></g>
+    </g>
+  </svg>
+  <aside id="info" style="display:none" aria-label="Explicación de la selección"></aside>
+  <div id="zoomTools" role="group" aria-label="Zoom del grafo">
+    <button id="zoomOut" type="button" aria-label="Alejar" title="Alejar">−</button><output id="zoomLevel" aria-label="Nivel de zoom">100%</output><button id="zoomIn" type="button" aria-label="Acercar" title="Acercar">+</button>
+  </div>
+  <div id="modal" hidden>
+    <div id="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Claves de lectura</h2>
+<div class="thesis"><b>El bien, y por qué dejó de discutirse.</b> Berti no arranca definiendo el bien sino constatando su desaparición del vocabulario filosófico. Su respuesta —el bien es el fin y la perfección del hombre— se sostiene en un recorrido histórico que es el argumento mismo: un planteo que funciona en Grecia, una serie de pérdidas que lo desarman y una restauración posible. Este mapa separa cuatro cosas: el asunto, los componentes de la respuesta, la historia del problema y las dos propuestas que intentan superarla.</div>
+<p><b>Explorar:</b> tocá o hacé clic en un nodo, una línea o su palabra griega. La ficha muestra el sentido de la relación y sus referencias. Con teclado: Tab y Enter o Espacio; Escape cierra la ficha. Los nodos con un signo <b>+</b> o <b>−</b> tienen ramas: el signo las abre o las cierra. Al abrir, el grafo muestra cuatro secciones colapsadas.</p>
+<p><b>Dos grafos:</b> este mapa general y el de las <b>propuestas superadoras</b>. Los nodos <b>Berti</b> y <b>Nuestra idea</b> llevan el signo <b>↘</b> arriba a la izquierda: al tocarlo no se despliegan acá sino que se abre el segundo grafo con esa rama ya abierta. Desde allá se vuelve con el botón <b>Volver</b> del encabezado, con <b>↑ El bien · mapa general</b>, o cerrando las dos ramas. El menú <b>Grafos</b> lleva de uno a otro en cualquier momento.</p>
+<p><b>Mover y acercar:</b> arrastrá un nodo para moverlo, o el fondo para recorrer el grafo. Usá + / −, la rueda o dos dedos para cambiar el zoom. Recentrar encuadra todos los elementos visibles. Las posiciones arrastradas no se guardan.</p>
+<p><b>Dos capas:</b> la mayor parte del grafo es doxografía: lo que Berti sostiene, con el párrafo citado en cada ficha. Las relaciones de <b>lectura propia</b> están marcadas como tales en su ficha y van en línea de guiones. No hay que leerlas como si fueran de Berti.</p>
+<p><b>Los componentes de la respuesta:</b> la respuesta de Berti tiene dos caras. El <b>método</b> explica por qué el libro es un recorrido histórico y no una deducción; los <b>principios</b> son los cuatro rasgos irrenunciables: el bien es ser y no tener, es fin, es común y remite a un absoluto. Van juntos: quien deja caer alguno deja de poder decir para qué vivir.</p>
+<p><b>La cadena del planteo logrado:</b> Sócrates descubre el bien como un ser y no un tener, pero lo reduce a saber y queda en círculo vicioso; Platón le da el fundamento metafísico que faltaba, pero en una idea unívoca; Aristóteles corrige a los dos con el fin y el acto. La diferencia decisiva no es de doctrina sino de régimen: en Aristóteles el bien no queda entendido, queda hecho.</p>
+<p><b>Los desvíos:</b> cuatro pérdidas sucesivas, no una decadencia difusa. El mecanicismo saca los fines de la naturaleza; Hume y Kant cortan el paso del ser al deber; la inmanencia disuelve al individuo en la historia; Nietzsche renuncia al concepto. Cada una quita una condición distinta, y por eso la restauración no puede ser un solo movimiento.</p>
+<p><b>Una arista que no está:</b> la enérgeia planteada por Aristóteles y el <i>acto recuperado</i> de nuestra propuesta son el mismo hilo, pero viven en grafos distintos y la flecha que los unaía se quitó para no cortar el dibujo. Las fichas de <b>Acto</b> acá y de <b>Acto recuperado</b> en el otro grafo lo dicen expresamente.</p>
+<p><b>Nodos originarios:</b> Phýsis y Lo Divino pasaron al grafo de las propuestas, que es donde hacen trabajo. Por eso este mapa ya no resalta los campos verde y celeste.</p>
+<p><b>Una palabra por arista:</b> los rótulos griegos e italianos son claves de memoria elegidas para este diagrama, no necesariamente citas ni fórmulas técnicas del texto.</p>
+<p><b>Pendiente:</b> las secciones históricas intermedias —Plotino, la escolástica tardía, Rosmini, Moore, Scheler y Hartmann, Sartre— están representadas por sus cuatro nodos de pérdida y se desplegarán en una capa posterior.</p>
+<div class="ref">Berti, <i>Il bene</i> §3–11, §14–28, §29, §35–40, §43–98, §111–115 · EN I.6 1096a11–1097a14 · EE VIII.3 · Rep. VI 505e, 509b · Fil. 22a · Tim. 29e</div>
+<button id="modalClose" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="./js/grafo-berti-1.data.js"></script>
+<script src="../js/grafos.js"></script>
+<script>
+/* Puente de navegación entre los dos grafos. No modifica el motor compartido. */
+(function(){
+  var hash = decodeURIComponent((location.hash || '').replace('#','')).split(',')[0];
+  if (hash && typeof collapsed !== 'undefined' && collapsed.has(hash)) { collapsed.delete(hash); render(); fit(); }
+
+  /* Si la ficha de entrada ocupa el lado derecho, el encuadre se achica para no quedar debajo. */
+  var panel = document.getElementById('info');
+  if (hash && panel && panel.style.display !== 'none') {
+    var pw = panel.getBoundingClientRect().width + 24, W = svg.clientWidth, H = Math.max(80, svg.clientHeight - 64);
+    if (W - pw > 320) { var s = (W - pw) / W; view.k *= s; view.x *= s; view.y = H / 2 + (view.y - H / 2) * s; applyView(); }
+  }
+
+  function target(el){
+    var id = el.dataset.subId || el.dataset.linkId;
+    var n = NODES.find(function(x){ return x.id === id; });
+    if (!n) return null;
+    var list = el.classList.contains('subBadge') ? n.subs : n.links;
+    if (!list || !list.length) return null;
+    return { node:n, dest:list[0] };
+  }
+  function jump(el){
+    var t = target(el);
+    if (!t) return false;
+    goTo(t.dest.file, t.dest.concept, t.node.id);
+    return true;
+  }
+  document.addEventListener('pointerdown', function(e){
+    if (e.button !== 0) return;
+    var b = e.target.closest && e.target.closest('.subBadge,.linkBadge');
+    if (b && jump(b)) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var b = e.target.closest && e.target.closest('.subBadge,.linkBadge');
+    if (b && jump(b)) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
+  if (typeof BACK_WHEN_CLOSED === 'undefined') return;
+  var cfg = BACK_WHEN_CLOSED, armed = false;
+  document.addEventListener('pointerdown', function(e){
+    var b = e.target.closest && e.target.closest('.badge');
+    armed = !!(b && cfg.list.indexOf(b.dataset.badgeId) >= 0 && !collapsed.has(b.dataset.badgeId));
+  }, true);
+  svg.addEventListener('pointerup', function(){
+    if (!armed) return;
+    armed = false;
+    if (cfg.list.every(function(id){ return collapsed.has(id); })) goTo(cfg.file, cfg.concept, null);
+  });
+})();
+</script>
+</body>
+</html>

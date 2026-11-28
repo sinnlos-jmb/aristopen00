@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Owens · Aristotle on Empedocles</title>
+<link rel="stylesheet" href="../css/grafos.css">
+<link rel="stylesheet" href="../css/owens.css">
+</head>
+<body>
+<header>
+  <h1>Owens · Aristóteles sobre Empédocles</h1>
+  <span class="sub">Joseph Owens · capas: Owens, lectura propia, contacto con Berti · <a href="lectura.html?t=owens-empedocles&amp;from=grafo-owens-2.html">Texto completo (30 §)</a></span>
+  <div class="tools">
+    <div class="group" role="group" aria-label="Controles del diagrama">
+      <button id="expand" type="button">Expandir</button>
+      <button id="collapse" type="button">Colapsar</button>
+      <button id="fit" type="button">Recentrar</button>
+    </div>
+    <button id="keys" type="button" aria-haspopup="dialog"><span class="keysFull">Claves de lectura</span><span class="keysShort">Claves</span></button>
+  </div>
+</header>
+
+<div id="stage">
+  <svg id="svg" role="group" aria-label="Owens · Aristotle on Empedocles">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#A9A6A0"></path>
+      </marker>
+      <marker id="arrowOn" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#2783DE"></path>
+      </marker>
+      <marker id="arrow-fphusis" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#4E9A5E"></path>
+      </marker>
+      <marker id="arrow-ftheion" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+        <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#3FA0CC"></path>
+      </marker>
+    </defs>
+    <g id="viewport">
+      <g id="gedges"></g>
+      <g id="gnodes"></g>
+    </g>
+  </svg>
+  <aside id="info" style="display:none" aria-label="Explicación de la selección"></aside>
+  <div id="zoomTools" role="group" aria-label="Zoom del grafo">
+    <button id="zoomOut" type="button" aria-label="Alejar" title="Alejar">−</button><output id="zoomLevel" aria-label="Nivel de zoom">100%</output><button id="zoomIn" type="button" aria-label="Acercar" title="Acercar">+</button>
+  </div>
+  <div id="modal" hidden>
+    <div id="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Claves de lectura</h2>
+<p>Cada ficha tiene tres capas: <b>Lo que dice Owens</b> (doxografía, con los párrafos citados), <b style="color:#9A7B12">Lectura propia</b> y <b style="color:#3D7A4A">Contacto con Berti</b> (<i>Il bene</i>, §).</p><p>El botón <b>Leer en el texto §n</b> abre el artículo en la página de lectura con esos párrafos resaltados; <b>← Volver al grafo</b> regresa a la misma ficha.</p><p>La raíz es el artículo; los cinco nodos grandes son sus secciones (se despliegan con un clic); debajo, las tesis. Las aristas punteadas son conexiones nuestras o internas al argumento.</p><p><b>Nodo dorado:</b> lectura propia sin párrafo de Owens (la energeia como salida del dilema).</p><p>Berti no menciona a Empédocles: la capa <b>Contacto con Berti</b> de este grafo es siempre una conexión nuestra.</p><p>La numeración § es nuestra (párrafos del texto pegado), no la de la edición impresa.</p>
+<button id="modalClose" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="./js/grafo-owens-2.data.js"></script>
+<script src="../js/grafos.js"></script>
+<script>
+/* Puente de navegación entre los dos grafos. No modifica el motor compartido. */
+(function(){
+  var hash = decodeURIComponent((location.hash || '').replace('#','')).split(',')[0];
+  if (hash && typeof collapsed !== 'undefined' && collapsed.has(hash)) { collapsed.delete(hash); render(); fit(); }
+
+  /* Si la ficha de entrada ocupa el lado derecho, el encuadre se achica para no quedar debajo. */
+  var panel = document.getElementById('info');
+  if (hash && panel && panel.style.display !== 'none') {
+    var pw = panel.getBoundingClientRect().width + 24, W = svg.clientWidth, H = Math.max(80, svg.clientHeight - 64);
+    if (W - pw > 320) { var s = (W - pw) / W; view.k *= s; view.x *= s; view.y = H / 2 + (view.y - H / 2) * s; applyView(); }
+  }
+
+  function target(el){
+    var id = el.dataset.subId || el.dataset.linkId;
+    var n = NODES.find(function(x){ return x.id === id; });
+    if (!n) return null;
+    var list = el.classList.contains('subBadge') ? n.subs : n.links;
+    if (!list || !list.length) return null;
+    return { node:n, dest:list[0] };
+  }
+  function jump(el){
+    var t = target(el);
+    if (!t) return false;
+    goTo(t.dest.file, t.dest.concept, t.node.id);
+    return true;
+  }
+  document.addEventListener('pointerdown', function(e){
+    if (e.button !== 0) return;
+    var b = e.target.closest && e.target.closest('.subBadge,.linkBadge');
+    if (b && jump(b)) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var b = e.target.closest && e.target.closest('.subBadge,.linkBadge');
+    if (b && jump(b)) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
+  if (typeof BACK_WHEN_CLOSED === 'undefined') return;
+  var cfg = BACK_WHEN_CLOSED, armed = false;
+  document.addEventListener('pointerdown', function(e){
+    var b = e.target.closest && e.target.closest('.badge');
+    armed = !!(b && cfg.list.indexOf(b.dataset.badgeId) >= 0 && !collapsed.has(b.dataset.badgeId));
+  }, true);
+  svg.addEventListener('pointerup', function(){
+    if (!armed) return;
+    armed = false;
+    if (cfg.list.every(function(id){ return collapsed.has(id); })) goTo(cfg.file, cfg.concept, null);
+  });
+})();
+</script>
+<script src="./js/owens-ficha.js"></script>
+</body>
+</html>

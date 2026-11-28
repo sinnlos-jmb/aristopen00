@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>El bien — cadena de realización, autores y rupturas (v4)</title>
+<link rel="stylesheet" href="../css/berti-bien.css" />
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="kicker">Grafo introductorio · v4 · base doxográfica: Enrico Berti, <i>Il bene</i></div>
+    <h1>La cadena de realización del bien y sus rupturas</h1>
+    <p class="thesis">Seis eslabones encadenados —<span class="gr">phusis, logos, ergon·energeia, areté, eudaimonía, koinonía</span>— y diecinueve autores examinados eslabón por eslabón. No hay un único punto de ruptura: cada autor <b>conserva</b>, <b>desplaza</b>, <b>rompe</b> o <b>suprime</b> cada concepto. La tesis es que una sola queda íntegra, y que la nuestra es un realismo naturalista inspirado en Aristóteles.</p>
+  </header>
+<div class="statusrow">
+<div class="statusline" id="statusline"></div>
+<button id="btn-leyenda" class="btn-leyenda" aria-haspopup="dialog" aria-controls="leyenda-modal">
+<span class="syms" aria-hidden="true"><i class="sym conserva">●</i><i class="sym desplaza">◆</i><i class="sym rompe">×</i></span>&nbsp;Leyenda
+</button>
+</div>
+  <div class="statusbar">
+    <div class="chain" id="chain"></div>
+
+  </div>
+
+  <div class="layout">
+    <aside id="sidebar"></aside>
+	<div id="leyenda-scrim"></div>
+<div id="leyenda-modal" role="dialog" aria-modal="true" aria-labelledby="leyenda-titulo" aria-hidden="true">
+<div class="lg-head">
+<h3 id="leyenda-titulo">Leyenda de signos</h3>
+<button class="lg-close" id="leyenda-close" aria-label="Cerrar leyenda">×</button>
+</div>
+<ul class="lg-list">
+<li><span class="lg-sym"><i class="sym conserva">●</i></span><span><b>conserva</b> · lo mantiene en su función</span></li>
+<li><span class="lg-sym"><i class="sym desplaza">◆</i></span><span><b>desplaza</b> · lo conserva con el sentido corrido</span></li>
+<li><span class="lg-sym"><i class="sym rompe">×</i></span><span><b>rompe</b> · corta el vínculo con el siguiente</span></li>
+<li><span class="lg-sym"><i class="sym suprime">∅</i></span><span><b>suprime</b> · lo niega o lo elimina</span></li>
+<li><span class="lg-sym"><i class="sym recover">○</i></span><span><b>recupera</b> sin base</span></li>
+<li><span class="lg-sym"><i class="sym origin">●</i></span><span><b>origen</b> · sentido que sólo aquí tiene fundamento</span></li>
+<li><span class="lg-sym"><i class="sym conserva">●</i><i class="sym desplaza">●</i><i class="sym rompe">●</i></span><span><b>puntos del menú</b>: cadena íntegra · sin ruptura · con ruptura</span></li>
+</ul>
+<p class="lg-note">Queda disponible en el botón «Leyenda», junto a la línea de estado.</p>
+</div>
+    <main id="main" aria-live="polite"></main>
+  </div>
+
+  <footer>
+    Cadena y evaluación: elaboración propia. Recorrido histórico y citas italianas: Enrico Berti, <i>Il bene</i> (texto del usuario, uso personal).
+    Traducciones y loci verificados contra Aristóteles. Uso interno · no publicar.
+  </footer>
+</div>
+
+<div id="scrim"></div>
+<aside id="drawer" aria-hidden="true" aria-label="Texto de Berti">
+  <div class="dhead">
+    <div>
+      <div class="k">Leer a Berti · texto original</div>
+      <h4 id="dtitle"></h4>
+      <div class="it" id="dsub"></div>
+    </div>
+    <button class="dclose" id="dclose" aria-label="Cerrar">×</button>
+  </div>
+  <div class="dbody" id="dbody"></div>
+</aside>
+
+<script src="./js/berti-bien.data.js"></script>
+<script src="./js/berti-bien.autores.js"></script>
+<script src="./js/berti-bien.capas.js"></script>
+<script src="./js/berti-bien.app.js"></script>
+</body>
+</html>
