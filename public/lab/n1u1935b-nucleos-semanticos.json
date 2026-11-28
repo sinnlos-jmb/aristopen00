@@ -1,0 +1,545 @@
+{
+  "schema": "agora.articulaciones.piloto.v0",
+  "estado": "propuesto",
+  "revision_catalogo": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
+  "texto": {
+    "archivo": "EN_libro1_v8.txt",
+    "sha256": "2835eb0936dc6228fda7696610bdb9f09e3f20317ea30844a710f4041728186d"
+  },
+  "fuentes_hermeneuticas": [
+    {
+      "autor": "George A. Blair",
+      "titulo": "The Meaning of ἐνέργεια and ἐντελέχεια in Aristotle",
+      "anio": 1978,
+      "revista": "International Philosophical Quarterly",
+      "paginas": "101–117",
+      "secciones": "II–IV; Conclusion",
+      "url": "https://docs.google.com/document/d/1DwJhyQ84RSyMmlxauVAoJZnYQYbb2BnBHrabQROJwUQ/edit",
+      "tesis": "Hipótesis diacrónica: actividad inicialmente; entelecheia como posesión interna del fin; reintegración en energeia de la forma entendida como actividad. No equivale a identidad lexical universal."
+    }
+  ],
+  "cambios_jerarquia": [
+    {
+      "id": "energeia_acto",
+      "padre": "estatico:energeia",
+      "actual": "especie",
+      "propuesta": "agrupacion",
+      "nota": "Modalidad analógica; no especie unívoca",
+      "estado": "propuesto"
+    },
+    {
+      "id": "energeia_actividad",
+      "padre": "estatico:energeia",
+      "actual": "especie",
+      "propuesta": "agrupacion",
+      "nota": "Modalidad analógica; no especie unívoca",
+      "estado": "propuesto"
+    },
+    {
+      "id": "ergon_obra",
+      "padre": "estatico:ergon",
+      "actual": "especie",
+      "propuesta": "agrupacion",
+      "nota": "Modo de decir; conservar diferencia obra/uso",
+      "estado": "propuesto"
+    },
+    {
+      "id": "ergon_funcion",
+      "padre": "estatico:ergon",
+      "actual": "especie",
+      "propuesta": "agrupacion",
+      "nota": "Modo de decir; conservar diferencia obra/uso",
+      "estado": "propuesto"
+    },
+    {
+      "id": "dunamis_capacidad",
+      "padre": "estatico:dunamis",
+      "actual": "especie",
+      "propuesta": null,
+      "nota": "Pendiente revisar homonimia y ubicación en Alma; no aplicar por analogía con energeia",
+      "estado": "propuesto"
+    },
+    {
+      "id": "dunamis_potencia",
+      "padre": "estatico:dunamis",
+      "actual": "especie",
+      "propuesta": null,
+      "nota": "Pendiente revisar homonimia y ubicación en Alma; no aplicar por analogía con energeia",
+      "estado": "propuesto"
+    }
+  ],
+  "nucleos": [
+    {
+      "id": "n01",
+      "unidad": "proemio",
+      "estado": "propuesto",
+      "voz": "nuestra",
+      "formulacion": "Un fin puede consistir en la actividad misma o en una obra aparte de ella. Solo cuando hay un fin aparte de la acción se afirma la superioridad de la obra.",
+      "funcion_argumentativa": "distincion",
+      "evidencias": [
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "proemio",
+          "subunidad": "1094a3-6",
+          "parrafo_local": 1,
+          "gr_ancla": "τὰ μὲν γάρ εἰσιν ἐνέργειαι"
+        },
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "proemio",
+          "subunidad": "1094a3-6",
+          "parrafo_local": 1,
+          "gr_ancla": "παρ᾽ αὐτὰς"
+        },
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "proemio",
+          "subunidad": "1094a3-6",
+          "parrafo_local": 1,
+          "gr_ancla": "ἐν τούτοις βελτίω πέφυκε τῶν ἐνεργειῶν τὰ ἔργα"
+        }
+      ],
+      "manifestaciones": [
+        {
+          "id": "fin",
+          "concepto": "estatico:telos",
+          "sentido": null,
+          "ancla": "τῶν τελῶν",
+          "papel_local": "objeto_de_distincion",
+          "determinacion": "Fin de acciones, no necesariamente producto",
+          "evidencia": 0,
+          "expreso": true
+        },
+        {
+          "id": "actividad",
+          "concepto": "estatico:energeia_actividad",
+          "sentido": "fin",
+          "ancla": "ἐνέργειαι",
+          "papel_local": "predicado",
+          "determinacion": "Una clase de fin en este contexto",
+          "evidencia": 0,
+          "expreso": true
+        },
+        {
+          "id": "obra",
+          "concepto": "estatico:ergon_obra",
+          "sentido": null,
+          "ancla": "ἔργα τινά",
+          "papel_local": "predicado",
+          "determinacion": "Obra distinta de la actividad",
+          "evidencia": 1,
+          "expreso": true
+        }
+      ],
+      "relaciones": [
+        {
+          "de": "actividad",
+          "a": "fin",
+          "rel": "es_fin_en_contexto",
+          "justificacion": "Primer miembro de la distinción",
+          "voz": "nuestra",
+          "estado": "propuesto"
+        },
+        {
+          "de": "obra",
+          "a": "fin",
+          "rel": "es_fin_en_contexto",
+          "justificacion": "Segundo miembro; obra aparte de la actividad",
+          "voz": "nuestra",
+          "estado": "propuesto"
+        }
+      ],
+      "aristas_funcionales_existentes": [],
+      "limite": "No hacer de toda acción una producción ni universalizar la superioridad de la obra. Las aristas no son subtipos ontológicos.",
+      "pregunta_continuacion": "¿Puede una actividad ser valiosa sin producir algo aparte de ella?"
+    },
+    {
+      "id": "n02",
+      "unidad": "ergon",
+      "estado": "propuesto",
+      "voz": "nuestra",
+      "formulacion": "La investigación de lo propio del ser humano conduce a la vida que tiene razón en ejercicio; la función humana se formula como actividad del alma según razón o no sin razón.",
+      "funcion_argumentativa": "determinacion",
+      "evidencias": [
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "ergon",
+          "subunidad": "1098a5-7",
+          "parrafo_local": 26,
+          "gr_ancla": "τὴν κατ᾽ ἐνέργειαν θετέον"
+        },
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "ergon",
+          "subunidad": "1098a7-8",
+          "parrafo_local": 27,
+          "gr_ancla": "ἔργον ἀνθρώπου ψυχῆς ἐνέργεια κατὰ λόγον ἢ μὴ ἄνευ λόγου"
+        }
+      ],
+      "manifestaciones": [
+        {
+          "id": "funcion",
+          "concepto": "estatico:ergon_funcion",
+          "sentido": null,
+          "ancla": "ἔργον ἀνθρώπου",
+          "papel_local": "sujeto",
+          "determinacion": "Función humana en la hipótesis del argumento",
+          "evidencia": 1,
+          "expreso": true
+        },
+        {
+          "id": "ejercicio",
+          "concepto": "estatico:energeia_actividad",
+          "sentido": "ejercicio",
+          "ancla": "κατ᾽ ἐνέργειαν",
+          "papel_local": "determinacion",
+          "determinacion": "Vida en ejercicio, no solo poseída",
+          "evidencia": 0,
+          "expreso": true
+        },
+        {
+          "id": "razon",
+          "concepto": "estatico:logos",
+          "sentido": "razon",
+          "ancla": "κατὰ λόγον",
+          "papel_local": "determinacion",
+          "determinacion": "Según razón; conservar también la fórmula negativa",
+          "evidencia": 1,
+          "expreso": true
+        }
+      ],
+      "relaciones": [
+        {
+          "de": "funcion",
+          "a": "ejercicio",
+          "rel": "se_determina_por",
+          "justificacion": "La función se caracteriza como actividad del alma",
+          "voz": "nuestra",
+          "estado": "propuesto"
+        },
+        {
+          "de": "ejercicio",
+          "a": "razon",
+          "rel": "se_cualifica_por",
+          "justificacion": "Restricción del pasaje, no toda actividad",
+          "voz": "nuestra",
+          "estado": "propuesto"
+        }
+      ],
+      "aristas_funcionales_existentes": [
+        "ergon_funcion--actividad"
+      ],
+      "limite": "No reducir razón a pensamiento teórico ni excluir las dos maneras de tener razón. En el griego la formulación es condicional.",
+      "pregunta_continuacion": "¿Basta con ejercer una función para realizarla bien?"
+    },
+    {
+      "id": "n03",
+      "unidad": "ergon",
+      "estado": "propuesto",
+      "voz": "nuestra",
+      "formulacion": "La función del citarista y del citarista ejemplar es la misma en género; la excelencia añade la superioridad de realizarla bien.",
+      "funcion_argumentativa": "premisa",
+      "evidencias": [
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "ergon",
+          "subunidad": "1098a8-12",
+          "parrafo_local": 27,
+          "gr_ancla": "τὸ δ᾽ αὐτό φαμεν ἔργον εἶναι τῷ γένει"
+        },
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "ergon",
+          "subunidad": "1098a8-12",
+          "parrafo_local": 27,
+          "gr_ancla": "προστιθεμένης τῆς κατὰ τὴν ἀρετὴν ὑπεροχῆς πρὸς τὸ ἔργον"
+        }
+      ],
+      "manifestaciones": [
+        {
+          "id": "funcion",
+          "concepto": "estatico:ergon_funcion",
+          "sentido": null,
+          "ancla": "ἔργον",
+          "papel_local": "objeto_de_cualificacion",
+          "determinacion": "Función en el ejemplo técnico",
+          "evidencia": 0,
+          "expreso": true
+        },
+        {
+          "id": "excelencia",
+          "concepto": "estatico:excelencia",
+          "sentido": "funcional",
+          "ancla": "κατὰ τὴν ἀρετὴν",
+          "papel_local": "determinacion",
+          "determinacion": "Excelencia genérica de realización; candidato a precisar el tag arete#funcional",
+          "evidencia": 1,
+          "expreso": true
+        }
+      ],
+      "relaciones": [
+        {
+          "de": "excelencia",
+          "a": "funcion",
+          "rel": "perfecciona",
+          "justificacion": "Superioridad en el cumplimiento de la misma función; no producción de otra función",
+          "voz": "nuestra",
+          "estado": "propuesto"
+        }
+      ],
+      "aristas_funcionales_existentes": [
+        "arete--ergon_funcion"
+      ],
+      "limite": "El vínculo con la adquisición de virtud ética requiere pasos adicionales. No imponer un crecimiento cuantitativo ni identificar la técnica con la praxis.",
+      "pregunta_continuacion": "¿Qué excelencia corresponde entonces a la función humana?"
+    },
+    {
+      "id": "n04",
+      "unidad": "ergon",
+      "estado": "propuesto",
+      "voz": "nuestra",
+      "formulacion": "El bien humano es actividad del alma según la virtud completa en una vida entera. La pluralidad de virtudes exige considerar la mejor y más completa.",
+      "funcion_argumentativa": "conclusion",
+      "evidencias": [
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "ergon",
+          "subunidad": "1098a16-18",
+          "parrafo_local": 27,
+          "gr_ancla": "τὸ ἀνθρώπινον ἀγαθὸν ψυχῆς ἐνέργεια γίνεται κατ᾽ ἀρετήν"
+        },
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "ergon",
+          "subunidad": "1098a18-20",
+          "parrafo_local": 27,
+          "gr_ancla": "Ἔτι δ᾽ ἐν βίῳ τελείῳ"
+        }
+      ],
+      "manifestaciones": [
+        {
+          "id": "felicidad",
+          "concepto": "estatico:eudaimonia",
+          "sentido": null,
+          "ancla": "τὸ ἀνθρώπινον ἀγαθὸν",
+          "papel_local": "definiendum",
+          "determinacion": "Bien humano; identificación con felicidad por el contexto de I.7, no lema eudaimonia en este ancla",
+          "evidencia": 0,
+          "expreso": false
+        },
+        {
+          "id": "actividad",
+          "concepto": "estatico:energeia_actividad",
+          "sentido": "fin",
+          "ancla": "ψυχῆς ἐνέργεια",
+          "papel_local": "determinacion",
+          "determinacion": "Actividad del alma",
+          "evidencia": 0,
+          "expreso": true
+        },
+        {
+          "id": "virtud",
+          "concepto": "estatico:arete",
+          "sentido": "teleia",
+          "ancla": "ἀρίστην καὶ τελειοτάτην",
+          "papel_local": "condicion_cualitativa",
+          "determinacion": "La mejor y más completa si son varias",
+          "evidencia": 0,
+          "expreso": true
+        },
+        {
+          "id": "vida",
+          "concepto": "estatico:bios",
+          "sentido": "completa",
+          "ancla": "ἐν βίῳ τελείῳ",
+          "papel_local": "condicion_temporal",
+          "determinacion": "Vida entera",
+          "evidencia": 1,
+          "expreso": true
+        }
+      ],
+      "relaciones": [
+        {
+          "de": "felicidad",
+          "a": "actividad",
+          "rel": "se_determina_por",
+          "justificacion": "Formulación del bien humano",
+          "voz": "nuestra",
+          "estado": "propuesto"
+        },
+        {
+          "de": "actividad",
+          "a": "virtud",
+          "rel": "se_cualifica_por",
+          "justificacion": "Actividad conforme a virtud; conservar la cláusula plural",
+          "voz": "nuestra",
+          "estado": "propuesto"
+        },
+        {
+          "de": "felicidad",
+          "a": "vida",
+          "rel": "requiere",
+          "justificacion": "No basta un día ni poco tiempo",
+          "voz": "nuestra",
+          "estado": "propuesto"
+        }
+      ],
+      "aristas_funcionales_existentes": [
+        "eudaimonia--actividad",
+        "arete--eudaimonia",
+        "bios--eudaimonia"
+      ],
+      "limite": "Conservar íntegra la formulación y su contexto condicional; no convertir cada condición por separado en definición suficiente. No resolver aquí el debate inclusivo/exclusivo.",
+      "pregunta_continuacion": "¿Por qué no basta un acto excelente aislado, ni poseer una virtud?"
+    },
+    {
+      "id": "n05",
+      "unidad": "confirmacion",
+      "estado": "propuesto",
+      "voz": "nuestra",
+      "formulacion": "La disposición puede estar presente sin producir ningún bien; la actividad conforme a la virtud implica ejercerla.",
+      "funcion_argumentativa": "confirmacion",
+      "evidencias": [
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "confirmacion",
+          "subunidad": "1098b30-31",
+          "parrafo_local": 32,
+          "gr_ancla": "ταύτης γάρ ἐστιν ἡ κατ᾽ αὐτὴν ἐνέργεια"
+        },
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "confirmacion",
+          "subunidad": "1098b31-1099a3",
+          "parrafo_local": 32,
+          "gr_ancla": "ἐν κτήσει ἢ χρήσει"
+        },
+        {
+          "obra": "EN",
+          "libro": 1,
+          "unidad": "confirmacion",
+          "subunidad": "1098b31-1099a3",
+          "parrafo_local": 32,
+          "gr_ancla": "τὴν μὲν γὰρ ἕξιν ἐνδέχεται μηδὲν ἀγαθὸν ἀποτελεῖν ὑπάρχουσαν"
+        }
+      ],
+      "manifestaciones": [
+        {
+          "id": "virtud",
+          "concepto": "estatico:arete",
+          "sentido": "humana",
+          "ancla": "ἀρετὴν",
+          "papel_local": "antecedente",
+          "determinacion": "Virtud en el contexto de felicidad",
+          "evidencia": 0,
+          "expreso": true
+        },
+        {
+          "id": "disposicion",
+          "concepto": "estatico:hexis",
+          "sentido": "disposicion",
+          "ancla": "ἕξιν",
+          "papel_local": "miembro_del_contraste",
+          "determinacion": "Puede estar presente sin producir bien",
+          "evidencia": 2,
+          "expreso": true
+        },
+        {
+          "id": "actividad",
+          "concepto": "estatico:energeia_actividad",
+          "sentido": "ejercicio",
+          "ancla": "ἐνέργεια",
+          "papel_local": "miembro_del_contraste",
+          "determinacion": "Ejercicio conforme a la virtud",
+          "evidencia": 0,
+          "expreso": true
+        }
+      ],
+      "relaciones": [
+        {
+          "de": "disposicion",
+          "a": "actividad",
+          "rel": "contrasta_con",
+          "justificacion": "Posesión/uso, disposición/actividad",
+          "voz": "nuestra",
+          "estado": "propuesto"
+        },
+        {
+          "de": "actividad",
+          "a": "virtud",
+          "rel": "se_cualifica_por",
+          "justificacion": "Según la virtud, no actividad cualquiera",
+          "voz": "nuestra",
+          "estado": "propuesto"
+        }
+      ],
+      "aristas_funcionales_existentes": [
+        "hexis--actividad",
+        "arete--actividad"
+      ],
+      "limite": "La virtud en acto no se identifica con la mera tenencia. No se prueba que toda actividad sea buena ni que una persona dormida carezca de virtud.",
+      "pregunta_continuacion": "¿Cómo se adquiere una disposición capaz de fructificar en buenas acciones?"
+    }
+  ],
+  "pruebas_tagueo": [
+    {
+      "unidad": "proemio",
+      "subunidad": "1094a9-16",
+      "parrafo_local": 2,
+      "concepto": "estatico:dunamis_capacidad",
+      "sentido": "arte",
+      "ancla": "ὑπὸ μίαν τινὰ δύναμιν",
+      "actual": "Tag de párrafo ya existente; no consta asociación directa del concepto en esa subunidad del exportado.",
+      "propuesta": "Añadir manifestación de capacidad técnica arquitectónica; evaluar concepto clave local. No confundir con potencia metafísica."
+    },
+    {
+      "unidad": "alma_virtudes",
+      "subunidad": "1102b3-11",
+      "parrafo_local": 49,
+      "concepto": "estatico:excelencia",
+      "sentido": null,
+      "ancla": "κοινή τις ἀρετὴ καὶ οὐκ ἀνθρωπίνη",
+      "actual": "arete central sin sentido de párrafo y concepto clave arete en subunidad",
+      "propuesta": "Distinguir excelencia común de la facultad vegetativa; no asignar virtud humana afirmativamente a esta ocurrencia. Mantener el tag de virtud humana para la mención contrastiva si se aprueba."
+    }
+  ],
+  "recorridos": [
+    {
+      "id": "pregunta-virtud",
+      "entrada": "¿Ser virtuoso basta para ser feliz?",
+      "orden": [
+        "n05",
+        "n03",
+        "n04"
+      ],
+      "hilo": "Posesión frente a ejercicio; realizar bien; alcance de la vida entera.",
+      "orientacion_editorial": "phusis",
+      "seguimiento": "¿Cómo se adquiere y ejercita esa virtud?"
+    },
+    {
+      "id": "pregunta-fin",
+      "entrada": "¿Para qué sirve la felicidad?",
+      "orden": [
+        "n01",
+        "n02",
+        "n03",
+        "n04"
+      ],
+      "hilo": "Distinguir obra y actividad; determinar la actividad humana; excelencia; bien humano.",
+      "orientacion_editorial": "phusis; apertura vertical mediante telos, no una conclusión sobre theion",
+      "seguimiento": "¿Qué hace que una actividad merezca elegirse por sí misma?"
+    }
+  ],
+  "nota": "Las relaciones locales son propuestas, no aristas del catálogo. La secuencia de recorridos es editorial, no deducción automática. Las anclas de manifestación se verifican en su párrafo; no se han comprobado los offsets internos de las subunidades contra MariaDB activa."
+}

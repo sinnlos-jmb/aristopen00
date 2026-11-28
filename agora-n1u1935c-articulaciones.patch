@@ -1,0 +1,1942 @@
+diff --git a/docs/AGORA_N1U1935C_REVISION.md b/docs/AGORA_N1U1935C_REVISION.md
+new file mode 100644
+index 0000000..79ebcce
+--- /dev/null
++++ b/docs/AGORA_N1U1935C_REVISION.md
+@@ -0,0 +1,39 @@
++# Ágora · N1-U.19.3.5c
++## Héxis, virtud y felicidad: continuidad de los núcleos
++
++Estado: propuesta editorial, no modificación de tagueo. Base: exportación histórica de árboles `3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8`, EN_libro1_v8.txt y catálogo 19.3.5b. Rama remota consultada: updating, 7dd92e2 (arbores04_save). Conservar la formulación de Ágora: «actividad del alma según la virtud completa en una vida entera».
++
++### 1. Distinciones
++
++- Héxis no equivale a enérgeia. EN I.8, 1098b30–1099a3, establece la diferencia de posesión y uso, disposición y actividad. La actividad aquí es la conforme a virtud, no cualquier actividad. El ejemplo del sueño no implica que el durmiente pierda la virtud. N05 permanece intacto.
++- EN I.13, 1103a3–10, distingue virtudes éticas y dianoéticas y caracteriza como virtudes las disposiciones elogiables. Esto no ofrece aún la definición completa de virtud ética ni explica su génesis. N07 prepara esa pregunta.
++- EN I.7, 1097a34–b6: la felicidad se elige por sí misma; las virtudes también por sí mismas y por la felicidad. N06 completa el recorrido anterior sobre fin, sin reducir las virtudes a medios externos.
++- EN I.10, 1100b7–11: las actividades conforme a virtud son rectoras de la felicidad. El contexto de las vicisitudes no autoriza una doctrina de invulnerabilidad. N08 retiene la necesidad de bienes que no dependen enteramente del agente. EN I.8, 1099a31–b6 y I.10, 1100b22–1101a13, son apoyos adicionales a examinar, no nuevas aristas aprobadas.
++- EN I.10, 1100a12–14, 1101a13–21: la aporía de Solón y la delimitación de la felicidad de los vivos. N09 no atribuye actividad feliz a un muerto ni resuelve qué le ocurre al alma después de morir. La finitud es una cuestión que brota del problema de la vida entera, no un tema añadido.
++- EN I.9, 1099b18–24: aprendizaje y esmerado cultivo, condicionados por la aptitud para la virtud; preferencia respecto a la fortuna. N10 abre la investigación de la adquisición sin anticipar el análisis de EN II.1. La traducción naturalista se mantiene donde ya figura en el corpus; no se reescribe el texto.
++
++### 2. Cinco núcleos nuevos
++
++| ID | Unidad | Pasaje | Papel |
++|---|---|---|---|
++| n06 | forma_fin | 1097a34–b6 | distinción de motivos de elección |
++| n07 | alma_virtudes | 1103a3–10 | caracterización de disposición virtuosa |
++| n08 | solon | 1100b3–11 | primacía frente a fortuna |
++| n09 | solon | 1100a12–14; 1101a13–21 | aporía de vida y muerte |
++| n10 | adquisicion | 1099b18–24 | apertura a formación de virtud |
++
++Los cinco núcleos anteriores permanecen idénticos. No se aprueban todavía las cuatro sustituciones especie → agrupación propuestas en 19.3.5b. No crear nuevos conceptos canónicos ni sentidos. La hipótesis de Blair se conserva en la bibliografía del catálogo previo, sin extender sus conclusiones automáticamente a la ética.
++
++### 3. Continuidad entre núcleos
++
++Introducir un único arreglo `transiciones`: `de`, `a`, `tipo`, `justificacion`, `pregunta`, `voz`, `estado`. Son vínculos editoriales dirigidos; `fundamenta_parcialmente` no denota una deducción suficiente. Los once vínculos permiten elegir bifurcaciones sin producir aristas por coocurrencia de tags. `n05` abre tres posibilidades: excelencia de la función (n03), disposición elogiable (n07) o aprendizaje/cultivo (n10). La secuencia n04 → n08 → n09 pone el bosquejo de felicidad a prueba ante la fortuna y la vida mortal. n01 → n06 → n02 → n03 → n04 distingue fin elegido por sí mismo y determinación del bien humano. El usuario puede retroceder, reiniciar o detenerse. No se obliga a profundizar hacia la dimensión divina.
++
++### 4. Ensayo de diálogo y evaluación
++
++Cuatro entradas redactadas editorialmente: suficiencia de la virtud, finalidad de la felicidad, adquisición de virtud, cambio de fortuna. Comparar en la aplicación si la pregunta recibe una respuesta directa, si la siguiente pregunta nace de una distinción reconocible, si el usuario puede reconstruir el hilo desde el texto y si una objeción permite cambiar de dirección. Evitar tomar continuidad por demostración. La orientación profunda se registra como criterio editorial inspeccionable; no es una clasificación del usuario. No hay perfil automático, LLM, puntuaciones ni cambios en Esfinge o Enigma.
++
++### 5. Alcance de la comprobación
++
++10 núcleos, 33 manifestaciones, 27 anclas y 11 transiciones; cuatro preguntas curadas. Se comprobó estructura, referencias de conceptos/sentidos/subunidades y anclas en el párrafo griego con la exportación histórica y texto disponible. No se verificaron offsets exactos internos de las subunidades ni la validez filosófica definitiva. La vista consulta `/api/labo/lectura` y `/api/texto/EN_libro1_v8.txt` para comprobar referencias actuales. Muestra párrafos bilingües completos con ancla griega resaltada, no una supuesta traducción exacta del fragmento. Si la revisión difiere, se advierte; si hay incidencias, quedan visibles. El prototipo sigue siendo material propuesto. Pruebas de modelo, no navegador real ni DB activa.
++
++Próximo: 19.3.5d, dimensión vertical (aitía, arkhé, télos, phýsis, theîon, lógos y verdad), utilizando estos núcleos y la cuestión de la divinidad de la felicidad en EN I.9 / I.12. No adelantamos su solución.
+diff --git a/instalar-lab-n1u1935c.mjs b/instalar-lab-n1u1935c.mjs
+new file mode 100644
+index 0000000..c54d825
+--- /dev/null
++++ b/instalar-lab-n1u1935c.mjs
+@@ -0,0 +1,68 @@
++// Ágora N1-U.19.3.5c: registra la vista de nucleos sin reescribir ni sustituir el resto del Lab.
++// Uso desde la raíz del repositorio: node instalar-lab-n1u1935c.mjs [--check]
++import fs from 'node:fs';
++import path from 'node:path';
++import { spawnSync } from 'node:child_process';
++
++const checkOnly = process.argv.includes('--check');
++const file = path.resolve('public/js/views/lab.js');
++if (!fs.existsSync(file)) {
++  console.error(`No existe ${file}. Ejecutá el script desde la raíz de Ágora.`);
++  process.exit(1);
++}
++const original = fs.readFileSync(file, 'utf8');
++const eol = original.includes('\r\n') ? '\r\n' : '\n';
++let result = original;
++const importStmt = "import { createLabNucleiView } from './labNucleiView.js';";
++const catalogMarker = /export\s+const\s+EXPERIMENTS\s*=\s*Object\.freeze\s*\(\s*\{/g;
++const viewMarker = /export\s+function\s+createLabView\s*\(\s*App\s*,\s*opts\s*=\s*\{\s*\}\s*\)\s*\{/g;
++const viewLine = "if (opts.exp === 'nucleos') return createLabNucleiView(App);";
++const catalogKey = /\bnucleos\s*:/g;
++
++function countMatches(text, re) { return Array.from(text.matchAll(re)).length; }
++function fail(msg) { console.error(`N1-U.19.3.5c: ${msg} No se modificó lab.js.`); process.exit(1); }
++const sections = [
++  ['EXPERIMENTS',catalogMarker],
++  ['createLabView',viewMarker],
++];
++for(const [label,matcher] of sections) {
++  if(countMatches(result, matcher)!==1) fail(`No puedo localizar de manera inequívoca ${label}.`);
++}
++if(countMatches(result,catalogKey)>1)fail('La tarjeta nucleos ya aparece más de una vez.');
++if(countMatches(result,/import\s*\{\s*createLabNucleiView\s*\}\s*from\s*['"]\.\/labNucleiView\.js['"];?/g)>1)fail('La importación está duplicada.');
++if(countMatches(result,/if\s*\(\s*opts\.exp\s*===\s*['"]nucleos['"]\s*\)/g)>1)fail('El enrutado de nucleos está duplicado.');
++const hasCatalog = countMatches(result,catalogKey)===1;
++const hasImport = result.includes(importStmt);
++const hasRoute = result.includes(viewLine);
++if (!hasImport) {
++  // Anteponer import no altera las importaciones y comentarios existentes.
++  const bom=result.startsWith('\ufeff')?'\ufeff':'';
++  result=bom+importStmt+eol+result.slice(bom.length);
++}
++if (!hasCatalog) {
++  const card = [
++    "", "  nucleos: {", "    id: 'nucleos', tab: 1, title: 'Articulaciones semánticas',",
++    "    desc: 'Explorá hilos de preguntas, núcleos semánticos y evidencia del Libro I.',",
++    "    tag: 'N1-U.19.3.5c · Exploratorio', icon: '🧵', featured: false", "  },"
++  ].join(eol);
++  result=result.replace(catalogMarker, full => full + card);
++}
++if (!hasRoute) {
++  result=result.replace(viewMarker, full=>full+eol+"  // N1-U.19.3.5c: nueva vista del Lab, sin modificar los experimentos existentes."+eol+"  "+viewLine);
++}
++if(!result.includes(importStmt)||!result.includes("nucleos: {")||!result.includes(viewLine))fail('La integración no produjo las tres piezas esperadas.');
++const additions=[!hasImport?'importación':null,!hasCatalog?'tarjeta':null,!hasRoute?'ruta':null].filter(Boolean);
++if(result===original){console.log('N1-U.19.3.5c: la tarjeta, la ruta y la importación ya están instaladas.');process.exit(0);}
++const testFile=path.join(path.dirname(file),`.n1u1935c-verify-${process.pid}.mjs`);
++try {
++  fs.writeFileSync(testFile,result,'utf8');
++  const test=spawnSync(process.execPath,['--check',testFile],{encoding:'utf8'});
++  if(test.status!==0) fail(`El resultado no supera node --check: ${test.stderr||test.stdout}`);
++} finally {if(fs.existsSync(testFile))fs.unlinkSync(testFile);}
++if(checkOnly){console.log('N1-U.19.3.5c: inserción compatible; se agregarían '+additions.join(', ')+'. Archivo sin cambios.');process.exit(0);}
++const backup=file+'.antes-n1u1935c.bak';
++if (fs.existsSync(backup))fail(`Ya existe respaldo ${backup}; no lo sobrescribo.`);
++fs.writeFileSync(backup,original,'utf8');
++fs.writeFileSync(file,result,'utf8');
++console.log('N1-U.19.3.5c instalado en lab.js ('+additions.join(', ')+').');
++console.log('Copia de seguridad: '+backup);
+diff --git a/public/css/lab-nuclei-n1u1935c.css b/public/css/lab-nuclei-n1u1935c.css
+new file mode 100644
+index 0000000..f278548
+--- /dev/null
++++ b/public/css/lab-nuclei-n1u1935c.css
+@@ -0,0 +1 @@
++.nuc-view{height:100%;overflow:auto;font-family:monospace}.nuc-inner{max-width:1150px;margin:auto;padding:1.5rem}.nuc-card{border:1px solid #78868b;border-radius:.65rem;padding:1rem;margin:1rem 0}.nuc-card select{max-width:100%;font:inherit;padding:.4rem;margin:.3rem}.nuc-view button{font:inherit;color:inherit;background:transparent;border:1px solid #78868b;border-radius:.35rem;padding:.45rem .65rem;cursor:pointer}.nuc-view button[aria-current]{outline:2px solid #789e9b}.nuc-flow{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}.nuc-answer,.nuc-bilingual{font-size:var(--agora-reader-font-size,18px);line-height:1.55}.nuc-note,.nuc-view small{font-size:.85rem;opacity:.85}.nuc-view details{margin:.65rem 0}.nuc-view summary{cursor:pointer;font-weight:bold}.nuc-rel{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;border-left:3px solid #9984b0;padding:.6rem;margin:.5rem 0}.nuc-rel small{flex-basis:100%}.nuc-choice{margin:.8rem 0}.nuc-bilingual{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.nuc-bilingual p{white-space:pre-wrap;overflow-wrap:anywhere}.nuc-card article{border-bottom:1px solid #78868b;padding:.4rem 0}.nuc-view mark{background:#d7c77b;color:#171717}@media(max-width:760px){.nuc-bilingual{grid-template-columns:1fr}.nuc-inner{padding:.7rem}}
+diff --git a/public/js/lab/semanticNuclei.js b/public/js/lab/semanticNuclei.js
+new file mode 100644
+index 0000000..0d78b7f
+--- /dev/null
++++ b/public/js/lab/semanticNuclei.js
+@@ -0,0 +1,38 @@
++import {normalizeWithOffsets} from '../reader/text.js';
++const arr=x=>Array.isArray(x)?x:[];
++const norm=x=>normalizeWithOffsets(String(x??'')).value;
++export function containsAnchor(text,anchor){const needle=norm(anchor);return !!needle&&norm(text).includes(needle);}
++export function inspectNuclei(pilot,graph,book,subunits=null){
++ const issues=[], issue=(id,message)=>issues.push({id,message});
++ const nodes=new Map(), concepts=new Map(arr(graph?.nodes).map(n=>[n.uid,n]));
++ const paragraphs=new Map(book.chapters.flatMap(c=>c.paragraphs.map(p=>[p.number,p])));
++ const subs=subunits??new Set(arr(graph?.asociaciones).filter(a=>a.tipo==='tag_subunidad').map(a=>`${a.unidad}/${a.subunidad}`));
++ const edgeIds=new Set(arr(graph?.edges).map(e=>e.source?.id).filter(Boolean));
++ for(const n of arr(pilot?.nucleos)){
++  if(!n.id||nodes.has(n.id)){issue(n.id,'ID de núcleo ausente o duplicado');continue;}
++  nodes.set(n.id,n); const local=new Set();
++  for(const e of arr(n.evidencias)){
++   if(e.obra!=='EN'||e.libro!==1||e.unidad!==n.unidad||!subs.has(`${e.unidad}/${e.subunidad}`))issue(n.id,`Referencia no resuelta: ${e.unidad}/${e.subunidad}`);
++   if(!containsAnchor(paragraphs.get(e.parrafo_local)?.gr,e.gr_ancla))issue(n.id,`Ancla griega no localizada en §${e.parrafo_local}: ${e.gr_ancla}`);
++  }
++  for(const m of arr(n.manifestaciones)){
++   if(!m.id||local.has(m.id))issue(n.id,'Manifestación sin ID único');local.add(m.id);
++   const c=concepts.get(m.concepto);if(!c)issue(n.id,`Concepto no resuelto: ${m.concepto}`);
++   else if(m.sentido!=null&&!arr(c.source?.sentidos).some(s=>s.id===m.sentido))issue(n.id,`Sentido no resuelto: ${m.concepto}#${m.sentido}`);
++   const e=n.evidencias?.[m.evidencia];if(!e)issue(n.id,`Manifestación sin evidencia: ${m.id}`);
++   else if(m.expreso&&!containsAnchor(paragraphs.get(e.parrafo_local)?.gr,m.ancla))issue(n.id,`Manifestación sin ancla: ${m.id}`);
++  }
++  for(const r of arr(n.relaciones))if(!local.has(r.de)||!local.has(r.a))issue(n.id,'Relación con extremo local inexistente');
++  for(const id of arr(n.aristas_funcionales_existentes))if(!edgeIds.has(id))issue(n.id,`Arista funcional no resuelta: ${id}`);
++ }
++ const transitions=new Map();for(const t of arr(pilot.transiciones)){
++  const key=`${t.de}/${t.a}`;if(!nodes.has(t.de)||!nodes.has(t.a)||transitions.has(key)||!t.justificacion)issue('transiciones',`Transición inválida: ${key}`);else transitions.set(key,t);
++ }
++ const routeIds=new Set();for(const r of arr(pilot.recorridos)){
++  if(!r.id||routeIds.has(r.id)||!r.orden?.length||r.orden.some(id=>!nodes.has(id)))issue('recorridos',`Recorrido inválido: ${r.id}`);
++  routeIds.add(r.id);for(let i=1;i<(r.orden?.length??0);i++)if(!transitions.has(`${r.orden[i-1]}/${r.orden[i]}`))issue('recorridos',`Falta transición: ${r.orden[i-1]} → ${r.orden[i]}`);
++ }
++ return {issues,nodes,concepts,paragraphs,transitions};
++}
++export function continuations(pilot,id){return arr(pilot.transiciones).filter(t=>t.de===id);}
++export function anchorMarkup(text,anchor,esc){const source=normalizeWithOffsets(text),needle=norm(anchor),i=needle?source.value.indexOf(needle):-1;if(i<0)return esc(text);const start=source.offsets[i],last=source.offsets[i+needle.length-1];let end=last+String.fromCodePoint(text.codePointAt(last)).length;while(end<text.length&&/\p{M}/u.test(text[end]))end++;return esc(text.slice(0,start))+'<mark>'+esc(text.slice(start,end))+'</mark>'+esc(text.slice(end));}
+diff --git a/public/js/views/labNucleiView.js b/public/js/views/labNucleiView.js
+new file mode 100644
+index 0000000..80ee127
+--- /dev/null
++++ b/public/js/views/labNucleiView.js
+@@ -0,0 +1,25 @@
++import {esc} from '../ui.js';
++import {parseBook} from '../reader/text.js';
++import {buildTagTrees} from '../lab/tagTreesGraph.js';
++import {inspectNuclei,continuations,anchorMarkup} from '../lab/semanticNuclei.js';
++import {controlesTamanoLector,actualizarLectura,cambiarTamanoLector} from '../reader/fontPreferences.js';
++const get=async(url,signal,json=true)=>{const r=await fetch(url,{cache:'no-store',signal});if(!r.ok)throw Error(`${url}: HTTP ${r.status}`);return json?r.json():r.text();};
++const button=(id,label,attr='data-nucleus')=>`<button type="button" ${attr}="${esc(id)}">${esc(label)}</button>`;
++const labels={n01:'Actividad y obra',n02:'Función humana',n03:'Excelencia',n04:'Bien humano',n05:'Posesión y ejercicio',n06:'Fin por sí mismo',n07:'Disposición elogiable',n08:'Fortuna',n09:'Vida mortal',n10:'Aprendizaje y cultivo'};
++const title=id=>labels[id]||id;
++export function createLabNucleiView(){
++ const el=document.createElement('div');el.className='scrollable has-scroll nuc-view';const controller=new AbortController();let destroyed=false,pilot,check,revision,route,history=[],inventory=false;
++ if(!document.querySelector('link[data-nuclei-styles]')){const css=document.createElement('link');css.rel='stylesheet';css.href='/css/lab-nuclei-n1u1935c.css';css.dataset.nucleiStyles='1';document.head.appendChild(css);}
++ const shell=body=>`<main class="nuc-inner"><nav><a href="#/lab">← Laboratorio</a> · N1-U.19.3.5c</nav>${controlesTamanoLector()}<h1>Articulaciones semánticas</h1>${body}</main>`;
++ el.innerHTML=shell('<p>Cargando catálogo piloto y texto activo…</p>');
++ function render(){if(destroyed)return;const id=history.at(-1),n=check.nodes.get(id),r=pilot.recorridos.find(x=>x.id===route),previous=history.at(-2),transition=check.transitions.get(`${previous}/${id}`);const unresolved=check.issues.filter(x=>x.id===id);const status=check.issues.length?`${check.issues.length} incidencias; revisar antes de reutilizar.`:'Referencias y anclas de párrafo comprobadas en los datos activos.';
++ const evid=n.evidencias.map((e,i)=>{const p=check.paragraphs.get(e.parrafo_local);return `<details><summary>${esc(e.obra)} I · ${esc(e.subunidad)} · §${esc(e.parrafo_local)} · ancla ${i+1}</summary><p lang="grc">${esc(e.gr_ancla)}</p>${p?`<p class="nuc-note">Párrafo bilingüe completo (no traducción aislada del ancla).</p><div class="nuc-bilingual"><p>${esc(p.es)}</p><p lang="grc">${anchorMarkup(p.gr,e.gr_ancla,esc)}</p></div>`:'<p>Párrafo no disponible.</p>'}</details>`;}).join('');
++ const next=continuations(pilot,id);const pos=r.orden.indexOf(id),inRoute=!inventory&&pos>=0?r.orden[pos+1]:null;
++ el.innerHTML=shell(`<p>Ensayo editorial de diálogo. Elegí una pregunta y seguí el hilo o abrí una bifurcación. No genera respuestas libres ni consume créditos de LLM.</p><p class="nuc-note">${esc(status)} ${revision===pilot.revision_catalogo?'Revisión original.':'La revisión difiere de la exportación original; se verifican referencias actuales, no equivalencia filosófica.'}</p>${check.issues.length?`<details><summary>Incidencias de validación</summary><ul>${check.issues.map(x=>`<li>${esc(x.id)}: ${esc(x.message)}</li>`).join('')}</ul></details>`:''}<section class="nuc-card"><label>Pregunta inicial <select data-route>${pilot.recorridos.map(x=>`<option value="${esc(x.id)}" ${x.id===route?'selected':''}>${esc(x.entrada)}</option>`).join('')}</select></label>${inventory?'<p class="nuc-note">Exploración libre desde el inventario; la respuesta de la pregunta inicial no se atribuye a este hilo.</p>':`<p class="nuc-answer">${esc(r.respuesta)}</p>`}<details><summary>Hilo editorial previsto para la pregunta seleccionada</summary><p>${esc(r.hilo)}</p><div class="nuc-flow">${r.orden.map(x=>`<span>${esc(title(x))}</span>`).join('<span aria-hidden="true">→</span>')}</div><p>Orientación: ${esc(r.orientacion_editorial)}</p></details></section><section class="nuc-card"><h2>Recorrido efectivo</h2><div class="nuc-flow">${history.map((x,i)=>`<button type="button" data-history="${i}" ${i===history.length-1?'aria-current="step"':''}>${esc(title(x))}</button>`).join('<span aria-hidden="true">→</span>')}</div>${transition?`<p class="nuc-note">${esc(transition.tipo)} · ${esc(transition.justificacion)} (transición editorial, no deducción).</p>`:''}<h2>${esc(title(id))}</h2><p><small>${esc(n.id)} · ${esc(n.funcion_argumentativa)} · ${esc(n.estado)} · ${esc(n.voz)}</small></p><p class="nuc-answer">${esc(n.formulacion)}</p>${unresolved.length?'<p role="alert">Este núcleo contiene referencias sin resolver; no está validado.</p>':''}<details open><summary>Grafo local de manifestaciones</summary><div class="nuc-relations">${n.relaciones.map(x=>`<div class="nuc-rel"><b>${esc(n.manifestaciones.find(m=>m.id===x.de)?.determinacion||x.de)}</b><span> — ${esc(x.rel)} → </span><b>${esc(n.manifestaciones.find(m=>m.id===x.a)?.determinacion||x.a)}</b><small>${esc(x.justificacion)}</small></div>`).join('')}</div></details><details><summary>Conceptos y sentidos</summary>${n.manifestaciones.map(m=>`<article><a href="/tagueo/#/${esc(m.concepto.replace(':','/'))}" target="_blank" rel="noopener">${esc(check.concepts.get(m.concepto)?.label||m.concepto)}${m.sentido?' #'+esc(m.sentido):''}</a> · ${esc(m.papel_local)} · ${m.expreso?'expreso':'implícito'}<p>${esc(m.determinacion)}</p><p lang="grc">${esc(m.ancla)}</p></article>`).join('')}</details><details><summary>Evidencias (${n.evidencias.length})</summary>${evid}</details><details><summary>Límites de interpretación</summary><p>${esc(n.limite)}</p></details></section><section class="nuc-card"><h2>¿Por dónde seguir?</h2>${next.map(t=>`<div class="nuc-choice">${button(t.a,t.pregunta)}${t.a===inRoute?' <small>Hilo previsto</small>':''}<p>${esc(t.justificacion)}</p></div>`).join('')||`<p>${esc(n.pregunta_continuacion)}</p><p class="nuc-note">Este hilo termina aquí; la pregunta queda abierta, no se genera una respuesta sin apoyo.</p>`}${history.length>1?'<button type="button" data-back>← Retroceder</button> ':''}<button type="button" data-reset>Reiniciar hilo</button></section><details class="nuc-card"><summary>Inventario de los ${pilot.nucleos.length} núcleos</summary><p>Entrar desde aquí reinicia el historial; no presupone una transición.</p><div class="nuc-flow">${pilot.nucleos.map(x=>button(x.id,title(x.id),'data-inventory')).join('')}</div></details>`);actualizarLectura(el);
++ }
++ function change(e){if(e.target.matches('[data-route]')){route=e.target.value;inventory=false;history=[pilot.recorridos.find(x=>x.id===route).orden[0]];render();el.querySelector('[data-route]')?.focus();}}
++ function click(e){const b=e.target.closest('button');if(!b||!el.contains(b))return;if(b.hasAttribute('data-reader-font-step')){cambiarTamanoLector(el,Number(b.dataset.readerFontStep));return;}if(!check)return;if(b.dataset.nucleus&&continuations(pilot,history.at(-1)).some(t=>t.a===b.dataset.nucleus)){history.push(b.dataset.nucleus);}else if(b.hasAttribute('data-history'))history=history.slice(0,Number(b.dataset.history)+1);else if(b.hasAttribute('data-back'))history.pop();else if(b.hasAttribute('data-reset')){inventory=false;history=[pilot.recorridos.find(x=>x.id===route).orden[0]];}else if(b.dataset.inventory&&check.nodes.has(b.dataset.inventory)){inventory=true;history=[b.dataset.inventory];}else return;render();el.querySelector('.nuc-card h2')?.scrollIntoView({block:'nearest'});}
++ el.addEventListener('click',click);el.addEventListener('change',change);const font=e=>actualizarLectura(el,e.detail?.value);document.addEventListener('agora:reader-font-change',font);
++ Promise.all([get('/lab/n1u1935c-nucleos-semanticos.json',controller.signal),get('/api/labo/lectura',controller.signal),get('/api/texto/EN_libro1_v8.txt',controller.signal,false)]).then(([p,lectura,raw])=>{if(destroyed)return;pilot=p;revision=lectura.revision;const subs=new Set((lectura.tags?.unidades||[]).flatMap(u=>(u.subunidades||[]).map(s=>`${u.id}/${s.id}`)));check=inspectNuclei(p,buildTagTrees(lectura),parseBook(raw),subs);if(!p.recorridos?.length||p.recorridos.some(r=>!check.nodes.has(r.orden?.[0])))throw Error('Recorridos piloto incompletos');route=p.recorridos[0].id;history=[p.recorridos[0].orden[0]];render();}).catch(e=>{if(!destroyed)el.innerHTML=shell(`<p role="alert">${esc(e.message)}</p>`);});
++ return {el,destroy(){destroyed=true;controller.abort();el.removeEventListener('click',click);el.removeEventListener('change',change);document.removeEventListener('agora:reader-font-change',font);}};
++}
+diff --git a/public/lab/n1u1935b-nucleos-semanticos.json b/public/lab/n1u1935b-nucleos-semanticos.json
+new file mode 100644
+index 0000000..ce1027f
+--- /dev/null
++++ b/public/lab/n1u1935b-nucleos-semanticos.json
+@@ -0,0 +1,545 @@
++{
++  "schema": "agora.articulaciones.piloto.v0",
++  "estado": "propuesto",
++  "revision_catalogo": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
++  "texto": {
++    "archivo": "EN_libro1_v8.txt",
++    "sha256": "2835eb0936dc6228fda7696610bdb9f09e3f20317ea30844a710f4041728186d"
++  },
++  "fuentes_hermeneuticas": [
++    {
++      "autor": "George A. Blair",
++      "titulo": "The Meaning of ἐνέργεια and ἐντελέχεια in Aristotle",
++      "anio": 1978,
++      "revista": "International Philosophical Quarterly",
++      "paginas": "101–117",
++      "secciones": "II–IV; Conclusion",
++      "url": "https://docs.google.com/document/d/1DwJhyQ84RSyMmlxauVAoJZnYQYbb2BnBHrabQROJwUQ/edit",
++      "tesis": "Hipótesis diacrónica: actividad inicialmente; entelecheia como posesión interna del fin; reintegración en energeia de la forma entendida como actividad. No equivale a identidad lexical universal."
++    }
++  ],
++  "cambios_jerarquia": [
++    {
++      "id": "energeia_acto",
++      "padre": "estatico:energeia",
++      "actual": "especie",
++      "propuesta": "agrupacion",
++      "nota": "Modalidad analógica; no especie unívoca",
++      "estado": "propuesto"
++    },
++    {
++      "id": "energeia_actividad",
++      "padre": "estatico:energeia",
++      "actual": "especie",
++      "propuesta": "agrupacion",
++      "nota": "Modalidad analógica; no especie unívoca",
++      "estado": "propuesto"
++    },
++    {
++      "id": "ergon_obra",
++      "padre": "estatico:ergon",
++      "actual": "especie",
++      "propuesta": "agrupacion",
++      "nota": "Modo de decir; conservar diferencia obra/uso",
++      "estado": "propuesto"
++    },
++    {
++      "id": "ergon_funcion",
++      "padre": "estatico:ergon",
++      "actual": "especie",
++      "propuesta": "agrupacion",
++      "nota": "Modo de decir; conservar diferencia obra/uso",
++      "estado": "propuesto"
++    },
++    {
++      "id": "dunamis_capacidad",
++      "padre": "estatico:dunamis",
++      "actual": "especie",
++      "propuesta": null,
++      "nota": "Pendiente revisar homonimia y ubicación en Alma; no aplicar por analogía con energeia",
++      "estado": "propuesto"
++    },
++    {
++      "id": "dunamis_potencia",
++      "padre": "estatico:dunamis",
++      "actual": "especie",
++      "propuesta": null,
++      "nota": "Pendiente revisar homonimia y ubicación en Alma; no aplicar por analogía con energeia",
++      "estado": "propuesto"
++    }
++  ],
++  "nucleos": [
++    {
++      "id": "n01",
++      "unidad": "proemio",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "Un fin puede consistir en la actividad misma o en una obra aparte de ella. Solo cuando hay un fin aparte de la acción se afirma la superioridad de la obra.",
++      "funcion_argumentativa": "distincion",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "proemio",
++          "subunidad": "1094a3-6",
++          "parrafo_local": 1,
++          "gr_ancla": "τὰ μὲν γάρ εἰσιν ἐνέργειαι"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "proemio",
++          "subunidad": "1094a3-6",
++          "parrafo_local": 1,
++          "gr_ancla": "παρ᾽ αὐτὰς"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "proemio",
++          "subunidad": "1094a3-6",
++          "parrafo_local": 1,
++          "gr_ancla": "ἐν τούτοις βελτίω πέφυκε τῶν ἐνεργειῶν τὰ ἔργα"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "fin",
++          "concepto": "estatico:telos",
++          "sentido": null,
++          "ancla": "τῶν τελῶν",
++          "papel_local": "objeto_de_distincion",
++          "determinacion": "Fin de acciones, no necesariamente producto",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "actividad",
++          "concepto": "estatico:energeia_actividad",
++          "sentido": "fin",
++          "ancla": "ἐνέργειαι",
++          "papel_local": "predicado",
++          "determinacion": "Una clase de fin en este contexto",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "obra",
++          "concepto": "estatico:ergon_obra",
++          "sentido": null,
++          "ancla": "ἔργα τινά",
++          "papel_local": "predicado",
++          "determinacion": "Obra distinta de la actividad",
++          "evidencia": 1,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "actividad",
++          "a": "fin",
++          "rel": "es_fin_en_contexto",
++          "justificacion": "Primer miembro de la distinción",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "obra",
++          "a": "fin",
++          "rel": "es_fin_en_contexto",
++          "justificacion": "Segundo miembro; obra aparte de la actividad",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [],
++      "limite": "No hacer de toda acción una producción ni universalizar la superioridad de la obra. Las aristas no son subtipos ontológicos.",
++      "pregunta_continuacion": "¿Puede una actividad ser valiosa sin producir algo aparte de ella?"
++    },
++    {
++      "id": "n02",
++      "unidad": "ergon",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "La investigación de lo propio del ser humano conduce a la vida que tiene razón en ejercicio; la función humana se formula como actividad del alma según razón o no sin razón.",
++      "funcion_argumentativa": "determinacion",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a5-7",
++          "parrafo_local": 26,
++          "gr_ancla": "τὴν κατ᾽ ἐνέργειαν θετέον"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a7-8",
++          "parrafo_local": 27,
++          "gr_ancla": "ἔργον ἀνθρώπου ψυχῆς ἐνέργεια κατὰ λόγον ἢ μὴ ἄνευ λόγου"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "funcion",
++          "concepto": "estatico:ergon_funcion",
++          "sentido": null,
++          "ancla": "ἔργον ἀνθρώπου",
++          "papel_local": "sujeto",
++          "determinacion": "Función humana en la hipótesis del argumento",
++          "evidencia": 1,
++          "expreso": true
++        },
++        {
++          "id": "ejercicio",
++          "concepto": "estatico:energeia_actividad",
++          "sentido": "ejercicio",
++          "ancla": "κατ᾽ ἐνέργειαν",
++          "papel_local": "determinacion",
++          "determinacion": "Vida en ejercicio, no solo poseída",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "razon",
++          "concepto": "estatico:logos",
++          "sentido": "razon",
++          "ancla": "κατὰ λόγον",
++          "papel_local": "determinacion",
++          "determinacion": "Según razón; conservar también la fórmula negativa",
++          "evidencia": 1,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "funcion",
++          "a": "ejercicio",
++          "rel": "se_determina_por",
++          "justificacion": "La función se caracteriza como actividad del alma",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "ejercicio",
++          "a": "razon",
++          "rel": "se_cualifica_por",
++          "justificacion": "Restricción del pasaje, no toda actividad",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [
++        "ergon_funcion--actividad"
++      ],
++      "limite": "No reducir razón a pensamiento teórico ni excluir las dos maneras de tener razón. En el griego la formulación es condicional.",
++      "pregunta_continuacion": "¿Basta con ejercer una función para realizarla bien?"
++    },
++    {
++      "id": "n03",
++      "unidad": "ergon",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "La función del citarista y del citarista ejemplar es la misma en género; la excelencia añade la superioridad de realizarla bien.",
++      "funcion_argumentativa": "premisa",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a8-12",
++          "parrafo_local": 27,
++          "gr_ancla": "τὸ δ᾽ αὐτό φαμεν ἔργον εἶναι τῷ γένει"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a8-12",
++          "parrafo_local": 27,
++          "gr_ancla": "προστιθεμένης τῆς κατὰ τὴν ἀρετὴν ὑπεροχῆς πρὸς τὸ ἔργον"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "funcion",
++          "concepto": "estatico:ergon_funcion",
++          "sentido": null,
++          "ancla": "ἔργον",
++          "papel_local": "objeto_de_cualificacion",
++          "determinacion": "Función en el ejemplo técnico",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "excelencia",
++          "concepto": "estatico:excelencia",
++          "sentido": "funcional",
++          "ancla": "κατὰ τὴν ἀρετὴν",
++          "papel_local": "determinacion",
++          "determinacion": "Excelencia genérica de realización; candidato a precisar el tag arete#funcional",
++          "evidencia": 1,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "excelencia",
++          "a": "funcion",
++          "rel": "perfecciona",
++          "justificacion": "Superioridad en el cumplimiento de la misma función; no producción de otra función",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [
++        "arete--ergon_funcion"
++      ],
++      "limite": "El vínculo con la adquisición de virtud ética requiere pasos adicionales. No imponer un crecimiento cuantitativo ni identificar la técnica con la praxis.",
++      "pregunta_continuacion": "¿Qué excelencia corresponde entonces a la función humana?"
++    },
++    {
++      "id": "n04",
++      "unidad": "ergon",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "El bien humano es actividad del alma según la virtud completa en una vida entera. La pluralidad de virtudes exige considerar la mejor y más completa.",
++      "funcion_argumentativa": "conclusion",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a16-18",
++          "parrafo_local": 27,
++          "gr_ancla": "τὸ ἀνθρώπινον ἀγαθὸν ψυχῆς ἐνέργεια γίνεται κατ᾽ ἀρετήν"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a18-20",
++          "parrafo_local": 27,
++          "gr_ancla": "Ἔτι δ᾽ ἐν βίῳ τελείῳ"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "felicidad",
++          "concepto": "estatico:eudaimonia",
++          "sentido": null,
++          "ancla": "τὸ ἀνθρώπινον ἀγαθὸν",
++          "papel_local": "definiendum",
++          "determinacion": "Bien humano; identificación con felicidad por el contexto de I.7, no lema eudaimonia en este ancla",
++          "evidencia": 0,
++          "expreso": false
++        },
++        {
++          "id": "actividad",
++          "concepto": "estatico:energeia_actividad",
++          "sentido": "fin",
++          "ancla": "ψυχῆς ἐνέργεια",
++          "papel_local": "determinacion",
++          "determinacion": "Actividad del alma",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "virtud",
++          "concepto": "estatico:arete",
++          "sentido": "teleia",
++          "ancla": "ἀρίστην καὶ τελειοτάτην",
++          "papel_local": "condicion_cualitativa",
++          "determinacion": "La mejor y más completa si son varias",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "vida",
++          "concepto": "estatico:bios",
++          "sentido": "completa",
++          "ancla": "ἐν βίῳ τελείῳ",
++          "papel_local": "condicion_temporal",
++          "determinacion": "Vida entera",
++          "evidencia": 1,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "felicidad",
++          "a": "actividad",
++          "rel": "se_determina_por",
++          "justificacion": "Formulación del bien humano",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "actividad",
++          "a": "virtud",
++          "rel": "se_cualifica_por",
++          "justificacion": "Actividad conforme a virtud; conservar la cláusula plural",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "felicidad",
++          "a": "vida",
++          "rel": "requiere",
++          "justificacion": "No basta un día ni poco tiempo",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [
++        "eudaimonia--actividad",
++        "arete--eudaimonia",
++        "bios--eudaimonia"
++      ],
++      "limite": "Conservar íntegra la formulación y su contexto condicional; no convertir cada condición por separado en definición suficiente. No resolver aquí el debate inclusivo/exclusivo.",
++      "pregunta_continuacion": "¿Por qué no basta un acto excelente aislado, ni poseer una virtud?"
++    },
++    {
++      "id": "n05",
++      "unidad": "confirmacion",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "La disposición puede estar presente sin producir ningún bien; la actividad conforme a la virtud implica ejercerla.",
++      "funcion_argumentativa": "confirmacion",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "confirmacion",
++          "subunidad": "1098b30-31",
++          "parrafo_local": 32,
++          "gr_ancla": "ταύτης γάρ ἐστιν ἡ κατ᾽ αὐτὴν ἐνέργεια"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "confirmacion",
++          "subunidad": "1098b31-1099a3",
++          "parrafo_local": 32,
++          "gr_ancla": "ἐν κτήσει ἢ χρήσει"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "confirmacion",
++          "subunidad": "1098b31-1099a3",
++          "parrafo_local": 32,
++          "gr_ancla": "τὴν μὲν γὰρ ἕξιν ἐνδέχεται μηδὲν ἀγαθὸν ἀποτελεῖν ὑπάρχουσαν"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "virtud",
++          "concepto": "estatico:arete",
++          "sentido": "humana",
++          "ancla": "ἀρετὴν",
++          "papel_local": "antecedente",
++          "determinacion": "Virtud en el contexto de felicidad",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "disposicion",
++          "concepto": "estatico:hexis",
++          "sentido": "disposicion",
++          "ancla": "ἕξιν",
++          "papel_local": "miembro_del_contraste",
++          "determinacion": "Puede estar presente sin producir bien",
++          "evidencia": 2,
++          "expreso": true
++        },
++        {
++          "id": "actividad",
++          "concepto": "estatico:energeia_actividad",
++          "sentido": "ejercicio",
++          "ancla": "ἐνέργεια",
++          "papel_local": "miembro_del_contraste",
++          "determinacion": "Ejercicio conforme a la virtud",
++          "evidencia": 0,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "disposicion",
++          "a": "actividad",
++          "rel": "contrasta_con",
++          "justificacion": "Posesión/uso, disposición/actividad",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "actividad",
++          "a": "virtud",
++          "rel": "se_cualifica_por",
++          "justificacion": "Según la virtud, no actividad cualquiera",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [
++        "hexis--actividad",
++        "arete--actividad"
++      ],
++      "limite": "La virtud en acto no se identifica con la mera tenencia. No se prueba que toda actividad sea buena ni que una persona dormida carezca de virtud.",
++      "pregunta_continuacion": "¿Cómo se adquiere una disposición capaz de fructificar en buenas acciones?"
++    }
++  ],
++  "pruebas_tagueo": [
++    {
++      "unidad": "proemio",
++      "subunidad": "1094a9-16",
++      "parrafo_local": 2,
++      "concepto": "estatico:dunamis_capacidad",
++      "sentido": "arte",
++      "ancla": "ὑπὸ μίαν τινὰ δύναμιν",
++      "actual": "Tag de párrafo ya existente; no consta asociación directa del concepto en esa subunidad del exportado.",
++      "propuesta": "Añadir manifestación de capacidad técnica arquitectónica; evaluar concepto clave local. No confundir con potencia metafísica."
++    },
++    {
++      "unidad": "alma_virtudes",
++      "subunidad": "1102b3-11",
++      "parrafo_local": 49,
++      "concepto": "estatico:excelencia",
++      "sentido": null,
++      "ancla": "κοινή τις ἀρετὴ καὶ οὐκ ἀνθρωπίνη",
++      "actual": "arete central sin sentido de párrafo y concepto clave arete en subunidad",
++      "propuesta": "Distinguir excelencia común de la facultad vegetativa; no asignar virtud humana afirmativamente a esta ocurrencia. Mantener el tag de virtud humana para la mención contrastiva si se aprueba."
++    }
++  ],
++  "recorridos": [
++    {
++      "id": "pregunta-virtud",
++      "entrada": "¿Ser virtuoso basta para ser feliz?",
++      "orden": [
++        "n05",
++        "n03",
++        "n04"
++      ],
++      "hilo": "Posesión frente a ejercicio; realizar bien; alcance de la vida entera.",
++      "orientacion_editorial": "phusis",
++      "seguimiento": "¿Cómo se adquiere y ejercita esa virtud?"
++    },
++    {
++      "id": "pregunta-fin",
++      "entrada": "¿Para qué sirve la felicidad?",
++      "orden": [
++        "n01",
++        "n02",
++        "n03",
++        "n04"
++      ],
++      "hilo": "Distinguir obra y actividad; determinar la actividad humana; excelencia; bien humano.",
++      "orientacion_editorial": "phusis; apertura vertical mediante telos, no una conclusión sobre theion",
++      "seguimiento": "¿Qué hace que una actividad merezca elegirse por sí misma?"
++    }
++  ],
++  "nota": "Las relaciones locales son propuestas, no aristas del catálogo. La secuencia de recorridos es editorial, no deducción automática. Las anclas de manifestación se verifican en su párrafo; no se han comprobado los offsets internos de las subunidades contra MariaDB activa."
++}
+diff --git a/public/lab/n1u1935c-nucleos-semanticos.json b/public/lab/n1u1935c-nucleos-semanticos.json
+new file mode 100644
+index 0000000..b2a9fc6
+--- /dev/null
++++ b/public/lab/n1u1935c-nucleos-semanticos.json
+@@ -0,0 +1,1158 @@
++{
++  "schema": "agora.articulaciones.piloto.v0",
++  "estado": "propuesto",
++  "revision_catalogo": "3e94a2a6f73eca6b2772a3cd97e3b046b2c2db52a8d4713b4472e14abb2d02a8",
++  "texto": {
++    "archivo": "EN_libro1_v8.txt",
++    "sha256": "2835eb0936dc6228fda7696610bdb9f09e3f20317ea30844a710f4041728186d"
++  },
++  "fuentes_hermeneuticas": [
++    {
++      "autor": "George A. Blair",
++      "titulo": "The Meaning of ἐνέργεια and ἐντελέχεια in Aristotle",
++      "anio": 1978,
++      "revista": "International Philosophical Quarterly",
++      "paginas": "101–117",
++      "secciones": "II–IV; Conclusion",
++      "url": "https://docs.google.com/document/d/1DwJhyQ84RSyMmlxauVAoJZnYQYbb2BnBHrabQROJwUQ/edit",
++      "tesis": "Hipótesis diacrónica: actividad inicialmente; entelecheia como posesión interna del fin; reintegración en energeia de la forma entendida como actividad. No equivale a identidad lexical universal."
++    }
++  ],
++  "cambios_jerarquia": [
++    {
++      "id": "energeia_acto",
++      "padre": "estatico:energeia",
++      "actual": "especie",
++      "propuesta": "agrupacion",
++      "nota": "Modalidad analógica; no especie unívoca",
++      "estado": "propuesto"
++    },
++    {
++      "id": "energeia_actividad",
++      "padre": "estatico:energeia",
++      "actual": "especie",
++      "propuesta": "agrupacion",
++      "nota": "Modalidad analógica; no especie unívoca",
++      "estado": "propuesto"
++    },
++    {
++      "id": "ergon_obra",
++      "padre": "estatico:ergon",
++      "actual": "especie",
++      "propuesta": "agrupacion",
++      "nota": "Modo de decir; conservar diferencia obra/uso",
++      "estado": "propuesto"
++    },
++    {
++      "id": "ergon_funcion",
++      "padre": "estatico:ergon",
++      "actual": "especie",
++      "propuesta": "agrupacion",
++      "nota": "Modo de decir; conservar diferencia obra/uso",
++      "estado": "propuesto"
++    },
++    {
++      "id": "dunamis_capacidad",
++      "padre": "estatico:dunamis",
++      "actual": "especie",
++      "propuesta": null,
++      "nota": "Pendiente revisar homonimia y ubicación en Alma; no aplicar por analogía con energeia",
++      "estado": "propuesto"
++    },
++    {
++      "id": "dunamis_potencia",
++      "padre": "estatico:dunamis",
++      "actual": "especie",
++      "propuesta": null,
++      "nota": "Pendiente revisar homonimia y ubicación en Alma; no aplicar por analogía con energeia",
++      "estado": "propuesto"
++    }
++  ],
++  "nucleos": [
++    {
++      "id": "n01",
++      "unidad": "proemio",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "Un fin puede consistir en la actividad misma o en una obra aparte de ella. Solo cuando hay un fin aparte de la acción se afirma la superioridad de la obra.",
++      "funcion_argumentativa": "distincion",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "proemio",
++          "subunidad": "1094a3-6",
++          "parrafo_local": 1,
++          "gr_ancla": "τὰ μὲν γάρ εἰσιν ἐνέργειαι"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "proemio",
++          "subunidad": "1094a3-6",
++          "parrafo_local": 1,
++          "gr_ancla": "παρ᾽ αὐτὰς"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "proemio",
++          "subunidad": "1094a3-6",
++          "parrafo_local": 1,
++          "gr_ancla": "ἐν τούτοις βελτίω πέφυκε τῶν ἐνεργειῶν τὰ ἔργα"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "fin",
++          "concepto": "estatico:telos",
++          "sentido": null,
++          "ancla": "τῶν τελῶν",
++          "papel_local": "objeto_de_distincion",
++          "determinacion": "Fin de acciones, no necesariamente producto",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "actividad",
++          "concepto": "estatico:energeia_actividad",
++          "sentido": "fin",
++          "ancla": "ἐνέργειαι",
++          "papel_local": "predicado",
++          "determinacion": "Una clase de fin en este contexto",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "obra",
++          "concepto": "estatico:ergon_obra",
++          "sentido": null,
++          "ancla": "ἔργα τινά",
++          "papel_local": "predicado",
++          "determinacion": "Obra distinta de la actividad",
++          "evidencia": 1,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "actividad",
++          "a": "fin",
++          "rel": "es_fin_en_contexto",
++          "justificacion": "Primer miembro de la distinción",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "obra",
++          "a": "fin",
++          "rel": "es_fin_en_contexto",
++          "justificacion": "Segundo miembro; obra aparte de la actividad",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [],
++      "limite": "No hacer de toda acción una producción ni universalizar la superioridad de la obra. Las aristas no son subtipos ontológicos.",
++      "pregunta_continuacion": "¿Puede una actividad ser valiosa sin producir algo aparte de ella?"
++    },
++    {
++      "id": "n02",
++      "unidad": "ergon",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "La investigación de lo propio del ser humano conduce a la vida que tiene razón en ejercicio; la función humana se formula como actividad del alma según razón o no sin razón.",
++      "funcion_argumentativa": "determinacion",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a5-7",
++          "parrafo_local": 26,
++          "gr_ancla": "τὴν κατ᾽ ἐνέργειαν θετέον"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a7-8",
++          "parrafo_local": 27,
++          "gr_ancla": "ἔργον ἀνθρώπου ψυχῆς ἐνέργεια κατὰ λόγον ἢ μὴ ἄνευ λόγου"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "funcion",
++          "concepto": "estatico:ergon_funcion",
++          "sentido": null,
++          "ancla": "ἔργον ἀνθρώπου",
++          "papel_local": "sujeto",
++          "determinacion": "Función humana en la hipótesis del argumento",
++          "evidencia": 1,
++          "expreso": true
++        },
++        {
++          "id": "ejercicio",
++          "concepto": "estatico:energeia_actividad",
++          "sentido": "ejercicio",
++          "ancla": "κατ᾽ ἐνέργειαν",
++          "papel_local": "determinacion",
++          "determinacion": "Vida en ejercicio, no solo poseída",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "razon",
++          "concepto": "estatico:logos",
++          "sentido": "razon",
++          "ancla": "κατὰ λόγον",
++          "papel_local": "determinacion",
++          "determinacion": "Según razón; conservar también la fórmula negativa",
++          "evidencia": 1,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "funcion",
++          "a": "ejercicio",
++          "rel": "se_determina_por",
++          "justificacion": "La función se caracteriza como actividad del alma",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "ejercicio",
++          "a": "razon",
++          "rel": "se_cualifica_por",
++          "justificacion": "Restricción del pasaje, no toda actividad",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [
++        "ergon_funcion--actividad"
++      ],
++      "limite": "No reducir razón a pensamiento teórico ni excluir las dos maneras de tener razón. En el griego la formulación es condicional.",
++      "pregunta_continuacion": "¿Basta con ejercer una función para realizarla bien?"
++    },
++    {
++      "id": "n03",
++      "unidad": "ergon",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "La función del citarista y del citarista ejemplar es la misma en género; la excelencia añade la superioridad de realizarla bien.",
++      "funcion_argumentativa": "premisa",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a8-12",
++          "parrafo_local": 27,
++          "gr_ancla": "τὸ δ᾽ αὐτό φαμεν ἔργον εἶναι τῷ γένει"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a8-12",
++          "parrafo_local": 27,
++          "gr_ancla": "προστιθεμένης τῆς κατὰ τὴν ἀρετὴν ὑπεροχῆς πρὸς τὸ ἔργον"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "funcion",
++          "concepto": "estatico:ergon_funcion",
++          "sentido": null,
++          "ancla": "ἔργον",
++          "papel_local": "objeto_de_cualificacion",
++          "determinacion": "Función en el ejemplo técnico",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "excelencia",
++          "concepto": "estatico:excelencia",
++          "sentido": "funcional",
++          "ancla": "κατὰ τὴν ἀρετὴν",
++          "papel_local": "determinacion",
++          "determinacion": "Excelencia genérica de realización; candidato a precisar el tag arete#funcional",
++          "evidencia": 1,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "excelencia",
++          "a": "funcion",
++          "rel": "perfecciona",
++          "justificacion": "Superioridad en el cumplimiento de la misma función; no producción de otra función",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [
++        "arete--ergon_funcion"
++      ],
++      "limite": "El vínculo con la adquisición de virtud ética requiere pasos adicionales. No imponer un crecimiento cuantitativo ni identificar la técnica con la praxis.",
++      "pregunta_continuacion": "¿Qué excelencia corresponde entonces a la función humana?"
++    },
++    {
++      "id": "n04",
++      "unidad": "ergon",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "El bien humano es actividad del alma según la virtud completa en una vida entera. La pluralidad de virtudes exige considerar la mejor y más completa.",
++      "funcion_argumentativa": "conclusion",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a16-18",
++          "parrafo_local": 27,
++          "gr_ancla": "τὸ ἀνθρώπινον ἀγαθὸν ψυχῆς ἐνέργεια γίνεται κατ᾽ ἀρετήν"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "ergon",
++          "subunidad": "1098a18-20",
++          "parrafo_local": 27,
++          "gr_ancla": "Ἔτι δ᾽ ἐν βίῳ τελείῳ"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "felicidad",
++          "concepto": "estatico:eudaimonia",
++          "sentido": null,
++          "ancla": "τὸ ἀνθρώπινον ἀγαθὸν",
++          "papel_local": "definiendum",
++          "determinacion": "Bien humano; identificación con felicidad por el contexto de I.7, no lema eudaimonia en este ancla",
++          "evidencia": 0,
++          "expreso": false
++        },
++        {
++          "id": "actividad",
++          "concepto": "estatico:energeia_actividad",
++          "sentido": "fin",
++          "ancla": "ψυχῆς ἐνέργεια",
++          "papel_local": "determinacion",
++          "determinacion": "Actividad del alma",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "virtud",
++          "concepto": "estatico:arete",
++          "sentido": "teleia",
++          "ancla": "ἀρίστην καὶ τελειοτάτην",
++          "papel_local": "condicion_cualitativa",
++          "determinacion": "La mejor y más completa si son varias",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "vida",
++          "concepto": "estatico:bios",
++          "sentido": "completa",
++          "ancla": "ἐν βίῳ τελείῳ",
++          "papel_local": "condicion_temporal",
++          "determinacion": "Vida entera",
++          "evidencia": 1,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "felicidad",
++          "a": "actividad",
++          "rel": "se_determina_por",
++          "justificacion": "Formulación del bien humano",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "actividad",
++          "a": "virtud",
++          "rel": "se_cualifica_por",
++          "justificacion": "Actividad conforme a virtud; conservar la cláusula plural",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "felicidad",
++          "a": "vida",
++          "rel": "requiere",
++          "justificacion": "No basta un día ni poco tiempo",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [
++        "eudaimonia--actividad",
++        "arete--eudaimonia",
++        "bios--eudaimonia"
++      ],
++      "limite": "Conservar íntegra la formulación y su contexto condicional; no convertir cada condición por separado en definición suficiente. No resolver aquí el debate inclusivo/exclusivo.",
++      "pregunta_continuacion": "¿Por qué no basta un acto excelente aislado, ni poseer una virtud?"
++    },
++    {
++      "id": "n05",
++      "unidad": "confirmacion",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "La disposición puede estar presente sin producir ningún bien; la actividad conforme a la virtud implica ejercerla.",
++      "funcion_argumentativa": "confirmacion",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "confirmacion",
++          "subunidad": "1098b30-31",
++          "parrafo_local": 32,
++          "gr_ancla": "ταύτης γάρ ἐστιν ἡ κατ᾽ αὐτὴν ἐνέργεια"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "confirmacion",
++          "subunidad": "1098b31-1099a3",
++          "parrafo_local": 32,
++          "gr_ancla": "ἐν κτήσει ἢ χρήσει"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "confirmacion",
++          "subunidad": "1098b31-1099a3",
++          "parrafo_local": 32,
++          "gr_ancla": "τὴν μὲν γὰρ ἕξιν ἐνδέχεται μηδὲν ἀγαθὸν ἀποτελεῖν ὑπάρχουσαν"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "virtud",
++          "concepto": "estatico:arete",
++          "sentido": "humana",
++          "ancla": "ἀρετὴν",
++          "papel_local": "antecedente",
++          "determinacion": "Virtud en el contexto de felicidad",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "disposicion",
++          "concepto": "estatico:hexis",
++          "sentido": "disposicion",
++          "ancla": "ἕξιν",
++          "papel_local": "miembro_del_contraste",
++          "determinacion": "Puede estar presente sin producir bien",
++          "evidencia": 2,
++          "expreso": true
++        },
++        {
++          "id": "actividad",
++          "concepto": "estatico:energeia_actividad",
++          "sentido": "ejercicio",
++          "ancla": "ἐνέργεια",
++          "papel_local": "miembro_del_contraste",
++          "determinacion": "Ejercicio conforme a la virtud",
++          "evidencia": 0,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "disposicion",
++          "a": "actividad",
++          "rel": "contrasta_con",
++          "justificacion": "Posesión/uso, disposición/actividad",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "actividad",
++          "a": "virtud",
++          "rel": "se_cualifica_por",
++          "justificacion": "Según la virtud, no actividad cualquiera",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [
++        "hexis--actividad",
++        "arete--actividad"
++      ],
++      "limite": "La virtud en acto no se identifica con la mera tenencia. No se prueba que toda actividad sea buena ni que una persona dormida carezca de virtud.",
++      "pregunta_continuacion": "¿Cómo se adquiere una disposición capaz de fructificar en buenas acciones?"
++    },
++    {
++      "id": "n06",
++      "unidad": "forma_fin",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "La felicidad se elige por sí misma y nunca por otra cosa. La virtud, en cambio, se elige también por sí misma y también por la felicidad.",
++      "funcion_argumentativa": "distincion",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "forma_fin",
++          "subunidad": "1097a34-b6",
++          "parrafo_local": 23,
++          "gr_ancla": "Ταύτην γὰρ αἱρούμεθα ἀεὶ δι᾽ αὐτὴν καὶ οὐδέποτε δι᾽ ἄλλο"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "forma_fin",
++          "subunidad": "1097a34-b6",
++          "parrafo_local": 23,
++          "gr_ancla": "καὶ πᾶσαν ἀρετὴν αἱρούμεθα μὲν καὶ δι᾽ αὐτά"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "forma_fin",
++          "subunidad": "1097a34-b6",
++          "parrafo_local": 23,
++          "gr_ancla": "αἱρούμεθα δὲ καὶ τῆς εὐδαιμονίας χάριν"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "felicidad",
++          "concepto": "estatico:eudaimonia",
++          "sentido": null,
++          "ancla": "εὐδαιμονία",
++          "papel_local": "fin",
++          "determinacion": "Elegida siempre por sí misma; el pronombre Ταύτην retoma la felicidad.",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "virtud",
++          "concepto": "estatico:arete",
++          "sentido": "humana",
++          "ancla": "πᾶσαν ἀρετὴν",
++          "papel_local": "bien_elegible",
++          "determinacion": "Elegible por sí y por la felicidad.",
++          "evidencia": 1,
++          "expreso": true
++        },
++        {
++          "id": "elegible",
++          "concepto": "estatico:haireton",
++          "sentido": "ambos",
++          "ancla": "αἱρούμεθα",
++          "papel_local": "determinacion",
++          "determinacion": "Doble motivo de elección de la virtud.",
++          "evidencia": 2,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "virtud",
++          "a": "felicidad",
++          "rel": "se_elige_tambien_por",
++          "justificacion": "No reduce virtud a instrumento; conserva la elección por sí misma.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "virtud",
++          "a": "elegible",
++          "rel": "se_cualifica_por",
++          "justificacion": "La virtud admite ambos motivos.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [],
++      "limite": "No hacer de la virtud un mero medio externo; no prueba todavía qué virtud es la mejor.",
++      "pregunta_continuacion": "¿Qué actividad constituye ese fin?"
++    },
++    {
++      "id": "n07",
++      "unidad": "alma_virtudes",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "Las disposiciones que merecen elogio se llaman virtudes. El cierre del Libro I distingue virtudes éticas y dianoéticas según la diferencia de las partes del alma.",
++      "funcion_argumentativa": "determinacion",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "alma_virtudes",
++          "subunidad": "1103a3-7",
++          "parrafo_local": 52,
++          "gr_ancla": "τὰς μὲν διανοητικὰς τὰς δὲ ἠθικάς"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "alma_virtudes",
++          "subunidad": "1103a7-10",
++          "parrafo_local": 52,
++          "gr_ancla": "τῶν ἕξεων δὲ τὰς ἐπαινετὰς ἀρετὰς λέγομεν"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "disposicion",
++          "concepto": "estatico:hexis",
++          "sentido": "disposicion",
++          "ancla": "ἕξεων",
++          "papel_local": "genero_en_contexto",
++          "determinacion": "Disposiciones elogiables, no mera tenencia.",
++          "evidencia": 1,
++          "expreso": true
++        },
++        {
++          "id": "virtud",
++          "concepto": "estatico:arete",
++          "sentido": "humana",
++          "ancla": "ἀρετὰς",
++          "papel_local": "determinacion",
++          "determinacion": "Disposiciones dignas de elogio.",
++          "evidencia": 1,
++          "expreso": true
++        },
++        {
++          "id": "etica",
++          "concepto": "estatico:arete_ethike",
++          "sentido": null,
++          "ancla": "ἠθικάς",
++          "papel_local": "miembro_de_division",
++          "determinacion": "Excelencia ética.",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "dianoetica",
++          "concepto": "estatico:arete_dianoetike",
++          "sentido": null,
++          "ancla": "διανοητικὰς",
++          "papel_local": "miembro_de_division",
++          "determinacion": "Excelencia dianoética.",
++          "evidencia": 0,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "virtud",
++          "a": "disposicion",
++          "rel": "se_caracteriza_como",
++          "justificacion": "Las disposiciones elogiables reciben el nombre de virtudes.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "etica",
++          "a": "virtud",
++          "rel": "miembro_de_division",
++          "justificacion": "Distinción textual en I.13.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "dianoetica",
++          "a": "virtud",
++          "rel": "miembro_de_division",
++          "justificacion": "Distinción textual en I.13.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [],
++      "limite": "No confundir disposición con acto; no adelantar la definición de virtud ética de II.6 ni su adquisición.",
++      "pregunta_continuacion": "¿Cómo llega una disposición a merecer elogio?"
++    },
++    {
++      "id": "n08",
++      "unidad": "solon",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "Las actividades conforme a la virtud son rectoras de la felicidad. La vida humana necesita también bienes sujetos a la fortuna, pero su felicidad no fluctúa sin más con cada cambio de fortuna.",
++      "funcion_argumentativa": "confirmacion",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "solon",
++          "subunidad": "1100b7-11",
++          "parrafo_local": 39,
++          "gr_ancla": "προσδεῖται τούτων ὁ ἀνθρώπινος βίος"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "solon",
++          "subunidad": "1100b7-11",
++          "parrafo_local": 39,
++          "gr_ancla": "κύριαι δ᾽ εἰσὶν αἱ κατ᾽ ἀρετὴν ἐνέργειαι τῆς εὐδαιμονίας"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "solon",
++          "subunidad": "1100b3-7",
++          "parrafo_local": 39,
++          "gr_ancla": "χαμαιλέοντά τινα τὸν εὐδαίμονα"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "actividad",
++          "concepto": "estatico:energeia_actividad",
++          "sentido": "ejercicio",
++          "ancla": "ἐνέργειαι",
++          "papel_local": "rectora",
++          "determinacion": "Actividad conforme a virtud.",
++          "evidencia": 1,
++          "expreso": true
++        },
++        {
++          "id": "virtud",
++          "concepto": "estatico:arete",
++          "sentido": "humana",
++          "ancla": "ἀρετὴν",
++          "papel_local": "determinacion",
++          "determinacion": "Cualifica actividad.",
++          "evidencia": 1,
++          "expreso": true
++        },
++        {
++          "id": "felicidad",
++          "concepto": "estatico:eudaimonia",
++          "sentido": null,
++          "ancla": "εὐδαιμονίας",
++          "papel_local": "objeto_de_determinacion",
++          "determinacion": "No sigue mecánicamente los azares.",
++          "evidencia": 1,
++          "expreso": true
++        },
++        {
++          "id": "fortuna",
++          "concepto": "estatico:tyche",
++          "sentido": null,
++          "ancla": "τύχαις",
++          "papel_local": "contraste",
++          "determinacion": "Vicisitudes de la fortuna, no actividad propia.",
++          "evidencia": 0,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "actividad",
++          "a": "felicidad",
++          "rel": "rige",
++          "justificacion": "κύριαι: primacía, no suficiencia aislada.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "actividad",
++          "a": "virtud",
++          "rel": "se_cualifica_por",
++          "justificacion": "κατ᾽ ἀρετήν.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "fortuna",
++          "a": "felicidad",
++          "rel": "no_determina_por_si_sola",
++          "justificacion": "La imagen del camaleón critica la dependencia exclusiva de los azares.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [],
++      "limite": "No afirmar invulnerabilidad ni negar necesidades externas; los grandes infortunios exigen otra consideración (1100b22–1101a13).",
++      "pregunta_continuacion": "¿Hasta qué punto puede mantenerse una vida buena ante los infortunios?"
++    },
++    {
++      "id": "n09",
++      "unidad": "solon",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "Si la felicidad es actividad, resulta absurdo atribuirla como actividad presente al muerto. El problema de Solón se reformula: podemos llamar bienaventurados a los vivos bajo condiciones, pero el porvenir permanece oculto.",
++      "funcion_argumentativa": "aporia",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "solon",
++          "subunidad": "1100a12-14",
++          "parrafo_local": 38,
++          "gr_ancla": "ἆρά γε καὶ ἔστιν εὐδαίμων τότε ἐπειδὰν ἀποθάνῃ"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "solon",
++          "subunidad": "1100a12-14",
++          "parrafo_local": 38,
++          "gr_ancla": "ἐνέργειάν τινα τὴν εὐδαιμονίαν"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "solon",
++          "subunidad": "1101a16-19",
++          "parrafo_local": 41,
++          "gr_ancla": "τὸ μέλλον ἀφανὲς ἡμῖν ἐστίν"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "solon",
++          "subunidad": "1101a19-21",
++          "parrafo_local": 41,
++          "gr_ancla": "μακαρίους δ᾽ ἀνθρώπους"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "solon",
++          "subunidad": "1101a13-16",
++          "parrafo_local": 41,
++          "gr_ancla": "μὴ τὸν τυχόντα χρόνον ἀλλὰ τέλειον βίον"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "felicidad",
++          "concepto": "estatico:eudaimonia",
++          "sentido": null,
++          "ancla": "εὐδαιμονίαν",
++          "papel_local": "objeto_de_aporia",
++          "determinacion": "Atribución a una vida humana, no actividad póstuma.",
++          "evidencia": 1,
++          "expreso": true
++        },
++        {
++          "id": "actividad",
++          "concepto": "estatico:energeia_actividad",
++          "sentido": "ejercicio",
++          "ancla": "ἐνέργειάν",
++          "papel_local": "criterio",
++          "determinacion": "La definición como actividad suscita la objeción.",
++          "evidencia": 1,
++          "expreso": true
++        },
++        {
++          "id": "vida",
++          "concepto": "estatico:bios",
++          "sentido": "completa",
++          "ancla": "τέλειον βίον",
++          "papel_local": "alcance_temporal",
++          "determinacion": "Vida entera, no lapso cualquiera.",
++          "evidencia": 4,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "felicidad",
++          "a": "actividad",
++          "rel": "se_determina_por",
++          "justificacion": "La aporía presupone la caracterización de felicidad como actividad.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "felicidad",
++          "a": "vida",
++          "rel": "requiere",
++          "justificacion": "La duración completa pertenece a la determinación de la vida feliz.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [],
++      "limite": "No resolver aquí el estatuto del alma después de la muerte ni la influencia de descendientes; I.11 trata esta última cuestión. No concluir que solo los muertos son felices.",
++      "pregunta_continuacion": "¿Qué significa ser bienaventurado en cuanto humano?"
++    },
++    {
++      "id": "n10",
++      "unidad": "adquisicion",
++      "estado": "propuesto",
++      "voz": "nuestra",
++      "formulacion": "La felicidad se presenta como alcanzable mediante aprendizaje y esmerado cultivo por quienes no están mermados para la virtud. Es preferible esa vía a confiar el bien mayor a la fortuna.",
++      "funcion_argumentativa": "apertura",
++      "evidencias": [
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "adquisicion",
++          "subunidad": "1099b18-20",
++          "parrafo_local": 36,
++          "gr_ancla": "πρὸς ἀρετὴν διά τινος μαθήσεως καὶ ἐπιμελείας"
++        },
++        {
++          "obra": "EN",
++          "libro": 1,
++          "unidad": "adquisicion",
++          "subunidad": "1099b20-24",
++          "parrafo_local": 36,
++          "gr_ancla": "βέλτιον ἢ τὸ διὰ τύχην εὐδαιμονεῖν"
++        }
++      ],
++      "manifestaciones": [
++        {
++          "id": "virtud",
++          "concepto": "estatico:arete",
++          "sentido": "humana",
++          "ancla": "ἀρετὴν",
++          "papel_local": "condicion_de_aptitud",
++          "determinacion": "Aptitud para la virtud, no posesión garantizada.",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "aprendizaje",
++          "concepto": "estatico:mathesis",
++          "sentido": null,
++          "ancla": "μαθήσεως",
++          "papel_local": "via",
++          "determinacion": "Aprendizaje.",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "cultivo",
++          "concepto": "estatico:epimeleia",
++          "sentido": null,
++          "ancla": "ἐπιμελείας",
++          "papel_local": "via",
++          "determinacion": "Esmerado cultivo, según nuestra traducción.",
++          "evidencia": 0,
++          "expreso": true
++        },
++        {
++          "id": "felicidad",
++          "concepto": "estatico:eudaimonia",
++          "sentido": null,
++          "ancla": "εὐδαιμονεῖν",
++          "papel_local": "fin",
++          "determinacion": "Alcanzable bajo condiciones.",
++          "evidencia": 1,
++          "expreso": true
++        }
++      ],
++      "relaciones": [
++        {
++          "de": "aprendizaje",
++          "a": "felicidad",
++          "rel": "via_de_adquisicion",
++          "justificacion": "La posibilidad se expresa bajo la condición de aptitud para virtud.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        },
++        {
++          "de": "cultivo",
++          "a": "felicidad",
++          "rel": "via_de_adquisicion",
++          "justificacion": "Aprendizaje y cultivo, no garantía automática.",
++          "voz": "nuestra",
++          "estado": "propuesto"
++        }
++      ],
++      "aristas_funcionales_existentes": [],
++      "limite": "No deducir todavía el mecanismo de habituación de II.1; tampoco hacer de la felicidad un resultado garantizado de la educación.",
++      "pregunta_continuacion": "¿Cómo se forman las virtudes éticas y las dianoéticas?"
++    }
++  ],
++  "pruebas_tagueo": [
++    {
++      "unidad": "proemio",
++      "subunidad": "1094a9-16",
++      "parrafo_local": 2,
++      "concepto": "estatico:dunamis_capacidad",
++      "sentido": "arte",
++      "ancla": "ὑπὸ μίαν τινὰ δύναμιν",
++      "actual": "Tag de párrafo ya existente; no consta asociación directa del concepto en esa subunidad del exportado.",
++      "propuesta": "Añadir manifestación de capacidad técnica arquitectónica; evaluar concepto clave local. No confundir con potencia metafísica."
++    },
++    {
++      "unidad": "alma_virtudes",
++      "subunidad": "1102b3-11",
++      "parrafo_local": 49,
++      "concepto": "estatico:excelencia",
++      "sentido": null,
++      "ancla": "κοινή τις ἀρετὴ καὶ οὐκ ἀνθρωπίνη",
++      "actual": "arete central sin sentido de párrafo y concepto clave arete en subunidad",
++      "propuesta": "Distinguir excelencia común de la facultad vegetativa; no asignar virtud humana afirmativamente a esta ocurrencia. Mantener el tag de virtud humana para la mención contrastiva si se aprueba."
++    }
++  ],
++  "recorridos": [
++    {
++      "id": "pregunta-virtud",
++      "entrada": "¿Ser virtuoso basta para ser feliz?",
++      "orden": [
++        "n05",
++        "n03",
++        "n04",
++        "n08",
++        "n09"
++      ],
++      "hilo": "De la posesión y el ejercicio a la estabilidad de una vida mortal.",
++      "orientacion_editorial": "phusis",
++      "seguimiento": "¿Qué significa ser bienaventurado en cuanto humano?",
++      "respuesta": "Poseer virtud no basta: importa ejercerla bien. La felicidad no es una acción aislada ni un estado inmune a la fortuna; se determina en el horizonte de una vida entera."
++    },
++    {
++      "id": "pregunta-fin",
++      "entrada": "¿Para qué sirve la felicidad?",
++      "orden": [
++        "n01",
++        "n06",
++        "n02",
++        "n03",
++        "n04"
++      ],
++      "hilo": "De la diferencia de fines al fin humano.",
++      "orientacion_editorial": "phusis; apertura mediante telos",
++      "seguimiento": "¿Qué excelencia corresponde a la actividad propia?",
++      "respuesta": "Aristóteles no entiende la felicidad como medio para otra cosa: la elegimos por sí misma. Para comprender en qué consiste hay que examinar la actividad propia del ser humano y su excelencia."
++    },
++    {
++      "id": "pregunta-cultivo",
++      "entrada": "¿Cómo se llega a ser virtuoso?",
++      "orden": [
++        "n05",
++        "n07",
++        "n10"
++      ],
++      "hilo": "Del ejercicio a las disposiciones elogiables y la pregunta por su adquisición.",
++      "orientacion_editorial": "phusis",
++      "seguimiento": "¿Qué diferencia hay entre habituación y aprendizaje? (Libro II, pendiente)",
++      "respuesta": "El Libro I distingue posesión y ejercicio, caracteriza las virtudes como disposiciones elogiables y reconoce el aprendizaje y el cultivo como vías hacia la felicidad. La explicación detallada de cómo se adquiere cada virtud queda para el Libro II."
++    },
++    {
++      "id": "pregunta-suerte",
++      "entrada": "¿Podemos ser felices si la fortuna cambia?",
++      "orden": [
++        "n08",
++        "n09"
++      ],
++      "hilo": "Primacía de las actividades excelentes y límites de la vida humana.",
++      "orientacion_editorial": "phusis; apertura a finitud",
++      "seguimiento": "¿Qué significa ser bienaventurado en cuanto humano?",
++      "respuesta": "Las actividades conforme a la virtud son rectoras de la felicidad, pero la vida necesita condiciones externas. Los azares no determinan por sí solos la felicidad y el porvenir no está asegurado."
++    }
++  ],
++  "nota": "Piloto acumulativo 19.3.5b + 19.3.5c. Las transiciones son editoriales; no equivalen a implicaciones lógicas. Las preguntas y respuestas son ejemplos curados, no LLM. Ningún cambio de jerarquía aplicado.",
++  "transiciones": [
++    {
++      "de": "n01",
++      "a": "n06",
++      "tipo": "precisa",
++      "justificacion": "De la diferencia de fines a la elección por sí misma.",
++      "pregunta": "¿La felicidad es un medio?",
++      "voz": "nuestra",
++      "estado": "propuesto"
++    },
++    {
++      "de": "n06",
++      "a": "n02",
++      "tipo": "abre",
++      "justificacion": "Determinado el estatuto del fin, falta precisar en qué consiste.",
++      "pregunta": "¿Cuál es nuestra actividad propia?",
++      "voz": "nuestra",
++      "estado": "propuesto"
++    },
++    {
++      "de": "n02",
++      "a": "n03",
++      "tipo": "precisa",
++      "justificacion": "La función necesita la determinación de su realización excelente.",
++      "pregunta": "¿Qué significa realizarla bien?",
++      "voz": "nuestra",
++      "estado": "propuesto"
++    },
++    {
++      "de": "n03",
++      "a": "n04",
++      "tipo": "fundamenta_parcialmente",
++      "justificacion": "El ejemplo aporta una premisa, no toda la demostración.",
++      "pregunta": "¿Qué constituye el bien humano?",
++      "voz": "nuestra",
++      "estado": "propuesto"
++    },
++    {
++      "de": "n05",
++      "a": "n03",
++      "tipo": "aclara",
++      "justificacion": "El contraste posesión/ejercicio se enriquece con el criterio de excelencia.",
++      "pregunta": "¿Basta con actuar?",
++      "voz": "nuestra",
++      "estado": "propuesto"
++    },
++    {
++      "de": "n05",
++      "a": "n07",
++      "tipo": "abre",
++      "justificacion": "La disposición virtuosa se distingue de cualquier disposición.",
++      "pregunta": "¿Qué disposición merece elogio?",
++      "voz": "nuestra",
++      "estado": "propuesto"
++    },
++    {
++      "de": "n07",
++      "a": "n10",
++      "tipo": "abre",
++      "justificacion": "La caracterización de virtud suscita la pregunta por su formación.",
++      "pregunta": "¿Cómo se llega a ser virtuoso?",
++      "voz": "nuestra",
++      "estado": "propuesto"
++    },
++    {
++      "de": "n05",
++      "a": "n10",
++      "tipo": "abre",
++      "justificacion": "El ejercicio plantea una cuestión de adquisición.",
++      "pregunta": "¿Cómo se adquiere la virtud?",
++      "voz": "nuestra",
++      "estado": "propuesto"
++    },
++    {
++      "de": "n04",
++      "a": "n08",
++      "tipo": "contrasta",
++      "justificacion": "El bosquejo de felicidad se examina frente a la fortuna.",
++      "pregunta": "¿Depende de la suerte?",
++      "voz": "nuestra",
++      "estado": "propuesto"
++    },
++    {
++      "de": "n08",
++      "a": "n09",
++      "tipo": "problematiza",
++      "justificacion": "La estabilidad debe examinarse en el horizonte de una vida mortal.",
++      "pregunta": "¿Solo al morir sabemos si fuimos felices?",
++      "voz": "nuestra",
++      "estado": "propuesto"
++    },
++    {
++      "de": "n04",
++      "a": "n09",
++      "tipo": "problematiza",
++      "justificacion": "La exigencia de una vida entera suscita la aporía de Solón.",
++      "pregunta": "¿Por qué una vida entera?",
++      "voz": "nuestra",
++      "estado": "propuesto"
++    }
++  ],
++  "incremento": "N1-U.19.3.5c"
++}
+diff --git a/public/scripts/check-n1u1935c.mjs b/public/scripts/check-n1u1935c.mjs
+new file mode 100644
+index 0000000..8a18b37
+--- /dev/null
++++ b/public/scripts/check-n1u1935c.mjs
+@@ -0,0 +1,20 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import {parseBook} from '../js/reader/text.js';
++import {containsAnchor,inspectNuclei,continuations,anchorMarkup} from '../js/lab/semanticNuclei.js';
++import {esc} from '../js/ui.js';
++const read=p=>JSON.parse(fs.readFileSync(p,'utf8'));
++const pilot=read(new URL('../lab/n1u1935c-nucleos-semanticos.json',import.meta.url));
++const prior=read(new URL('../lab/n1u1935b-nucleos-semanticos.json',import.meta.url));
++// A synthetic structural fixture, not a validation of the philosophical text.
++const fixture=()=>{const nodes=new Map(),paras=new Map(),subs=new Set(),edges=[];for(const n of pilot.nucleos){for(const e of n.evidencias){subs.add(`${e.unidad}/${e.subunidad}`);paras.set(e.parrafo_local,(paras.get(e.parrafo_local)||'')+' '+e.gr_ancla);}for(const m of n.manifestaciones){const c=nodes.get(m.concepto)||{uid:m.concepto,source:{sentidos:[]}};if(m.sentido)c.source.sentidos.push({id:m.sentido});nodes.set(m.concepto,c);const p=n.evidencias[m.evidencia].parrafo_local;paras.set(p,paras.get(p)+' '+m.ancla);}for(const id of n.aristas_funcionales_existentes)edges.push({source:{id}});}return {graph:{nodes:[...nodes.values()],edges},book:{chapters:[{paragraphs:[...paras].map(([number,gr])=>({number,gr}))}]},subs};};
++test('preserva íntegros los cinco núcleos del incremento b',()=>assert.deepEqual(pilot.nucleos.slice(0,5),prior.nucleos));
++test('diez núcleos, cuatro recorridos y once transiciones explícitas',()=>{assert.equal(pilot.nucleos.length,10);assert.equal(pilot.recorridos.length,4);assert.equal(pilot.transiciones.length,11);});
++test('estructura resuelta sobre fixture',()=>{const {graph,book,subs}=fixture();assert.deepEqual(inspectNuclei(pilot,graph,book,subs).issues,[]);});
++test('detecta un sentido eliminado y un ancla no localizada',()=>{const {graph,book,subs}=fixture();graph.nodes.find(n=>n.uid==='estatico:hexis').source.sentidos=[];book.chapters[0].paragraphs.find(p=>p.number===52).gr='';const issues=inspectNuclei(pilot,graph,book,subs).issues;assert.ok(issues.some(x=>x.message.includes('Sentido no resuelto')));assert.ok(issues.some(x=>x.message.includes('Ancla griega no localizada')));});
++test('no inventa transición si falta en catálogo',()=>{const p=structuredClone(pilot);p.transiciones=p.transiciones.filter(t=>!(t.de==='n01'&&t.a==='n06'));const {graph,book,subs}=fixture();assert.ok(inspectNuclei(p,graph,book,subs).issues.some(x=>x.message.includes('Falta transición')));assert.equal(continuations(p,'n01').length,0);});
++test('ramas de la posesión y la muerte se mantienen separadas',()=>{assert.deepEqual(continuations(pilot,'n05').map(t=>t.a),['n03','n07','n10']);assert.deepEqual(continuations(pilot,'n09'),[]);});
++test('anclas con marcas Bekker y seguridad HTML',()=>{assert.ok(containsAnchor('κατ᾽ [15] ἀρετήν','κατ’ αρετήν'));assert.equal(anchorMarkup('<script> ἀρετή','αρετη',esc),'&lt;script&gt; <mark>ἀρετή</mark>');assert.equal(anchorMarkup('<script>','ausente',esc),'&lt;script&gt;');});
++const g=process.env.AGORA_TEST_TREE_JSON,txt=process.env.AGORA_TEST_BOOK_TXT;
++test('exportación real y texto bilingüe (opcional)',{skip:!g||!txt},()=>{const result=inspectNuclei(pilot,read(g),parseBook(fs.readFileSync(txt,'utf8')));assert.deepEqual(result.issues,[]);});

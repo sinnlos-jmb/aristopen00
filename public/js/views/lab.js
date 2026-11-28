@@ -1,3 +1,4 @@
+import { createLabNucleiView } from './labNucleiView.js';
 import { createLabTreesView } from './labTreesView.js';
 import { createLabEnigmaView } from './labEnigmaView.js';
 import { createLabEsfingeView } from './labEsfingeView.js';
@@ -17,6 +18,11 @@ import { openTrayectoEditor } from './labTrayectoEditor.js';
 
 // Catálogo de experimentos para la maqueta grid
 export const EXPERIMENTS = Object.freeze({
+  nucleos: {
+    id: 'nucleos', tab: 1, title: 'Articulaciones semánticas',
+    desc: 'Explorá hilos de preguntas, núcleos semánticos y evidencia del Libro I.',
+    tag: 'N1-U.19.3.5c · Exploratorio', icon: '🧵', featured: false
+  },
   arboles: {
     id: 'arboles', tab: 1, title: 'Árboles conceptuales y textuales',
     desc: 'Descubrí conceptos y distinciones del Libro I a partir de arboless, pistas y pasajes.',
@@ -133,6 +139,8 @@ const EXAMPLES = [
 ];
 
 export function createLabView(App, opts = {}) {
+  // N1-U.19.3.5c: nueva vista del Lab, sin modificar los experimentos existentes.
+  if (opts.exp === 'nucleos') return createLabNucleiView(App);
   // N1-U.19.3: nueva vista del Lab, sin modificar los experimentos existentes.
   if (opts.exp === 'arboles') return createLabTreesView(App);
   // N1-U.19.2: nueva vista del Lab, sin modificar los experimentos existentes.

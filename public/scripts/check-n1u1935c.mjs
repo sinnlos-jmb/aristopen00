@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {parseBook} from '../js/reader/text.js';
+import {containsAnchor,inspectNuclei,continuations,anchorMarkup} from '../js/lab/semanticNuclei.js';
+import {esc} from '../js/ui.js';
+const read=p=>JSON.parse(fs.readFileSync(p,'utf8'));
+const pilot=read(new URL('../lab/n1u1935c-nucleos-semanticos.json',import.meta.url));
+const prior=read(new URL('../lab/n1u1935b-nucleos-semanticos.json',import.meta.url));
+// A synthetic structural fixture, not a validation of the philosophical text.
+const fixture=()=>{const nodes=new Map(),paras=new Map(),subs=new Set(),edges=[];for(const n of pilot.nucleos){for(const e of n.evidencias){subs.add(`${e.unidad}/${e.subunidad}`);paras.set(e.parrafo_local,(paras.get(e.parrafo_local)||'')+' '+e.gr_ancla);}for(const m of n.manifestaciones){const c=nodes.get(m.concepto)||{uid:m.concepto,source:{sentidos:[]}};if(m.sentido)c.source.sentidos.push({id:m.sentido});nodes.set(m.concepto,c);const p=n.evidencias[m.evidencia].parrafo_local;paras.set(p,paras.get(p)+' '+m.ancla);}for(const id of n.aristas_funcionales_existentes)edges.push({source:{id}});}return {graph:{nodes:[...nodes.values()],edges},book:{chapters:[{paragraphs:[...paras].map(([number,gr])=>({number,gr}))}]},subs};};
+test('preserva íntegros los cinco núcleos del incremento b',()=>assert.deepEqual(pilot.nucleos.slice(0,5),prior.nucleos));
+test('diez núcleos, cuatro recorridos y once transiciones explícitas',()=>{assert.equal(pilot.nucleos.length,10);assert.equal(pilot.recorridos.length,4);assert.equal(pilot.transiciones.length,11);});
+test('estructura resuelta sobre fixture',()=>{const {graph,book,subs}=fixture();assert.deepEqual(inspectNuclei(pilot,graph,book,subs).issues,[]);});
+test('detecta un sentido eliminado y un ancla no localizada',()=>{const {graph,book,subs}=fixture();graph.nodes.find(n=>n.uid==='estatico:hexis').source.sentidos=[];book.chapters[0].paragraphs.find(p=>p.number===52).gr='';const issues=inspectNuclei(pilot,graph,book,subs).issues;assert.ok(issues.some(x=>x.message.includes('Sentido no resuelto')));assert.ok(issues.some(x=>x.message.includes('Ancla griega no localizada')));});
+test('no inventa transición si falta en catálogo',()=>{const p=structuredClone(pilot);p.transiciones=p.transiciones.filter(t=>!(t.de==='n01'&&t.a==='n06'));const {graph,book,subs}=fixture();assert.ok(inspectNuclei(p,graph,book,subs).issues.some(x=>x.message.includes('Falta transición')));assert.equal(continuations(p,'n01').length,0);});
+test('ramas de la posesión y la muerte se mantienen separadas',()=>{assert.deepEqual(continuations(pilot,'n05').map(t=>t.a),['n03','n07','n10']);assert.deepEqual(continuations(pilot,'n09'),[]);});
+test('anclas con marcas Bekker y seguridad HTML',()=>{assert.ok(containsAnchor('κατ᾽ [15] ἀρετήν','κατ’ αρετήν'));assert.equal(anchorMarkup('<script> ἀρετή','αρετη',esc),'&lt;script&gt; <mark>ἀρετή</mark>');assert.equal(anchorMarkup('<script>','ausente',esc),'&lt;script&gt;');});
+const g=process.env.AGORA_TEST_TREE_JSON,txt=process.env.AGORA_TEST_BOOK_TXT;
+test('exportación real y texto bilingüe (opcional)',{skip:!g||!txt},()=>{const result=inspectNuclei(pilot,read(g),parseBook(fs.readFileSync(txt,'utf8')));assert.deepEqual(result.issues,[]);});
