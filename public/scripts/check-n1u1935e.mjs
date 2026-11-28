@@ -1,0 +1,18 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {parseBook} from '../js/reader/text.js';
+import {inspectNuclei} from '../js/lab/semanticNuclei.js';
+import {inspectHorizons} from '../js/lab/semanticHorizon.js';
+import {inspectSemanticContract,inspectProposedSenses,notesFor} from '../js/lab/semanticContract.js';
+const read=p=>JSON.parse(fs.readFileSync(p,'utf8'));
+const p=read(new URL('../lab/n1u1935e-nucleos-semanticos.json',import.meta.url));
+const d=read(new URL('../lab/n1u1935d-nucleos-semanticos.json',import.meta.url));
+test('contrato v1 y horizontes válidos',()=>{assert.deepEqual(inspectSemanticContract(p),[]);assert.deepEqual(inspectHorizons(p),[]);});
+test('conserva afirmaciones y relaciones previas; solo añade sintaxis local',()=>{const old=structuredClone(p.nucleos.slice(0,15));for(const n of old)for(const m of n.manifestaciones)delete m.funcion_sintactica;assert.deepEqual(old,d.nucleos);assert.deepEqual(p.transiciones.slice(0,20),d.transiciones);assert.deepEqual(p.recorridos.slice(0,6),d.recorridos);});
+test('lenguaje candidato no suplanta razón ni argumento',()=>{const m=p.nucleos.at(-1).manifestaciones.at(-1);assert.equal(m.sentido,null);assert.equal(m.sentido_candidato,'lenguaje');assert.equal(m.expreso,false);const q=structuredClone(p);q.nucleos.at(-1).manifestaciones.at(-1).sentido='lenguaje';assert.ok(inspectSemanticContract(q).length);});
+test('nota hermenéutica no es voz textual',()=>{assert.equal(notesFor(p,'n16').length,1);const q=structuredClone(p);q.notas_hermeneuticas[0].voz='textual';assert.ok(inspectSemanticContract(q).length);});
+test('no se confirma automáticamente ni se aceptan evidencias inválidas',()=>{const q=structuredClone(p);q.nucleos.at(-1).estado='confirmado';q.nucleos[0].manifestaciones[0].evidencia=-1;assert.ok(inspectSemanticContract(q).length>=2);});
+test('distingue propuesta, concepto ausente y sentido ya registrado',()=>{const node={uid:'estatico:logos',source:{sentidos:[]}};assert.equal(inspectProposedSenses(p,{nodes:[node]})[0].estado,'propuesto');assert.equal(inspectProposedSenses(p,{nodes:[]})[0].estado,'concepto_ausente');node.source.sentidos.push({id:'lenguaje'});assert.equal(inspectProposedSenses(p,{nodes:[node]})[0].estado,'ya_registrado_revisar');});
+const g=process.env.AGORA_TEST_TREE_JSON,txt=process.env.AGORA_TEST_BOOK_TXT;
+test('exportación histórica y texto real (opcional)',{skip:!g||!txt},()=>{const graph=read(g);assert.deepEqual(inspectNuclei(p,graph,parseBook(fs.readFileSync(txt,'utf8'))).issues,[]);assert.equal(inspectProposedSenses(p,graph)[0].estado,'propuesto');});
